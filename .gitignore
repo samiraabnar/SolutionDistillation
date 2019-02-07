@@ -1,9 +1,0 @@
-__pycache__
-.idea
-.idea/*
-logs
-logs/*
-data
-data/*
-*.zip
-*.npy

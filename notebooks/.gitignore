@@ -1,9 +1,0 @@
-data
-data/*
-logs
-logs/*
-*.pyc
-*.zip
-__pycach__
-.idea
-.idea/*

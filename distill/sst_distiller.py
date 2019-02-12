@@ -2,6 +2,9 @@ import tensorflow as tf
 import numpy as np
 from distill.data_util.prep_sst import SST
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
+from distill.models.sentiment_lstm import SentimentLSTM
+
+from distill.common.distill_util import get_logit_distill_loss
 import os
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -29,13 +32,13 @@ class Config(object):
 
 
 
-class SSTTrainer(object):
-  def __init__(self, config, model_class):
+class SSTDistiller(object):
+  def __init__(self, config, student_model_class, teacher_model_class):
     self.config = config
     self.sst = SST("data/sst")
     config.vocab_size = len(self.sst.vocab)
-    self.sentimen_tree_lstm = model_class(self.config)
-
+    self.student = student_model_class(self.config)
+    self.teacher = teacher_model_class(self.config)
 
   def get_train_op(self, loss, params):
     # add training op
@@ -77,32 +80,45 @@ class SSTTrainer(object):
     return iterator, dev_iterator
 
   def build_train_graph(self):
-    self.sentimen_tree_lstm.build_graph()
+    self.student.build_graph()
+    self.teacher.build_graph()
+
 
     train_iterator, dev_iterator = self.get_data_itaratoes()
-    train_output_dic = self.sentimen_tree_lstm.apply(train_iterator.get_next())
-    tf.summary.scalar("loss", train_output_dic[self.config.loss_type], family="train")
-    tf.summary.scalar("accuracy", train_output_dic["root_accuracy"], family="train")
-
-    dev_output_dic = self.sentimen_tree_lstm.apply(dev_iterator.get_next())
-    tf.summary.scalar("loss", dev_output_dic[self.config.loss_type], family="dev")
-    tf.summary.scalar("accuracy", dev_output_dic["root_accuracy"], family="dev")
 
 
-    update_op = self.get_train_op(train_output_dic[self.config.loss_type],train_output_dic["trainable_vars"])
+    student_train_output_dic = self.student.apply(train_iterator.get_next())
+    teacher_train_output_dic = self.teacher.apply(train_iterator.get_next())
+    student_dev_output_dic = self.student.apply(dev_iterator.get_next())
+
+
+    tf.summary.scalar("loss", student_train_output_dic[self.config.loss_type], family="train")
+    tf.summary.scalar("accuracy", student_train_output_dic["root_accuracy"], family="train")
+    tf.summary.scalar("loss", student_dev_output_dic[self.config.loss_type], family="dev")
+    tf.summary.scalar("accuracy", student_dev_output_dic["root_accuracy"], family="dev")
+
+
+    update_op = self.get_train_op(student_train_output_dic[self.config.loss_type],
+                                  student_train_output_dic["trainable_vars"])
+
+    distill_loss = get_logit_distill_loss(student_train_output_dic['logits'],teacher_train_output_dic['logits'])
+    distill_op = self.get_train_op(distill_loss, student_train_output_dic["trainable_vars"])
+
+
 
     scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                         train_iterator.initializer,
                                                         dev_iterator.initializer))
 
-    return update_op, scaffold
+    return update_op,distill_op, scaffold
 
 
   def train(self):
-    update_op, scaffold  = self.build_train_graph()
+    update_op, distill_op, scaffold  = self.build_train_graph()
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
       for _ in np.arange(self.config.max_iterations):
         sess.run(update_op)
+        sess.run(distill_op)
 
 
 
@@ -110,5 +126,5 @@ class SSTTrainer(object):
 
 
 if __name__ == '__main__':
-  trainer = SSTTrainer(config=Config, model_class=SentimentTreeLSTM)
+  trainer = SSTDistiller(config=Config, student_model_class=SentimentLSTM, teacher_model_class=SentimentTreeLSTM)
   trainer.train()

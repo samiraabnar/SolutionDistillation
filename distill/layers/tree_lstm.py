@@ -3,11 +3,14 @@ from tensorflow.python.ops import embedding_ops
 
 
 class TreeLSTM(object):
-  def __init__(self, input_dim, hidden_dim, output_dim, scope="TreeLSTM"):
+  def __init__(self, input_dim, hidden_dim, output_dim, input_keep_prob=0.8, hidden_keep_prob=0.8, depth=1, scope="TreeLSTM"):
     self.scope = scope
     self.hidden_dim = hidden_dim
     self.input_dim = input_dim
     self.output_dim = output_dim
+    self.input_keep_prob = input_keep_prob
+    self.hidden_keep_prob = hidden_keep_prob
+    self.num_layers = depth
 
 
   def create_vars(self, reuse=False):

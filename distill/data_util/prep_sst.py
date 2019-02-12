@@ -51,13 +51,17 @@ class SST(object):
                           node.word else 0
                           for node in nodes_list],
         'labels': [node.label for node in nodes_list],
-        'binary_labels': [0 if node.label < 2 else 1 for node in nodes_list],
-        'length': len(nodes_list)
+        'binary_labels': [0 if node.label <= 2 else 1 for node in nodes_list],
+        'length': len(nodes_list),
+        'word_length': len(words),
+        'word_ids': [self.vocab.encode(word)[0] for word in words],
+        'root_label': [tree.root.label],
+        'root_binary_label': [0 if tree.root.label <= 2 else 1]
       })
 
     return example_features
 
-  def get_tf_features(self, example_feaures):
+  def get_all_tf_features(self, example_feaures):
     """Convert our own representation of an example's features to Features class for TensorFlow dataset.
     """
     features = tf.train.Features(feature={
@@ -69,8 +73,29 @@ class SST(object):
       "labels": tf.train.Feature(int64_list=tf.train.Int64List(value=example_feaures['labels'])),
       "binary_labels": tf.train.Feature(int64_list=tf.train.Int64List(value=example_feaures['binary_labels'])),
       "length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example_feaures['length']])),
+      "root_label": tf.train.Feature(int64_list=tf.train.Int64List(value=example_feaures['root_label'])),
+      "root_binary_label": tf.train.Feature(int64_list=tf.train.Int64List(value=example_feaures['root_binary_label'])),
+      "word_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example_feaures['word_length']])),
+      "word_ids": tf.train.Feature(int64_list=tf.train.Int64List(value=example_feaures['word_ids'])),
+
     })
     return features
+
+
+
+  def get_plain_tf_features(self, example_feaures):
+    """Convert our own representation of an example's features to Features class for TensorFlow dataset.
+    """
+    features = tf.train.Features(feature={
+      "example_id": tf.train.Feature(int64_list=tf.train.Int64List(value=[example_feaures['example_id']])),
+      "root_label": tf.train.Feature(int64_list=tf.train.Int64List(value=example_feaures['root_label'])),
+      "root_binary_label": tf.train.Feature(int64_list=tf.train.Int64List(value=example_feaures['root_binary_label'])),
+      "word_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example_feaures['length']])),
+      "word_ids": tf.train.Feature(int64_list=tf.train.Int64List(value=[example_feaures['word_ids']])),
+
+    })
+    return features
+
 
   def load_data(self):
     data_splits = ["train", "test", "dev"]
@@ -82,12 +107,13 @@ class SST(object):
         self.data[tag] = [Tree(line) for line in fid.readlines()]
 
 
-  def build_tfrecords(self, mode):
+  def build_tfrecords(self,tf_feature_fn, mode, feature_type="tree"):
     tf_example_features = []
     for example in self.get_examples(mode):
-      tf_example_features.append(self.get_tf_features(example))
+      if example['root_label'] != 2:
+       tf_example_features.append(tf_feature_fn(example))
 
-    with tf.python_io.TFRecordWriter(os.path.join(self.data_path, mode + ".tfr")) as tf_record_writer:
+    with tf.python_io.TFRecordWriter(os.path.join(self.data_path,feature_type+"_" + mode + ".tfr")) as tf_record_writer:
       for example in tqdm(tf_example_features):
         tf_record = tf.train.Example(features=example)
         tf_record_writer.write(tf_record.SerializeToString())
@@ -119,12 +145,51 @@ class SST(object):
     return example_id, length, is_leaf, left_children, right_children, node_word_ids, labels, binary_labels
 
   @staticmethod
-  def get_padded_shapes():
-    return [], [], [None], [None], [None], [None], [None], [None]
+  def parse_full_sst_tree_examples(example):
+    """Load an example from TF record format."""
+    features = {"example_id": tf.FixedLenFeature([], tf.int64),
+                "length": tf.FixedLenFeature([], tf.int64),
+                "is_leaf": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                "left_children": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                "right_children": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                "node_word_ids": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                "labels": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                "binary_labels": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                "root_label": tf.FixedLenFeature([], tf.int64),
+                "root_binary_label": tf.FixedLenFeature([], tf.int64),
+                "word_length": tf.FixedLenFeature([], tf.int64),
+                "word_ids": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                }
+
+    parsed_example = tf.parse_single_example(example, features=features)
+
+    example_id = parsed_example["example_id"]
+    length = parsed_example["length"]
+    tf.logging.info(length)
+    is_leaf = parsed_example["is_leaf"]
+    tf.logging.info(is_leaf)
+    left_children = parsed_example["left_children"]
+    right_children = parsed_example["right_children"]
+    node_word_ids = parsed_example["node_word_ids"]
+    labels = parsed_example["labels"]
+    binary_labels = parsed_example["binary_labels"]
+
+    root_label = parsed_example["root_label"]
+    root_binary_label = parsed_example["root_binary_label"]
+    word_length = parsed_example["word_length"]
+    word_ids = parsed_example["word_ids"]
+
+    return example_id, length, is_leaf, left_children, right_children, node_word_ids, labels, binary_labels,\
+           root_label, root_binary_label, word_length, word_ids
+
 
   @staticmethod
-  def get_tfrecord_path(datapath, mode):
-    return os.path.join(datapath, mode + ".tfr")
+  def get_padded_shapes():
+    return [], [], [None], [None], [None], [None], [None], [None], [], [], [], [None]
+
+  @staticmethod
+  def get_tfrecord_path(datapath, mode, feature_type="full"):
+    return os.path.join(datapath, feature_type + "_" + mode + ".tfr")
 
 def build_sst():
 
@@ -134,7 +199,15 @@ def build_sst():
   sst_prep.build_tfrecords("dev")
   sst_prep.build_tfrecords("test")
 
-if __name__ == '__main__':
+def build_full_sst():
+  sst_prep = SST(data_path="data/sst/")
+  sst_prep.load_data()
+
+  sst_prep.build_tfrecords(sst_prep.get_all_tf_features, mode="train", feature_type="full")
+  sst_prep.build_tfrecords(sst_prep.get_all_tf_features, mode="dev", feature_type="full")
+  sst_prep.build_tfrecords(sst_prep.get_all_tf_features, mode="test", feature_type="full")
+
+def build_sst_main():
   build_sst()
 
   dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))
@@ -147,5 +220,41 @@ if __name__ == '__main__':
   global_step = tf.train.get_or_create_global_step()
   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                       iterator.initializer))
-  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs',scaffold=scaffold) as sess:
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
     print(sess.run(labels))
+
+def test():
+  batch_size = 10
+  dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train", feature_type="full"))
+  dataset = dataset.map(SST.parse_full_sst_tree_examples)
+  dataset = dataset.padded_batch(batch_size, padded_shapes=SST.get_padded_shapes())
+  iterator = dataset.make_initializable_iterator()
+
+  example = iterator.get_next()
+  example_id, length, is_leaf, left_children, right_children, node_word_ids, labels, binary_labels, \
+      root_label, root_binary_label, word_length, word_ids = example
+
+  bach_indices = tf.expand_dims(tf.range(batch_size), 1)
+  root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(length - 1, dtype=tf.int32), 1)], axis=-1)
+
+  computed_root_label = tf.gather_nd(labels, root_indices)
+  computed_root_binary_label = tf.gather_nd(binary_labels, root_indices)
+
+  global_step = tf.train.get_or_create_global_step()
+  scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
+                                                      iterator.initializer))
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
+    out_root_label, out_root_binary_label, out_labels, out_binary_labels, out_computed_root_label, out_computed_root_binary_label= \
+      sess.run([root_label, root_binary_label,labels, binary_labels, computed_root_label, computed_root_binary_label])
+    out_word_ids = sess.run(word_ids)
+
+    print(out_word_ids)
+
+    print(list(zip(out_root_label,out_computed_root_label)))
+    print(out_root_binary_label[0])
+    print(out_computed_root_label[0])
+    print(out_computed_root_binary_label[0])
+
+if __name__ == '__main__':
+  build_full_sst()
+  test()

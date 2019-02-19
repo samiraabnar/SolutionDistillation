@@ -90,12 +90,20 @@ class SSTTrainer(object):
                                            drop_remainder=True)
     dev_iterator = dev_dataset.make_initializable_iterator()
 
-    return iterator, dev_iterator
+    test_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="test"))
+    test_dataset = test_dataset.map(SST.parse_full_sst_tree_examples)
+    test_dataset = test_dataset.shuffle(buffer_size=2210)
+    test_dataset = test_dataset.repeat()
+    test_dataset = test_dataset.padded_batch(2210, padded_shapes=SST.get_padded_shapes(),
+                                             drop_remainder=True)
+    test_iterator = test_dataset.make_initializable_iterator()
+
+    return iterator, dev_iterator, test_iterator
 
   def build_train_graph(self):
     self.sentimen_tree_lstm.build_graph(self.pretrained_word_embeddings)
 
-    train_iterator, dev_iterator = self.get_data_itaratoes()
+    train_iterator, dev_iterator, test_iterator = self.get_data_itaratoes()
     train_output_dic = self.sentimen_tree_lstm.apply(train_iterator.get_next())
     tf.summary.scalar("loss", train_output_dic[self.config.loss_type], family="train")
     tf.summary.scalar("accuracy", train_output_dic["root_accuracy"], family="train")
@@ -104,6 +112,9 @@ class SSTTrainer(object):
     tf.summary.scalar("loss", dev_output_dic[self.config.loss_type], family="dev")
     tf.summary.scalar("accuracy", dev_output_dic["root_accuracy"], family="dev")
 
+    test_output_dic = self.sentimen_tree_lstm.apply(test_iterator.get_next())
+    tf.summary.scalar("loss", test_output_dic[self.config.loss_type], family="test")
+    tf.summary.scalar("accuracy", test_output_dic["root_accuracy"], family="test")
 
     update_op = self.get_train_op(train_output_dic[self.config.loss_type],train_output_dic["trainable_vars"])
 

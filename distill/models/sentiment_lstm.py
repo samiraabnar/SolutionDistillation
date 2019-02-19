@@ -13,8 +13,8 @@ class SentimentLSTM(object):
                               depth=config.depth)
 
 
-  def build_graph(self):
-    self.lstm.create_vars()
+  def build_graph(self, pretrained_word_embeddings):
+    self.lstm.create_vars(pretrained_word_embeddings)
 
 
   def apply(self, examples):

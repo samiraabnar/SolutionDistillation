@@ -9,26 +9,36 @@ import os
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-class Config(object):
-  """Holds model hyperparams and data information.
-  Model objects are passed a Config() object at instantiation.
-  """
-  embed_size = 35
-  label_size = 2
-  early_stopping = 2
-  anneal_threshold = 0.99
-  anneal_by = 1.5
-  max_iterations = 3000000
-  lr = 0.001
-  l2 = 0.001
-  vocab_size = 80000
-  batch_size = 10
-  loss_type = 'root_loss'
-  log_dir = 'logs'
-  task_name = 'sst'
-  model_name = 'tree_lstm'
+tf.app.flags.DEFINE_string("exp_name", "trial", "")
+tf.app.flags.DEFINE_string("task_name", "sst_distill", "")
+tf.app.flags.DEFINE_string("log_dir", "logs", "")
+tf.app.flags.DEFINE_string("save_dir", None, "")
 
-  save_dir = os.path.join(log_dir, task_name, model_name+"_"+loss_type+"_lr=%d_l2=%f_lr=%f" % (embed_size, l2, lr))
+tf.app.flags.DEFINE_string("model_type", "tree_to_plain", "")
+tf.app.flags.DEFINE_integer("hidden_dim", 100, "")
+tf.app.flags.DEFINE_integer("depth", 1, "")
+tf.app.flags.DEFINE_integer("input_dim", None, "")
+tf.app.flags.DEFINE_integer("output_dim", 2, "")
+
+tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
+tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
+tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
+
+tf.app.flags.DEFINE_float("learning_rate", 0.005, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
+
+tf.app.flags.DEFINE_integer("batch_size", 32, "")
+tf.app.flags.DEFINE_integer("training_iterations", 12000, "")
+
+tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
+tf.app.flags.DEFINE_integer("embedding_dim", 100, "embeddings dim")
+
+
+tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt", "pretrained embedding path")
+tf.app.flags.DEFINE_string("data_path", "./data", "data path")
+
+
+hparams = tf.app.flags.FLAGS
 
 
 
@@ -126,5 +136,5 @@ class SSTDistiller(object):
 
 
 if __name__ == '__main__':
-  trainer = SSTDistiller(config=Config, student_model_class=SentimentLSTM, teacher_model_class=SentimentTreeLSTM)
+  trainer = SSTDistiller(config=hparams, student_model_class=SentimentLSTM, teacher_model_class=SentimentTreeLSTM)
   trainer.train()

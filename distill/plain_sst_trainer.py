@@ -2,8 +2,10 @@ import tensorflow as tf
 import numpy as np
 from distill.data_util.prep_sst import SST
 from distill.models.sentiment_lstm import SentimentLSTM
-from distill.common.util import cosine_decay_with_warmup
+from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
 
+from distill.common.util import cosine_decay_with_warmup
+from distill.data_util.vocab import PretrainedVocab
 import os
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -21,7 +23,7 @@ tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 2, "")
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
-tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.8, "")
+tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.005, "")
@@ -31,8 +33,15 @@ tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 12000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
+tf.app.flags.DEFINE_integer("embedding_dim", 100, "embeddings dim")
+
+
+tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt", "pretrained embedding path")
+tf.app.flags.DEFINE_string("data_path", "./data", "data path")
+
 
 hparams = tf.app.flags.FLAGS
+
 
 
 
@@ -41,13 +50,14 @@ class PlainSSTTrainer(object):
     self.config = hparams
     self.sst = SST("data/sst")
     self.config.input_dim = len(self.sst.vocab)
-    self.sentimen_lstm = model_class(self.config)
 
+    self.vocab = PretrainedVocab(self.config.data_path, self.config.pretrained_embedding_path,
+                                 self.config.embedding_dim)
+    self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
+    self.sentimen_lstm = model_class(self.config)
 
   def get_train_op(self, loss, params):
     # add training op
-    self.global_step = tf.train.get_or_create_global_step()
-
     # Learning rate is linear from step 0 to self.FLAGS.lr_warmup. Then it decays as 1/sqrt(timestep).
 
     self.global_step = tf.train.get_or_create_global_step()
@@ -72,7 +82,6 @@ class PlainSSTTrainer(object):
       updates = opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step)
 
     return updates, learning_rate
-
 
   def get_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))
@@ -102,7 +111,7 @@ class PlainSSTTrainer(object):
     return iterator, dev_iterator, test_iterator
 
   def build_train_graph(self):
-    self.sentimen_lstm.build_graph()
+    self.sentimen_lstm.build_graph(self.pretrained_word_embeddings)
 
     train_iterator, dev_iterator, test_iterator = self.get_data_itaratoes()
     train_output_dic = self.sentimen_lstm.apply(train_iterator.get_next())
@@ -135,7 +144,6 @@ class PlainSSTTrainer(object):
                                                         test_iterator.initializer))
     return update_op, scaffold, train_output_dic
 
-
   def train(self):
     update_op, scaffold, train_output_dic = self.build_train_graph()
 
@@ -143,12 +151,6 @@ class PlainSSTTrainer(object):
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
       for _ in np.arange(self.config.training_iterations):
         sess.run(update_op)
-
-
-
-
-
-
 
 
 

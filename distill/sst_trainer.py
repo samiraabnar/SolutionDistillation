@@ -1,31 +1,43 @@
 import tensorflow as tf
 import numpy as np
 from distill.data_util.prep_sst import SST
+from distill.data_util.vocab import PretrainedVocab
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
 import os
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-class Config(object):
-  """Holds model hyperparams and data information.
-  Model objects are passed a Config() object at instantiation.
-  """
-  embed_size = 35
-  label_size = 2
-  early_stopping = 2
-  anneal_threshold = 0.99
-  anneal_by = 1.5
-  max_iterations = 3000000
-  lr = 0.001
-  l2 = 0.001
-  vocab_size = 80000
-  batch_size = 10
-  loss_type = 'root_loss'
-  log_dir = 'logs'
-  task_name = 'sst'
-  model_name = 'tree_lstm'
+tf.app.flags.DEFINE_string("exp_name", "trial", "")
+tf.app.flags.DEFINE_string("task_name", "sst", "")
+tf.app.flags.DEFINE_string("log_dir", "logs", "")
+tf.app.flags.DEFINE_string("save_dir", None, "")
 
-  save_dir = os.path.join(log_dir, task_name, model_name+"_"+loss_type+"_lr=%d_l2=%f_lr=%f" % (embed_size, l2, lr))
+tf.app.flags.DEFINE_string("model_type", "tree_lstm", "")
+tf.app.flags.DEFINE_integer("hidden_dim", 100, "")
+tf.app.flags.DEFINE_integer("depth", 1, "")
+tf.app.flags.DEFINE_integer("input_dim", None, "")
+tf.app.flags.DEFINE_integer("output_dim", 2, "")
+
+tf.app.flags.DEFINE_string("loss_type", "full_loss", "")
+tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
+tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
+
+tf.app.flags.DEFINE_float("learning_rate", 0.005, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
+
+tf.app.flags.DEFINE_integer("batch_size", 32, "")
+tf.app.flags.DEFINE_integer("training_iterations", 12000, "")
+
+tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
+tf.app.flags.DEFINE_integer("embedding_dim", 100, "embeddings dim")
+
+
+tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt", "pretrained embedding path")
+tf.app.flags.DEFINE_string("data_path", "./data", "data path")
+
+
+hparams = tf.app.flags.FLAGS
+
 
 
 
@@ -33,7 +45,11 @@ class SSTTrainer(object):
   def __init__(self, config, model_class):
     self.config = config
     self.sst = SST("data/sst")
-    config.vocab_size = len(self.sst.vocab)
+    self.config.input_dim = len(self.sst.vocab)
+    self.vocab = PretrainedVocab(self.config.data_path, self.config.pretrained_embedding_path,
+                                 self.config.embedding_dim)
+    self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
+
     self.sentimen_tree_lstm = model_class(self.config)
 
 
@@ -42,11 +58,11 @@ class SSTTrainer(object):
     self.global_step = tf.train.get_or_create_global_step()
 
     # Learning rate is linear from step 0 to self.FLAGS.lr_warmup. Then it decays as 1/sqrt(timestep).
-    opt = tf.train.AdamOptimizer(learning_rate=self.config.lr)
+    opt = tf.train.AdamOptimizer(learning_rate=self.config.learning_rate)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)
-    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 1.0)
+    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
     self.param_norm = tf.global_norm(params)
 
     # Include batch norm mean and variance in gradient descent updates
@@ -60,14 +76,14 @@ class SSTTrainer(object):
 
   def get_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))
-    dataset = dataset.map(SST.parse_sst_tree_examples)
+    dataset = dataset.map(SST.parse_full_sst_tree_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=SST.get_padded_shapes(), drop_remainder=True)
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     iterator = dataset.make_initializable_iterator()
 
-    dev_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))
-    dev_dataset = dev_dataset.map(SST.parse_sst_tree_examples)
+    dev_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="dev"))
+    dev_dataset = dev_dataset.map(SST.parse_full_sst_tree_examples)
     dev_dataset = dev_dataset.shuffle(buffer_size=1101)
     dev_dataset = dev_dataset.repeat()
     dev_dataset = dev_dataset.padded_batch(1101, padded_shapes=SST.get_padded_shapes(),
@@ -77,7 +93,7 @@ class SSTTrainer(object):
     return iterator, dev_iterator
 
   def build_train_graph(self):
-    self.sentimen_tree_lstm.build_graph()
+    self.sentimen_tree_lstm.build_graph(self.pretrained_word_embeddings)
 
     train_iterator, dev_iterator = self.get_data_itaratoes()
     train_output_dic = self.sentimen_tree_lstm.apply(train_iterator.get_next())
@@ -101,14 +117,14 @@ class SSTTrainer(object):
   def train(self):
     update_op, scaffold  = self.build_train_graph()
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
-      for _ in np.arange(self.config.max_iterations):
+      for _ in np.arange(self.config.training_iterations):
         sess.run(update_op)
 
 
 
-
-
-
 if __name__ == '__main__':
-  trainer = SSTTrainer(config=Config, model_class=SentimentTreeLSTM)
+  if hparams.save_dir is None:
+    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, hparams.loss_type,'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name]))
+
+  trainer = SSTTrainer(config=hparams, model_class=SentimentTreeLSTM)
   trainer.train()

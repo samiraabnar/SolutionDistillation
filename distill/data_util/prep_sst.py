@@ -1,18 +1,57 @@
 import tensorflow as tf
+import numpy as np
 import os
 import itertools
 from collections import OrderedDict
 from tqdm import tqdm
 from distill.data_util.trees import Tree, leftTraverse
-from distill.data_util.vocab import Vocab
+from distill.data_util.vocab import Vocab, PretrainedVocab
 
+
+def get_word_embs(word_emb_path, word_emb_size, vocabulary_size=99002):
+  """Reads from preprocessed GloVe .txt file and returns embedding matrix and
+  mappings from words to word ids.
+  Input:
+    word_emb_path: string. Path to preprocessed glove file.
+    vec_size: int. Dimensionality of a word vector.
+  Returns:
+    word_emb_matrix: Numpy array shape (vocab_size, vec_size) containing word embeddings.
+      Only includes embeddings for words that were seen in the dev/train sets.
+    word2id: dictionary mapping word (string) to word id (int)
+  """
+
+  print("Loading word embeddings from file: {}...".format(word_emb_path))
+
+  word_emb_matrix = []
+  word2id = {}
+  idx = 0
+  with open(word_emb_path, 'r', encoding='utf-8') as fh:
+    for line in tqdm(fh, total=vocabulary_size):
+      line = line.lstrip().rstrip().split(" ")
+      word = line[0]
+      vector = list(map(float, line[1:]))
+      if word_emb_size != len(vector):
+        raise Exception("Expected vector of size {}, but got vector of size {}.".format(word_emb_size, len(vector)))
+      word_emb_matrix.append(vector)
+      word2id[word] = idx
+      idx += 1
+
+  word_emb_matrix = np.array(word_emb_matrix, dtype=np.float32)
+  print("Loaded word embedding matrix with shape {}.".format(word_emb_matrix.shape))
+
+
+  return word_emb_matrix, word2id
 
 class SST(object):
-  def __init__(self, data_path):
+  def __init__(self, data_path, pretrained=True, pretrained_path="/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt", embedding_size=100):
     self.data_path = data_path
 
-    self.vocab_path = os.path.join(data_path, "vocab")
-    self.vocab = Vocab(path=self.vocab_path)
+    self.vocab_path = os.path.join(data_path, "pretrained_" if pretrained else '' +"vocab")
+
+    if pretrained:
+      self.vocab = PretrainedVocab(self.vocab_path, pretrained_path, embedding_size)
+    else:
+      self.vocab = Vocab(path=self.vocab_path)
     self.load_vocab()
 
   def load_vocab(self):
@@ -81,8 +120,6 @@ class SST(object):
     })
     return features
 
-
-
   def get_plain_tf_features(self, example_feaures):
     """Convert our own representation of an example's features to Features class for TensorFlow dataset.
     """
@@ -96,7 +133,6 @@ class SST(object):
     })
     return features
 
-
   def load_data(self):
     data_splits = ["train", "test", "dev"]
     self.data = {}
@@ -105,7 +141,6 @@ class SST(object):
       print("Loading %s trees.." % file)
       with open(file, 'r') as fid:
         self.data[tag] = [Tree(line) for line in fid.readlines()]
-
 
   def build_tfrecords(self,tf_feature_fn, mode, feature_type="tree"):
     tf_example_features = []
@@ -182,7 +217,6 @@ class SST(object):
     return example_id, length, is_leaf, left_children, right_children, node_word_ids, labels, binary_labels,\
            root_label, root_binary_label, word_length, word_ids
 
-
   @staticmethod
   def get_padded_shapes():
     return [], [], [None], [None], [None], [None], [None], [None], [], [], [], [None]
@@ -200,7 +234,10 @@ def build_sst():
   sst_prep.build_tfrecords("test")
 
 def build_full_sst():
-  sst_prep = SST(data_path="data/sst/")
+  sst_prep = SST(data_path="data/sst/",
+                 pretrained=True,
+                 pretrained_path="/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt",
+                 embedding_size=100)
   sst_prep.load_data()
 
   sst_prep.build_tfrecords(sst_prep.get_all_tf_features, mode="train", feature_type="full")

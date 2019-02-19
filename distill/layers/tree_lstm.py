@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.ops import embedding_ops
+from distill.layers.embedding import Embedding
 
 
 class TreeLSTM(object):
@@ -13,26 +14,32 @@ class TreeLSTM(object):
     self.num_layers = depth
 
 
-  def create_vars(self, reuse=False):
+  def create_vars(self, pretrained_word_embeddings, reuse=False):
     with tf.variable_scope(self.scope, reuse=reuse):
-      with tf.variable_scope('Embeddings'):
-        self.word_emb_matrix = tf.get_variable("word_emb_matrix",
-                                               dtype=tf.float32,
-                                               shape=(self.input_dim, self.hidden_dim),
-                                               trainable=True)
+      self.embedding_layer = Embedding(keep_prob=self.input_keep_prob)
+      self.embedding_layer.create_vars(pretrained_word_embeddings)
+
       with tf.variable_scope('Composition'):
         self.W1 = tf.get_variable('W1',
                                   [2 * self.hidden_dim, self.hidden_dim])
         self.b1 = tf.get_variable('b1', [1, self.hidden_dim])
-        self.lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_dim)
+
+      # Build the RNN layers
+      with tf.name_scope("LSTM_Cell"):
+        lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
+        lstm = tf.contrib.rnn.DropoutWrapper(lstm,
+                                             output_keep_prob=self.hidden_keep_prob)
+        self.multi_lstm_cell = lstm
 
       with tf.variable_scope('Projection'):
         self.U = tf.get_variable('U', [self.hidden_dim, self.output_dim])
         self.bs = tf.get_variable('bs', [1, self.output_dim])
 
+
   def apply(self, examples):
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-      example_id, length, is_leaf, left_children, right_children, node_word_ids, _, labels = examples
+      example_id, length, is_leaf, left_children, right_children, node_word_ids, labels, binary_labels, \
+      root_label, root_binary_label, seq_lengths, seq_inputs = examples
 
       max_length = tf.reduce_max(length)
       output_tensor_array = tf.TensorArray(
@@ -177,7 +184,7 @@ class TreeLSTM(object):
 
   def combine_children(self, left_tensor, right_tensor, c_state, h_state):
     state = tf.nn.rnn_cell.LSTMStateTuple(c_state, h_state)
-    output, state = self.lstm_cell(
+    output, state = self.multi_lstm_cell(
       inputs=tf.nn.relu(tf.matmul(tf.concat([left_tensor, right_tensor], axis=1), self.W1) + self.b1),
       state=state)
 
@@ -195,7 +202,7 @@ class TreeLSTM(object):
       tf.logging.info(word_index)
       embedded_words = tf.where(tf.less(word_index, 0),
                                 tf.zeros((self.batch_size, self.hidden_dim)),
-                                embedding_ops.embedding_lookup(self.word_emb_matrix, tf.abs(word_index)))
+                                self.embedding_layer.apply(word_index))
 
       tf.logging.info("embedded words")
       tf.logging.info(embedded_words)

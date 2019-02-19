@@ -18,8 +18,6 @@ class LSTM(object):
       self.embedding_layer = Embedding(keep_prob=self.input_keep_prob)
       self.embedding_layer.create_vars(pretrained_word_embeddings)
 
-
-
       # Build the RNN layers
       with tf.name_scope("LSTM_Cell"):
         lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)

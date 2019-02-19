@@ -17,7 +17,7 @@ tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
 tf.app.flags.DEFINE_string("model_type", "plain_lstm", "")
-tf.app.flags.DEFINE_integer("hidden_dim", 100, "")
+tf.app.flags.DEFINE_integer("hidden_dim", 50, "")
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 2, "")
@@ -61,18 +61,12 @@ class PlainSSTTrainer(object):
     # Learning rate is linear from step 0 to self.FLAGS.lr_warmup. Then it decays as 1/sqrt(timestep).
 
     self.global_step = tf.train.get_or_create_global_step()
-    learning_rate = cosine_decay_with_warmup(self.global_step,
-                             self.config.learning_rate,
-                             self.config.training_iterations,
-                             warmup_learning_rate=0.0001,
-                             warmup_steps=1000,
-                             hold_base_rate_steps=10)
 
-    opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    opt = tf.train.AdamOptimizer(learning_rate=self.config.learning_rate)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)
-    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 1.0)
+    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 5)
     self.param_norm = tf.global_norm(params)
 
     # Include batch norm mean and variance in gradient descent updates

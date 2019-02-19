@@ -13,7 +13,7 @@ tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
 tf.app.flags.DEFINE_string("model_type", "tree_lstm", "")
-tf.app.flags.DEFINE_integer("hidden_dim", 100, "")
+tf.app.flags.DEFINE_integer("hidden_dim", 50, "")
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 2, "")
@@ -29,10 +29,10 @@ tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 12000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
-tf.app.flags.DEFINE_integer("embedding_dim", 100, "embeddings dim")
+tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
 
 
-tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt", "pretrained embedding path")
+tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.300d.txt", "pretrained embedding path")
 tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 
 

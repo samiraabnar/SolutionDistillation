@@ -33,10 +33,10 @@ tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 12000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
-tf.app.flags.DEFINE_integer("embedding_dim", 100, "embeddings dim")
+tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
 
 
-tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt", "pretrained embedding path")
+tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.300d.txt", "pretrained embedding path")
 tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 
 
@@ -75,7 +75,7 @@ class PlainSSTTrainer(object):
       # Fetch self.updates to apply gradients to all trainable parameters.
       updates = opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step)
 
-    return updates, learning_rate
+    return updates, self.config.learning_rate
 
   def get_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))

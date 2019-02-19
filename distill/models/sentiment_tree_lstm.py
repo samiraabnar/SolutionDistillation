@@ -5,7 +5,7 @@ from distill.layers.tree_lstm import TreeLSTM
 class SentimentTreeLSTM(object):
   def __init__(self, config):
     self.config = config
-    self.tree_lstm = TreeLSTM(input_dim=config.input_dim,
+    self.tree_lstm = TreeLSTM(input_dim=config.embedding_dim,
                               hidden_dim=config.hidden_dim,
                               output_dim=config.output_dim,
                               input_keep_prob=config.input_dropout_keep_prob,

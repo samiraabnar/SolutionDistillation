@@ -13,7 +13,7 @@ tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
 tf.app.flags.DEFINE_string("model_type", "tree_lstm", "")
-tf.app.flags.DEFINE_integer("hidden_dim", 50, "")
+tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 2, "")
@@ -22,7 +22,7 @@ tf.app.flags.DEFINE_string("loss_type", "full_loss", "")
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
-tf.app.flags.DEFINE_float("learning_rate", 0.005, "")
+tf.app.flags.DEFINE_float("learning_rate", 0.05, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
@@ -58,11 +58,11 @@ class SSTTrainer(object):
     self.global_step = tf.train.get_or_create_global_step()
 
     # Learning rate is linear from step 0 to self.FLAGS.lr_warmup. Then it decays as 1/sqrt(timestep).
-    opt = tf.train.AdamOptimizer(learning_rate=self.config.learning_rate)
+    opt = tf.train.AdadeltaOptimizer(learning_rate=0.05)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)
-    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
+    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 10.0)
     self.param_norm = tf.global_norm(params)
 
     # Include batch norm mean and variance in gradient descent updates

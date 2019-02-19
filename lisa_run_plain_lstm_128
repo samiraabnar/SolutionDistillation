@@ -1,8 +1,12 @@
 #!/bin/bash
 
-#SBATCH -N 1
-#SBATCH -t 10:00:00
-#SBATCH -p gpu
+#SBATCH --job-name=plain_lstm_128
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=5:00:00
+#SBATCH --partition=gpu_shared
+#SBATCH --gres=gpu:1
 
 module load eb
 module load Python/3.6.3-foss-2017b
@@ -19,8 +23,4 @@ LOGS_DIR=$HEAD_DIR/logs
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
-python $CODE_DIR/plain_sst_trainer.py --hidden_dim=100 --learning_rate=0.0005 --exp_name=lr0001 &
-python $CODE_DIR/plain_sst_trainer.py  --hidden_dim=100 --learning_rate=0.005 --exp_name=lr001 &
-python $CODE_DIR/plain_sst_trainer.py --hidden_dim=50 --learning_rate=0.005 --exp_name=lr001 &
-python $CODE_DIR/plain_sst_trainer.py --hidden_dim=50 --learning_rate=0.0005 --exp_name=lr0001 &
-wait
+python $CODE_DIR/plain_sst_trainer.py --hidden_dim=128 --pretrained_embedding_path=/home/samigpu/Codes/Data/word_embeddings/glove.840B.300d/glove.840B.300d.txt

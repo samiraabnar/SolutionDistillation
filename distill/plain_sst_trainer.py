@@ -26,7 +26,7 @@ tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
-tf.app.flags.DEFINE_float("learning_rate", 0.005, "")
+tf.app.flags.DEFINE_float("learning_rate", 0.05, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
@@ -62,11 +62,11 @@ class PlainSSTTrainer(object):
 
     self.global_step = tf.train.get_or_create_global_step()
 
-    opt = tf.train.AdamOptimizer(learning_rate=self.config.learning_rate)
+    opt = tf.train.AdadeltaOptimizer(learning_rate=0.05)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)
-    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 5)
+    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 10)
     self.param_norm = tf.global_norm(params)
 
     # Include batch norm mean and variance in gradient descent updates

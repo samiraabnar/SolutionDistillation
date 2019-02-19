@@ -35,6 +35,13 @@ class TreeLSTM(object):
         self.U = tf.get_variable('U', [self.hidden_dim, self.output_dim])
         self.bs = tf.get_variable('bs', [1, self.output_dim])
 
+        # Initialize the weights and biases
+        self.input_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
+        self.input_fully_connected_biases = tf.zeros_initializer()
+
+        self.output_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
+        self.output_fully_connected_biases = tf.zeros_initializer()
+
 
   def apply(self, examples):
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
@@ -201,8 +208,15 @@ class TreeLSTM(object):
                                             tf.zeros((self.batch_size, self.hidden_dim)))
       tf.logging.info(word_index)
       embedded_words = tf.where(tf.less(word_index, 0),
-                                tf.zeros((self.batch_size, self.hidden_dim)),
+                                tf.zeros((self.batch_size, self.input_dim)),
                                 self.embedding_layer.apply(word_index))
+
+      # Create the fully connected layers
+      with tf.variable_scope("Projection", reuse=tf.AUTO_REUSE):
+        embedded_words = tf.contrib.layers.fully_connected(embedded_words,
+                                                           num_outputs=self.hidden_dim,
+                                                           weights_initializer=self.input_fully_connected_weights,
+                                                           biases_initializer=self.input_fully_connected_biases)
 
       tf.logging.info("embedded words")
       tf.logging.info(embedded_words)

@@ -44,7 +44,7 @@ hparams = tf.app.flags.FLAGS
 class SSTTrainer(object):
   def __init__(self, config, model_class):
     self.config = config
-    self.sst = SST("data/sst")
+    self.sst = SST("data/sst", pretrained_path=self.config.pretrained_embedding_path, embedding_size=self.config.embedding_dim)
     self.config.input_dim = len(self.sst.vocab)
     self.vocab = PretrainedVocab(self.config.data_path, self.config.pretrained_embedding_path,
                                  self.config.embedding_dim)

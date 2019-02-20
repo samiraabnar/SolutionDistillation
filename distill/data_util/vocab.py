@@ -24,11 +24,11 @@ def get_word_embs(word_emb_path, word_emb_size, predefineds, vocabulary_size=100
   idx = 0
   with open(word_emb_path, 'r', encoding='utf-8') as fh:
     for line in tqdm(fh, total=vocabulary_size):
-      line = line.lstrip().rstrip().split(" ")
+      line = line.rstrip().split(" ")
       word = line[0]
       vector = list(map(float, line[1:]))
       if word_emb_size != len(vector):
-        raise Exception("Expected vector of size {}, but got vector of size {}.".format(word_emb_size, len(vector)))
+        raise Exception(word+": Expected vector of size {}, but got vector of size {}.".format(word_emb_size, len(vector)))
       word_emb_matrix.append(vector)
       word2id[word] = idx
       idx += 1

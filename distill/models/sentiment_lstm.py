@@ -3,14 +3,15 @@ from distill.layers.lstm import LSTM
 
 
 class SentimentLSTM(object):
-  def __init__(self, config):
+  def __init__(self, config, scope="SentimentLSTM"):
     self.config = config
     self.lstm = LSTM(input_dim=config.input_dim,
                               hidden_dim=config.hidden_dim,
                               output_dim=config.output_dim,
                               input_keep_prob=config.input_dropout_keep_prob,
                               hidden_keep_prob=config.input_dropout_keep_prob,
-                              depth=config.depth)
+                              depth=config.depth,
+                              scope=scope)
 
 
   def build_graph(self, pretrained_word_embeddings):

@@ -101,6 +101,7 @@ class SSTTrainer(object):
     return iterator, dev_iterator, test_iterator
 
   def build_train_graph(self):
+
     self.sentimen_tree_lstm.build_graph(self.pretrained_word_embeddings)
 
     train_iterator, dev_iterator, test_iterator = self.get_data_itaratoes()

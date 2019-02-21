@@ -122,7 +122,8 @@ class SSTTrainer(object):
     scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                         train_iterator.initializer,
                                                         dev_iterator.initializer,
-                                                        test_iterator.initializer), init_feed_dict={self.pretrained_embeddings_ph: self.pretrained_word_embeddings})
+                                                        test_iterator.initializer),
+                                 init_feed_dict={self.pretrained_embeddings_ph: self.pretrained_word_embeddings})
 
     return update_op, scaffold
 

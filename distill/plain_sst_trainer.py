@@ -105,7 +105,8 @@ class PlainSSTTrainer(object):
     return iterator, dev_iterator, test_iterator
 
   def build_train_graph(self):
-    self.sentimen_lstm.build_graph(self.pretrained_word_embeddings)
+    self.pretrained_embeddings_ph = tf.placeholder(tf.float32, shape=(self.config.input_dim, self.config.embedding_dim))
+    self.sentimen_lstm.build_graph(self.pretrained_embeddings_ph)
 
     train_iterator, dev_iterator, test_iterator = self.get_data_itaratoes()
     train_output_dic = self.sentimen_lstm.apply(train_iterator.get_next())
@@ -135,7 +136,9 @@ class PlainSSTTrainer(object):
     scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                         train_iterator.initializer,
                                                         dev_iterator.initializer,
-                                                        test_iterator.initializer))
+                                                        test_iterator.initializer),
+                                 init_feed_dict={self.pretrained_embeddings_ph: self.pretrained_word_embeddings})
+
     return update_op, scaffold, train_output_dic
 
   def train(self):
@@ -144,7 +147,8 @@ class PlainSSTTrainer(object):
     # self.global_step = tf.train.get_or_create_global_step()
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
       for _ in np.arange(self.config.training_iterations):
-        sess.run(update_op)
+        sess.run(update_op,
+                 feed_dict={self.pretrained_embeddings_ph: self.pretrained_word_embeddings})
 
 
 

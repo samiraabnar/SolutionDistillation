@@ -5,6 +5,7 @@ from distill.layers.lstm import LSTM
 class SentimentLSTM(object):
   def __init__(self, config, scope="SentimentLSTM"):
     self.config = config
+    self.scope=scope
     self.lstm = LSTM(input_dim=config.input_dim,
                               hidden_dim=config.hidden_dim,
                               output_dim=config.output_dim,
@@ -47,4 +48,4 @@ class SentimentLSTM(object):
             'embedded_inputs': lstm_output_dic['embedded_inputs'],
             'raw_inputs': lstm_output_dic['raw_inputs'],
             'total_matchings': total_matchings,
-            'trainable_vars': tf.trainable_variables()}
+            'trainable_vars': tf.trainable_variables(scope=self.scope)}

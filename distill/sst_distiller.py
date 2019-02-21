@@ -53,8 +53,8 @@ class SSTDistiller(object):
                                  self.config.embedding_dim)
     self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
 
-    self.student = student_model_class(self.config)
-    self.teacher = teacher_model_class(self.config)
+    self.student = student_model_class(self.config, scope="student")
+    self.teacher = teacher_model_class(self.config, scope="teacher")
 
   def get_train_op(self, loss, params):
     # add training op

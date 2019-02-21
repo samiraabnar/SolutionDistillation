@@ -3,14 +3,16 @@ from distill.layers.tree_lstm import TreeLSTM
 
 
 class SentimentTreeLSTM(object):
-  def __init__(self, config):
+  def __init__(self, config, scope="SentimentTreeLSTM"):
     self.config = config
+    self.scope = scope
     self.tree_lstm = TreeLSTM(input_dim=config.embedding_dim,
                               hidden_dim=config.hidden_dim,
                               output_dim=config.output_dim,
                               input_keep_prob=config.input_dropout_keep_prob,
                               hidden_keep_prob=config.input_dropout_keep_prob,
-                              depth=config.depth
+                              depth=config.depth,
+                              scope=self.scope
                               )
 
 
@@ -53,4 +55,4 @@ class SentimentTreeLSTM(object):
             'full_loss': full_loss,
             'root_loss': root_loss,
             'root_accuracy': root_accuracy,
-            'trainable_vars': tf.trainable_variables()}
+            'trainable_vars': tf.trainable_variables(scope=self.scope)}

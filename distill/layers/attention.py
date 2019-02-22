@@ -12,7 +12,7 @@ class FeedforwardSelfAttention(object):
       self.input_fully_connected_biases = tf.zeros_initializer()
 
 
-  def apply(self, input_keys):
+  def apply(self, input_keys, is_train=True):
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       attention_score = tf.contrib.layers.fully_connected(input_keys,
                                                           num_outputs=1,

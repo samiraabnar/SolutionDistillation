@@ -23,12 +23,13 @@ class Embedding(object):
                                                trainable=True)
 
 
-  def apply(self, inputs, reuse=tf.AUTO_REUSE):
+  def apply(self, inputs, reuse=tf.AUTO_REUSE, is_train=True):
     with tf.variable_scope(self.scope, reuse=reuse):
       fixed_embedded_input = tf.nn.embedding_lookup(self.fixed_embedding, inputs)
       tuned_embedded_input = tf.nn.embedding_lookup(self.tuned_embedding, inputs)
       embedded_input = tf.concat([fixed_embedded_input, tuned_embedded_input], axis=-1)
-      embedded_input = tf.nn.dropout(embedded_input, self.keep_prob)
+      if is_train:
+        embedded_input = tf.nn.dropout(embedded_input, self.keep_prob)
 
     return embedded_input
 

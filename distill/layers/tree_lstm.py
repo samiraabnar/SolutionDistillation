@@ -46,7 +46,7 @@ class TreeLSTM(object):
         self.output_fully_connected_biases = tf.zeros_initializer()
 
 
-  def apply(self, examples):
+  def apply(self, examples, is_train=True):
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       example_id, length, is_leaf, left_children, right_children, node_word_ids, labels, binary_labels, \
       root_label, root_binary_label, seq_lengths, seq_inputs = examples
@@ -205,7 +205,7 @@ class TreeLSTM(object):
 
     return output, state
 
-  def embed_word(self, word_index):
+  def embed_word(self, word_index, is_train=True):
     with tf.device('/cpu:0'):
       state = tf.nn.rnn_cell.LSTMStateTuple(tf.zeros((self.batch_size, self.hidden_dim)),
                                             tf.zeros((self.batch_size, self.hidden_dim)))
@@ -213,7 +213,7 @@ class TreeLSTM(object):
       embedded_words = tf.where(tf.less(word_index, 0),
                                 tf.zeros((self.batch_size,
                                           self.embedding_layer.embedding_dim + self.embedding_layer.tuned_embedding_dim)),
-                                self.embedding_layer.apply(word_index))
+                                self.embedding_layer.apply(word_index, is_train=is_train))
 
       # Create the fully connected layers
       with tf.variable_scope("Projection", reuse=tf.AUTO_REUSE):

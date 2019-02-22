@@ -23,7 +23,7 @@ class LSTM(object):
       with tf.variable_scope("LSTM_Cell"):
         lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
         lstm = tf.contrib.rnn.DropoutWrapper(lstm,
-                                             output_keep_prob=self.hidden_keep_prob)
+                                               output_keep_prob=self.hidden_keep_prob)
         self.multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
 
       with tf.variable_scope("Attention"):
@@ -39,10 +39,10 @@ class LSTM(object):
         self.output_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
         self.output_fully_connected_biases = tf.zeros_initializer()
 
-  def apply(self, inputs, inputs_length):
+  def apply(self, inputs, inputs_length, is_train=True):
     self.batch_size = inputs.get_shape()[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-      embedded_input = self.embedding_layer.apply(inputs)
+      embedded_input = self.embedding_layer.apply(inputs, is_train)
       embedded_input = tf_layers.layer_norm(embedded_input)
       tf.logging.info("embedded_input")
       tf.logging.info(embedded_input)
@@ -67,7 +67,7 @@ class LSTM(object):
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
 
       with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
-        lstm_outputs = self.attention.apply(lstm_outputs)
+        lstm_outputs = self.attention.apply(lstm_outputs, is_train)
 
       tf.logging.info("LSTM output before projection")
       tf.logging.info(lstm_outputs)

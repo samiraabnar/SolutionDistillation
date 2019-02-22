@@ -49,11 +49,12 @@ class PlainSSTTrainer(object):
   def __init__(self, hparams, model_class):
     self.config = hparams
     self.sst = SST("data/sst", pretrained_path=self.config.pretrained_embedding_path, embedding_size=self.config.embedding_dim)
-    self.config.input_dim = len(self.sst.vocab)
 
     self.vocab = PretrainedVocab(self.config.data_path, self.config.pretrained_embedding_path,
                                  self.config.embedding_dim)
     self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
+    self.config.input_dim = len(self.word2id)
+
     self.sentimen_lstm = model_class(self.config)
 
   def get_train_op(self, loss, params):

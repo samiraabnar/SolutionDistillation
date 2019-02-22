@@ -19,13 +19,13 @@ class SentimentLSTM(object):
     self.lstm.create_vars(pretrained_word_embeddings)
 
 
-  def apply(self, examples):
+  def apply(self, examples, is_train=True):
     example_id, length, is_leaf, left_children, right_children, node_word_ids, labels, binary_labels, \
     root_label, root_binary_label, seq_lengths, seq_inputs = examples
 
     labels = root_binary_label
 
-    lstm_output_dic = self.lstm.apply(inputs=seq_inputs, inputs_length=seq_lengths)
+    lstm_output_dic = self.lstm.apply(inputs=seq_inputs, inputs_length=seq_lengths, is_train=is_train)
 
     logits = lstm_output_dic['logits']
 

@@ -122,13 +122,13 @@ class PlainSSTTrainer(object):
     tf.summary.scalar("predicted_positive_ratio", tf.reduce_mean(tf.cast(train_output_dic['predictions'], tf.float32)), family="train")
 
 
-    dev_output_dic = self.sentimen_lstm.apply(dev_iterator.get_next())
+    dev_output_dic = self.sentimen_lstm.apply(dev_iterator.get_next(), is_train=False)
     tf.summary.scalar("loss", dev_output_dic[self.config.loss_type], family="dev")
     tf.summary.scalar("accuracy", dev_output_dic["root_accuracy"], family="dev")
     tf.summary.scalar("total_matchings", dev_output_dic["total_matchings"], family="dev")
     tf.summary.scalar("predicted_positive_ratio", tf.reduce_mean(tf.cast(dev_output_dic['predictions'], tf.float32)), family="dev")
 
-    test_output_dic = self.sentimen_lstm.apply(test_iterator.get_next())
+    test_output_dic = self.sentimen_lstm.apply(test_iterator.get_next(), is_train=False)
     tf.summary.scalar("loss", test_output_dic[self.config.loss_type], family="test")
     tf.summary.scalar("accuracy", test_output_dic["root_accuracy"], family="test")
     tf.summary.scalar("total_matchings", test_output_dic["total_matchings"], family="test")

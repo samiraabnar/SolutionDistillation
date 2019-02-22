@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as tf_layers
+from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
 class LSTM(object):
@@ -19,12 +20,15 @@ class LSTM(object):
       self.embedding_layer.create_vars(pretrained_word_embeddings)
 
       # Build the RNN layers
-      with tf.name_scope("LSTM_Cell"):
+      with tf.variable_scope("LSTM_Cell"):
         lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
         lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                              output_keep_prob=self.hidden_keep_prob)
         self.multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
 
+      with tf.variable_scope("Attention"):
+        self.attention = FeedforwardSelfAttention(scope="attention")
+        self.attention.create_vars()
 
         # Create the fully connected layers
       with tf.variable_scope("Projection"):
@@ -61,6 +65,9 @@ class LSTM(object):
 
       bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
+
+      with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
+        lstm_outputs = self.attention.apply(lstm_outputs)
 
       tf.logging.info("LSTM output before projection")
       tf.logging.info(lstm_outputs)

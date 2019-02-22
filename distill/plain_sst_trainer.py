@@ -30,7 +30,7 @@ tf.app.flags.DEFINE_float("learning_rate", 0.05, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
-tf.app.flags.DEFINE_integer("training_iterations", 12000, "")
+tf.app.flags.DEFINE_integer("training_iterations", 15000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
@@ -62,7 +62,11 @@ class PlainSSTTrainer(object):
 
     self.global_step = tf.train.get_or_create_global_step()
 
-    opt = tf.train.AdadeltaOptimizer(learning_rate=0.05)
+    loss_l2 = tf.add_n([tf.nn.l2_loss(p) for p in params]) * self.config.l2_rate
+
+    loss += loss_l2
+
+    opt = tf.train.AdamOptimizer(learning_rate=0.001)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)

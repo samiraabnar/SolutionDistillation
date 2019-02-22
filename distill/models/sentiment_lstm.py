@@ -34,7 +34,6 @@ class SentimentLSTM(object):
     loss = tf.reduce_sum(
       tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels))
 
-
     root_accuracy = tf.reduce_mean(tf.cast(tf.math.equal(predictions, labels), dtype=tf.float32))
     total_matchings = tf.reduce_sum(tf.cast(tf.math.equal(predictions, labels), dtype=tf.float32))
 

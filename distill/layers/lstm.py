@@ -22,9 +22,10 @@ class LSTM(object):
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cell"):
         lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
-        lstm = tf.contrib.rnn.DropoutWrapper(lstm,
+        dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                output_keep_prob=self.hidden_keep_prob)
         self.multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
+        self.multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
 
       with tf.variable_scope("Attention"):
         self.attention = FeedforwardSelfAttention(scope="attention")
@@ -57,8 +58,12 @@ class LSTM(object):
 
       # Run the data through the RNN layers
       with tf.variable_scope("LSTM_Cell", reuse=tf.AUTO_REUSE):
+        cell = self.multi_lstm_cell
+        if is_train:
+          cell = self.multi_dropout_lstm_cell
+
         lstm_outputs, final_state = tf.nn.dynamic_rnn(
-          self.multi_lstm_cell,
+          cell,
           embedded_input,
           dtype=tf.float32)
         lstm_outputs = tf_layers.layer_norm(lstm_outputs)

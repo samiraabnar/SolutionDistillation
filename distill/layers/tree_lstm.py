@@ -4,10 +4,11 @@ from distill.layers.embedding import Embedding
 
 
 class TreeLSTM(object):
-  def __init__(self, input_dim, hidden_dim, output_dim, input_keep_prob=0.8, hidden_keep_prob=0.8, depth=1, scope="TreeLSTM"):
+  def __init__(self, input_dim, embedding_dim, hidden_dim, output_dim, input_keep_prob=0.8, hidden_keep_prob=0.8, depth=1, scope="TreeLSTM"):
     self.scope = scope
     self.hidden_dim = hidden_dim
     self.input_dim = input_dim
+    self.embedding_dim = embedding_dim
     self.output_dim = output_dim
     self.input_keep_prob = input_keep_prob
     self.hidden_keep_prob = hidden_keep_prob
@@ -16,7 +17,9 @@ class TreeLSTM(object):
 
   def create_vars(self, pretrained_word_embeddings, reuse=False):
     with tf.variable_scope(self.scope, reuse=reuse):
-      self.embedding_layer = Embedding(keep_prob=self.input_keep_prob)
+      self.embedding_layer = Embedding(vocab_size=self.input_dim,
+                                       embedding_dim=self.embedding_dim,
+                                       keep_prob=self.input_keep_prob)
       self.embedding_layer.create_vars(pretrained_word_embeddings)
 
       with tf.variable_scope('Composition'):
@@ -208,7 +211,8 @@ class TreeLSTM(object):
                                             tf.zeros((self.batch_size, self.hidden_dim)))
       tf.logging.info(word_index)
       embedded_words = tf.where(tf.less(word_index, 0),
-                                tf.zeros((self.batch_size, self.input_dim)),
+                                tf.zeros((self.batch_size,
+                                          self.embedding_layer.embedding_dim + self.embedding_layer.tuned_embedding_dim)),
                                 self.embedding_layer.apply(word_index))
 
       # Create the fully connected layers

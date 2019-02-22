@@ -16,7 +16,7 @@ class LSTM(object):
   def create_vars(self, pretrained_word_embeddings, reuse=False):
     # Create the embeddings
     with tf.variable_scope(self.scope, reuse=reuse):
-      self.embedding_layer = Embedding(keep_prob=self.input_keep_prob)
+      self.embedding_layer = Embedding(vocab_size=self.input_dim, keep_prob=self.input_keep_prob)
       self.embedding_layer.create_vars(pretrained_word_embeddings)
 
       # Build the RNN layers

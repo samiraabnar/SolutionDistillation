@@ -42,7 +42,6 @@ tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 hparams = tf.app.flags.FLAGS
 
 
-
 class SSTDistiller(object):
   def __init__(self, config, student_model_class, teacher_model_class):
     self.config = config
@@ -65,14 +64,13 @@ class SSTDistiller(object):
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)
-    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 1.0)
+    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 10.0)
     self.param_norm = tf.global_norm(params)
 
     # Include batch norm mean and variance in gradient descent updates
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    with tf.control_dependencies(update_ops):
-      # Fetch self.updates to apply gradients to all trainable parameters.
-      updates = opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step)
+    #update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    #with tf.control_dependencies(update_ops):
+    updates = opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step)
 
     return updates
 
@@ -104,12 +102,10 @@ class SSTDistiller(object):
     return iterator, dev_iterator, test_iterator
 
   def build_train_graph(self):
-
     self.student.build_graph(self.pretrained_word_embeddings)
     self.teacher.build_graph(self.pretrained_word_embeddings)
 
     train_iterator, dev_iterator, test_iterator = self.get_data_itaratoes()
-
 
     train_examples = train_iterator.get_next()
     dev_examples = dev_iterator.get_next()
@@ -123,7 +119,6 @@ class SSTDistiller(object):
 
     student_test_output_dic = self.student.apply(test_examples)
     teacher_test_output_dic = self.teacher.apply(test_examples)
-
 
     tf.summary.scalar("loss", student_train_output_dic[self.config.loss_type], family="student_train")
     tf.summary.scalar("accuracy", student_train_output_dic["root_accuracy"], family="student_train")
@@ -166,10 +161,6 @@ class SSTDistiller(object):
       for _ in np.arange(self.config.training_iterations):
         sess.run(update_op)
         sess.run(distill_op)
-
-
-
-
 
 
 if __name__ == '__main__':

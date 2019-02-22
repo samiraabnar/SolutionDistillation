@@ -23,4 +23,6 @@ LOGS_DIR=$HEAD_DIR/logs
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
-python $CODE_DIR/plain_sst_trainer.py --hidden_dim=64 --pretrained_embedding_path=/home/samigpu/Codes/Data/word_embeddings/glove.840B.300d/glove.840B.300d.txt
+python $CODE_DIR/plain_sst_trainer.py --hidden_dim=64 \
+--pretrained_embedding_path=/home/samigpu/Codes/Data/word_embeddings/glove.840B.300d/glove.840B.300d.txt \
+--embedding_dim=300

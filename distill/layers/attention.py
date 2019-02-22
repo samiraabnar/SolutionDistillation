@@ -22,7 +22,7 @@ class FeedforwardSelfAttention(object):
       #attention_out = tf.squeeze(
       #  tf.matmul(tf.transpose(input_keys, perm=[0, 2, 1]), attention_score),axis=-1)
 
-      attention_out = tf.math.multiply(input_keys, attention_score)
+      attention_out = tf.multiply(input_keys, attention_score)
       tf.logging.info("attention output")
       tf.logging.info(attention_out)
 

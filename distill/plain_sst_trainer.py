@@ -54,6 +54,7 @@ class PlainSSTTrainer(object):
                                  self.config.embedding_dim)
     self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
     self.config.input_dim = len(self.word2id)
+    print("Input dim:", self.config.input_dim)
 
     self.sentimen_lstm = model_class(self.config)
 
@@ -151,6 +152,7 @@ class PlainSSTTrainer(object):
 
     # self.global_step = tf.train.get_or_create_global_step()
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
+      print("word embedding shape:", self.pretrained_word_embeddings.shape)
       for _ in np.arange(self.config.training_iterations):
         sess.run(update_op,
                  feed_dict={self.pretrained_embeddings_ph: self.pretrained_word_embeddings})

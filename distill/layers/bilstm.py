@@ -4,7 +4,7 @@ from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
 class BiLSTM(object):
-  def __init__(self, input_dim, hidden_dim, output_dim, input_keep_prob=0.8, hidden_keep_prob=0.8,depth=1, scope="LSTM"):
+  def __init__(self, input_dim, hidden_dim, output_dim, attention_mechanism=None, input_keep_prob=0.8, hidden_keep_prob=0.8,depth=1, scope="LSTM"):
     self.input_dim = input_dim
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
@@ -12,6 +12,7 @@ class BiLSTM(object):
     self.input_keep_prob = input_keep_prob
     self.hidden_keep_prob = hidden_keep_prob
     self.num_layers = depth
+    self.attention_mechanism = attention_mechanism
 
   def create_vars(self, pretrained_word_embeddings, reuse=False):
     # Create the embeddings
@@ -20,14 +21,14 @@ class BiLSTM(object):
       self.embedding_layer.create_vars(pretrained_word_embeddings)
 
       # Build the RNN layers
-      with tf.variable_scope("LSTM_FW_Cell"):
+      with tf.variable_scope("LSTM_Cell"):
         lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
         dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                output_keep_prob=self.hidden_keep_prob)
+
         self.fw_multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
         self.fw_multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
 
-      with tf.variable_scope("LSTM_BW_Cell"):
         lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
         dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                output_keep_prob=self.hidden_keep_prob)
@@ -41,9 +42,9 @@ class BiLSTM(object):
         # Create the fully connected layers
       with tf.variable_scope("Projection"):
         # Initialize the weights and biases
-        self.input_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
+        self.input_fully_connected_weights = tf.glorot_normal_initializer()
 
-        self.output_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
+        self.output_fully_connected_weights = tf.glorot_normal_initializer()
 
   def apply(self, inputs, inputs_length, is_train=True):
     self.batch_size = inputs.get_shape()[0]
@@ -74,8 +75,11 @@ class BiLSTM(object):
           cell_bw=bw_cell,
           inputs=embedded_input,
           sequence_length=inputs_length,
-          dtype=tf.float32)
-        lstm_outputs = tf_layers.layer_norm(lstm_outputs)
+          dtype=tf.float32,
+        )
+
+        #lstm_outputs = tf_layers.layer_norm(lstm_outputs)
+
 
       # concatenation output from forward and backward layers.
       fw_outputs, bw_outputs = tf.unstack(lstm_outputs)
@@ -105,9 +109,6 @@ class BiLSTM(object):
             'embedded_inputs': embedded_input,
             'raw_inputs': inputs,
     }
-
-
-
 
 
 

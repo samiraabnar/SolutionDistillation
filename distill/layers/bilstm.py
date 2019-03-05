@@ -20,12 +20,19 @@ class BiLSTM(object):
       self.embedding_layer.create_vars(pretrained_word_embeddings)
 
       # Build the RNN layers
-      with tf.variable_scope("LSTM_Cell"):
+      with tf.variable_scope("LSTM_FW_Cell"):
         lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
         dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                output_keep_prob=self.hidden_keep_prob)
-        self.multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
-        self.multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
+        self.fw_multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
+        self.fw_multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
+
+      with tf.variable_scope("LSTM_BW_Cell"):
+        lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
+        dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
+                                               output_keep_prob=self.hidden_keep_prob)
+        self.bw_multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
+        self.bw_multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
 
       with tf.variable_scope("Attention"):
         self.attention = FeedforwardSelfAttention(scope="attention")
@@ -56,13 +63,15 @@ class BiLSTM(object):
 
       # Run the data through the RNN layers
       with tf.variable_scope("LSTM_Cell", reuse=tf.AUTO_REUSE):
-        cell = self.multi_lstm_cell
+        fw_cell = self.fw_multi_lstm_cell
+        bw_cell = self.bw_multi_lstm_cell
         if is_train:
-          cell = self.multi_dropout_lstm_cell
+          fw_cell = self.fw_multi_dropout_lstm_cell
+          bw_cell = self.bw_multi_dropout_lstm_cell
 
         lstm_outputs, final_state = tf.nn.bidirectional_dynamic_rnn(
-          cell_fw=cell,
-          cell_bw=cell,
+          cell_fw=fw_cell,
+          cell_bw=bw_cell,
           inputs=embedded_input,
           sequence_length=inputs_length,
           dtype=tf.float32)

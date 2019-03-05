@@ -3,7 +3,7 @@ import tensorflow.contrib.layers as tf_layers
 from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
-class LSTM(object):
+class BiLSTM(object):
   def __init__(self, input_dim, hidden_dim, output_dim, input_keep_prob=0.8, hidden_keep_prob=0.8,depth=1, scope="LSTM"):
     self.input_dim = input_dim
     self.hidden_dim = hidden_dim
@@ -61,9 +61,11 @@ class LSTM(object):
         if is_train:
           cell = self.multi_dropout_lstm_cell
 
-        lstm_outputs, final_state = tf.nn.dynamic_rnn(
-          cell,
-          embedded_input,
+        lstm_outputs, final_state = tf.nn.bidirectional_dynamic_rnn(
+          cell_fw=cell,
+          cell_bw=cell,
+          inputs=embedded_input,
+          sequence_length=inputs_length,
           dtype=tf.float32)
         lstm_outputs = tf_layers.layer_norm(lstm_outputs)
 

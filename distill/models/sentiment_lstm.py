@@ -1,12 +1,14 @@
 import tensorflow as tf
 from distill.layers.lstm import LSTM
+from distill.layers.bilstm import BiLSTM
+
 
 
 class SentimentLSTM(object):
-  def __init__(self, config, scope="SentimentLSTM"):
+  def __init__(self, config, model=LSTM, scope="SentimentLSTM"):
     self.config = config
     self.scope=scope
-    self.lstm = LSTM(input_dim=config.input_dim,
+    self.lstm = model(input_dim=config.input_dim,
                               hidden_dim=config.hidden_dim,
                               output_dim=config.output_dim,
                               input_keep_prob=config.input_dropout_keep_prob,

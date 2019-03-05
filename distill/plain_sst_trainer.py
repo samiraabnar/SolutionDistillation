@@ -2,6 +2,8 @@ import tensorflow as tf
 import numpy as np
 from distill.data_util.prep_sst import SST
 from distill.models.sentiment_lstm import SentimentLSTM
+from distill.layers.lstm import LSTM
+from distill.layers.bilstm import BiLSTM
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
 
 from distill.common.util import cosine_decay_with_warmup
@@ -34,6 +36,7 @@ tf.app.flags.DEFINE_integer("training_iterations", 15000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
+tf.app.flags.DEFINE_boolean("bidirectional", False, "If the LSTM layer is bidirectional")
 
 
 tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.300d.txt", "pretrained embedding path")
@@ -55,7 +58,11 @@ class PlainSSTTrainer(object):
     self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
     self.config.input_dim = len(self.word2id)
 
-    self.sentimen_lstm = model_class(self.config)
+    if hparams.bidirectional:
+      lstm = BiLSTM
+    else:
+      lstm = LSTM
+    self.sentimen_lstm = model_class(self.config, model=lstm)
 
   def get_train_op(self, loss, params):
     # add training op
@@ -160,5 +167,7 @@ class PlainSSTTrainer(object):
 if __name__ == '__main__':
   if hparams.save_dir is None:
     hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, 'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name]))
+  if hparams.bidirectional:
+    hparams.save_dir = hparams.save_dir + "_bidi_"
   trainer = PlainSSTTrainer(hparams, model_class=SentimentLSTM)
   trainer.train()

@@ -14,7 +14,6 @@ class TreeLSTM(object):
     self.hidden_keep_prob = hidden_keep_prob
     self.num_layers = depth
 
-
   def create_vars(self, pretrained_word_embeddings, reuse=False):
     with tf.variable_scope(self.scope, reuse=reuse):
       self.embedding_layer = Embedding(vocab_size=self.input_dim,
@@ -44,7 +43,6 @@ class TreeLSTM(object):
 
         self.output_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
         self.output_fully_connected_biases = tf.zeros_initializer()
-
 
   def apply(self, examples, is_train=True):
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
@@ -190,7 +188,6 @@ class TreeLSTM(object):
               'logits': logits,
               'root_logits': root_logits,
               'root_indices': root_indices}
-
 
   def combine_children(self, left_tensor, right_tensor, c_state, h_state):
     state = tf.nn.rnn_cell.LSTMStateTuple(c_state, h_state)

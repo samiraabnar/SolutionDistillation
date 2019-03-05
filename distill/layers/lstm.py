@@ -38,7 +38,6 @@ class LSTM(object):
         self.input_fully_connected_biases = tf.zeros_initializer()
 
         self.output_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
-        self.output_fully_connected_biases = tf.zeros_initializer()
 
   def apply(self, inputs, inputs_length, is_train=True):
     self.batch_size = inputs.get_shape()[0]
@@ -53,7 +52,7 @@ class LSTM(object):
         embedded_input = tf.contrib.layers.fully_connected(embedded_input,
                                                    num_outputs=self.hidden_dim,
                                                    weights_initializer=self.input_fully_connected_weights,
-                                                   biases_initializer=self.input_fully_connected_biases)
+                                                   biases_initializer=None)
 
 
       # Run the data through the RNN layers
@@ -83,7 +82,7 @@ class LSTM(object):
         logits = tf.contrib.layers.fully_connected(tf.gather_nd(lstm_outputs, root_indices),
                                                     num_outputs=self.output_dim,
                                                     weights_initializer=self.output_fully_connected_weights,
-                                                    biases_initializer=self.output_fully_connected_biases)
+                                                    bias_initializer=None)
 
     return {'logits': logits,
             'raw_outputs': lstm_outputs,

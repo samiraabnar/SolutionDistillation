@@ -35,7 +35,6 @@ class BiLSTM(object):
       with tf.variable_scope("Projection"):
         # Initialize the weights and biases
         self.input_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
-        self.input_fully_connected_biases = tf.zeros_initializer()
 
         self.output_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
 
@@ -69,6 +68,12 @@ class BiLSTM(object):
           dtype=tf.float32)
         lstm_outputs = tf_layers.layer_norm(lstm_outputs)
 
+      # concatenation output from forward and backward layers.
+      fw_outputs, bw_outputs = tf.unstack(lstm_outputs)
+      lstm_outputs = tf.concat([fw_outputs, bw_outputs], axis=-1)
+
+      tf.logging.info("after concat")
+      tf.logging.info(lstm_outputs)
       bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
 

@@ -86,8 +86,8 @@ class BiLSTM(object):
       bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
 
-      with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
-        lstm_outputs = self.attention.apply(lstm_outputs, is_train)
+      #with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
+      #  lstm_outputs = self.attention.apply(lstm_outputs, is_train)
 
       tf.logging.info("LSTM output before projection")
       tf.logging.info(lstm_outputs)

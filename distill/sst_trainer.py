@@ -65,7 +65,7 @@ class SSTTrainer(object):
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)
-    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 10.0)
+    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
     self.param_norm = tf.global_norm(params)
 
     # Include batch norm mean and variance in gradient descent updates

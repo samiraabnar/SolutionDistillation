@@ -38,10 +38,10 @@ class TreeLSTM(object):
         self.bs = tf.get_variable('bs', [1, self.output_dim])
 
         # Initialize the weights and biases
-        self.input_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
+        self.input_fully_connected_weights = tf.glorot_normal_initializer()
         self.input_fully_connected_biases = tf.zeros_initializer()
 
-        self.output_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
+        self.output_fully_connected_weights = tf.glorot_normal_initializer()
         self.output_fully_connected_biases = tf.zeros_initializer()
 
   def apply(self, examples, is_train=True):

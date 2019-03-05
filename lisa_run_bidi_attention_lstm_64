@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=bidi_lstm_64
+#SBATCH --job-name=bidi_attention_lstm_64
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
@@ -23,6 +23,6 @@ LOGS_DIR=$HEAD_DIR/logs
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
-python $CODE_DIR/plain_sst_trainer.py --hidden_dim=64 --bidirectional=True --exp_name=_sepcells_ \
+python $CODE_DIR/plain_sst_trainer.py --hidden_dim=64 --bidirectional=True --attention_mechanism=ff_attention \
 --pretrained_embedding_path=/home/samigpu/Codes/Data/word_embeddings/glove.6B/glove.6B.300d.txt \
 --embedding_dim=300

@@ -4,7 +4,7 @@ from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
 class LSTM(object):
-  def __init__(self, input_dim, hidden_dim, output_dim, input_keep_prob=0.8, hidden_keep_prob=0.8,depth=1, scope="LSTM"):
+  def __init__(self, input_dim, hidden_dim, output_dim, attention_mechanism=None, input_keep_prob=0.8, hidden_keep_prob=0.8,depth=1, scope="LSTM"):
     self.input_dim = input_dim
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
@@ -12,6 +12,7 @@ class LSTM(object):
     self.input_keep_prob = input_keep_prob
     self.hidden_keep_prob = hidden_keep_prob
     self.num_layers = depth
+    self.attention_mechanism = attention_mechanism
 
   def create_vars(self, pretrained_word_embeddings, reuse=False):
     # Create the embeddings
@@ -27,17 +28,17 @@ class LSTM(object):
         self.multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
         self.multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
 
-      with tf.variable_scope("Attention"):
-        self.attention = FeedforwardSelfAttention(scope="attention")
-        self.attention.create_vars()
+      if self.attention_mechanism is not None:
+        with tf.variable_scope("Attention"):
+          self.attention = FeedforwardSelfAttention(scope="attention")
+          self.attention.create_vars()
 
         # Create the fully connected layers
       with tf.variable_scope("Projection"):
         # Initialize the weights and biases
-        self.input_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
-        self.input_fully_connected_biases = tf.zeros_initializer()
+        self.input_fully_connected_weights = tf.glorot_normal_initializer()
 
-        self.output_fully_connected_weights = tf.truncated_normal_initializer(stddev=0.1)
+        self.output_fully_connected_weights = tf.glorot_normal_initializer()
 
   def apply(self, inputs, inputs_length, is_train=True):
     self.batch_size = inputs.get_shape()[0]
@@ -70,8 +71,10 @@ class LSTM(object):
       bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
 
-      with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
-        lstm_outputs = self.attention.apply(lstm_outputs, is_train)
+
+      if self.attention_mechanism is not None:
+        with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
+          lstm_outputs = self.attention.apply(lstm_outputs, is_train)
 
       tf.logging.info("LSTM output before projection")
       tf.logging.info(lstm_outputs)

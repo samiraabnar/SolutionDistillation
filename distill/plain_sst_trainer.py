@@ -23,6 +23,8 @@ tf.app.flags.DEFINE_integer("hidden_dim", 50, "")
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 2, "")
+tf.app.flags.DEFINE_string("attention_mechanism", None, "")
+
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
@@ -169,5 +171,7 @@ if __name__ == '__main__':
     hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, 'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name]))
   if hparams.bidirectional:
     hparams.save_dir = hparams.save_dir + "_bidi_"
+  if hparams.attention_mechanism is not None:
+    hparams.save_dir = hparams.save_dir + "_"+hparams.attention_mechanism+"_"
   trainer = PlainSSTTrainer(hparams, model_class=SentimentLSTM)
   trainer.train()

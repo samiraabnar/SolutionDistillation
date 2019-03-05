@@ -13,6 +13,7 @@ class SentimentLSTM(object):
                               output_dim=config.output_dim,
                               input_keep_prob=config.input_dropout_keep_prob,
                               hidden_keep_prob=config.input_dropout_keep_prob,
+                              attention_mechanism=self.config.attention_mechanism,
                               depth=config.depth,
                               scope=scope)
 

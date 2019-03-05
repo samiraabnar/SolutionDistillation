@@ -35,9 +35,10 @@ class BiLSTM(object):
         self.bw_multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
         self.bw_multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
 
-      with tf.variable_scope("Attention"):
-        self.attention = FeedforwardSelfAttention(scope="attention")
-        self.attention.create_vars()
+      if self.attention_mechanism is not None:
+        with tf.variable_scope("Attention"):
+          self.attention = FeedforwardSelfAttention(scope="attention")
+          self.attention.create_vars()
 
         # Create the fully connected layers
       with tf.variable_scope("Projection"):
@@ -81,6 +82,8 @@ class BiLSTM(object):
         #lstm_outputs = tf_layers.layer_norm(lstm_outputs)
 
 
+
+
       # concatenation output from forward and backward layers.
       fw_outputs, bw_outputs = tf.unstack(lstm_outputs)
       lstm_outputs = tf.concat([fw_outputs, bw_outputs], axis=-1)
@@ -90,8 +93,9 @@ class BiLSTM(object):
       bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
 
-      #with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
-      #  lstm_outputs = self.attention.apply(lstm_outputs, is_train)
+      if self.attention_mechanism is not None:
+        with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
+          lstm_outputs = self.attention.apply(lstm_outputs, is_train)
 
       tf.logging.info("LSTM output before projection")
       tf.logging.info(lstm_outputs)

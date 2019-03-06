@@ -73,10 +73,10 @@ class SSTDistiller(object):
 
       loss += loss_l2
 
-      starter_learning_rate = 0.0001
+      starter_learning_rate = 1.0
       learning_rate = tf.train.exponential_decay(starter_learning_rate, self.global_step,
                                                  1000, 0.96, staircase=True)
-      opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
+      opt = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
       grads_and_vars = opt.compute_gradients(loss, params)
       gradients, variables = zip(*grads_and_vars)
       self.gradient_norm = tf.global_norm(gradients)

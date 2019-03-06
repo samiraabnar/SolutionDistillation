@@ -30,7 +30,7 @@ tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
-tf.app.flags.DEFINE_float("learning_rate", 0.1, "")
+tf.app.flags.DEFINE_float("learning_rate", 1.0, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.00001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")

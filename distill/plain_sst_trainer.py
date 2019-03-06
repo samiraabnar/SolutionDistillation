@@ -31,7 +31,7 @@ tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.05, "")
-tf.app.flags.DEFINE_float("l2_rate", 0.00000001, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.00, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 15000, "")
@@ -95,7 +95,7 @@ class PlainSSTTrainer(object):
     dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))
     dataset = dataset.map(SST.parse_full_sst_tree_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=SST.get_padded_shapes(), drop_remainder=True)
-    dataset = dataset.shuffle(buffer_size=8544)
+    dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     iterator = dataset.make_initializable_iterator()
 
@@ -103,7 +103,7 @@ class PlainSSTTrainer(object):
     dev_dataset = dev_dataset.map(SST.parse_full_sst_tree_examples)
     dev_dataset = dev_dataset.shuffle(buffer_size=1101)
     dev_dataset = dev_dataset.repeat()
-    dev_dataset = dev_dataset.padded_batch(1101, padded_shapes=SST.get_padded_shapes(),
+    dev_dataset = dev_dataset.padded_batch(1000, padded_shapes=SST.get_padded_shapes(),
                                            drop_remainder=True)
     dev_iterator = dev_dataset.make_initializable_iterator()
 
@@ -111,7 +111,7 @@ class PlainSSTTrainer(object):
     test_dataset = test_dataset.map(SST.parse_full_sst_tree_examples)
     test_dataset = test_dataset.shuffle(buffer_size=2210)
     test_dataset = test_dataset.repeat()
-    test_dataset = test_dataset.padded_batch(2210, padded_shapes=SST.get_padded_shapes(),
+    test_dataset = test_dataset.padded_batch(1000, padded_shapes=SST.get_padded_shapes(),
                                            drop_remainder=True)
     test_iterator = test_dataset.make_initializable_iterator()
 
@@ -129,7 +129,6 @@ class PlainSSTTrainer(object):
     tf.summary.scalar("total_matchings", train_output_dic["total_matchings"], family="train")
     tf.summary.scalar("positive_ratio", tf.reduce_mean(tf.cast(train_output_dic['labels'], tf.float32)), family="train")
     tf.summary.scalar("predicted_positive_ratio", tf.reduce_mean(tf.cast(train_output_dic['predictions'], tf.float32)), family="train")
-
 
     dev_output_dic = self.sentimen_lstm.apply(dev_iterator.get_next(), is_train=False)
     tf.summary.scalar("loss", dev_output_dic[self.config.loss_type], family="dev")

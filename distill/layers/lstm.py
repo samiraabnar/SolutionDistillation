@@ -22,7 +22,7 @@ class LSTM(object):
 
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cell"):
-        lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
+        lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim, forget_bias=1.0)
         dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                output_keep_prob=self.hidden_keep_prob)
         self.multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
@@ -36,9 +36,9 @@ class LSTM(object):
         # Create the fully connected layers
       with tf.variable_scope("Projection"):
         # Initialize the weights and biases
-        self.input_fully_connected_weights = tf.glorot_normal_initializer()
+        self.input_fully_connected_weights = tf.contrib.layers.xavier_initializer()
 
-        self.output_fully_connected_weights = tf.glorot_normal_initializer()
+        self.output_fully_connected_weights = tf.contrib.layers.xavier_initializer()
 
   def apply(self, inputs, inputs_length, is_train=True):
     self.batch_size = inputs.get_shape()[0]
@@ -47,6 +47,8 @@ class LSTM(object):
       embedded_input = tf_layers.layer_norm(embedded_input)
       tf.logging.info("embedded_input")
       tf.logging.info(embedded_input)
+
+      #embedded_input = tf_layers.layer_norm(embedded_input)
 
       # Create the fully connected layers
       with tf.variable_scope("InputProjection", reuse=tf.AUTO_REUSE):
@@ -65,27 +67,38 @@ class LSTM(object):
         lstm_outputs, final_state = tf.nn.dynamic_rnn(
           cell,
           embedded_input,
-          dtype=tf.float32)
-        lstm_outputs = tf_layers.layer_norm(lstm_outputs)
-
-      bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
-      root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
-
+          dtype=tf.float32,
+          sequence_length=inputs_length)
+        #lstm_outputs = tf_layers.layer_norm(lstm_outputs)
 
       if self.attention_mechanism is not None:
         with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
           lstm_outputs = self.attention.apply(lstm_outputs, is_train)
 
+
       tf.logging.info("LSTM output before projection")
       tf.logging.info(lstm_outputs)
       tf.logging.info(inputs_length)
 
+      bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
+      root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
+
+      # Sum over all representations for each sentence!
+      inputs_mask = tf.expand_dims(tf.cast(tf.sequence_mask(inputs_length), tf.float32),-1)
+      sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
+
+      tf.logging.info("final output:")
+      tf.logging.info(sentence_reps)
+
       # Create the fully connected layers
       with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
-        logits = tf.contrib.layers.fully_connected(tf.gather_nd(lstm_outputs, root_indices),
+        logits = tf.contrib.layers.fully_connected(sentence_reps,
                                                     num_outputs=self.output_dim,
                                                     weights_initializer=self.output_fully_connected_weights,
                                                     biases_initializer=None)
+
+      tf.logging.info("logits")
+      tf.logging.info(logits)
 
     return {'logits': logits,
             'raw_outputs': lstm_outputs,

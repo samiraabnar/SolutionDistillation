@@ -22,7 +22,7 @@ class BiLSTM(object):
 
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cell"):
-        lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
+        lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim, forget_bias=1.0)
         dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                output_keep_prob=self.hidden_keep_prob)
 
@@ -43,9 +43,9 @@ class BiLSTM(object):
         # Create the fully connected layers
       with tf.variable_scope("Projection"):
         # Initialize the weights and biases
-        self.input_fully_connected_weights = tf.glorot_normal_initializer()
+        self.input_fully_connected_weights = tf.contrib.layers.xavier_initializer()
 
-        self.output_fully_connected_weights = tf.glorot_normal_initializer()
+        self.output_fully_connected_weights = tf.contrib.layers.xavier_initializer()
 
   def apply(self, inputs, inputs_length, is_train=True):
     self.batch_size = inputs.get_shape()[0]
@@ -101,9 +101,13 @@ class BiLSTM(object):
       tf.logging.info(lstm_outputs)
       tf.logging.info(inputs_length)
 
+      # Sum over all representations for each sentence!
+      inputs_mask = tf.expand_dims(tf.cast(tf.sequence_mask(inputs_length), tf.float32), -1)
+      sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
+
       # Create the fully connected layers
       with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
-        logits = tf.contrib.layers.fully_connected(tf.gather_nd(lstm_outputs, root_indices),
+        logits = tf.contrib.layers.fully_connected(sentence_reps,
                                                     num_outputs=self.output_dim,
                                                     weights_initializer=self.output_fully_connected_weights,
                                                     biases_initializer=None)

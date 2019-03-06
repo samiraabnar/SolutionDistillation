@@ -31,10 +31,10 @@ tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.05, "")
-tf.app.flags.DEFINE_float("l2_rate", 0.00, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.00001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
-tf.app.flags.DEFINE_integer("training_iterations", 15000, "")
+tf.app.flags.DEFINE_integer("training_iterations", 30000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
@@ -67,8 +67,6 @@ class PlainSSTTrainer(object):
     self.sentimen_lstm = model_class(self.config, model=lstm)
 
   def get_train_op(self, loss, params):
-    # add training op
-    # Learning rate is linear from step 0 to self.FLAGS.lr_warmup. Then it decays as 1/sqrt(timestep).
 
     self.global_step = tf.train.get_or_create_global_step()
 
@@ -76,7 +74,10 @@ class PlainSSTTrainer(object):
 
     loss += loss_l2
 
-    opt = tf.train.AdamOptimizer(learning_rate=0.001)
+    starter_learning_rate = 0.0001
+    learning_rate = tf.train.exponential_decay(starter_learning_rate, self.global_step,
+                                               1000, 0.96, staircase=True)
+    opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)
@@ -89,7 +90,7 @@ class PlainSSTTrainer(object):
       # Fetch self.updates to apply gradients to all trainable parameters.
       updates = opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step)
 
-    return updates, self.config.learning_rate
+    return updates, learning_rate
 
   def get_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))

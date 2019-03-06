@@ -31,7 +31,7 @@ tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.05, "")
-tf.app.flags.DEFINE_float("l2_rate", 0.0001, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.00000001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 15000, "")
@@ -168,7 +168,7 @@ class PlainSSTTrainer(object):
 
 if __name__ == '__main__':
   if hparams.save_dir is None:
-    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, 'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name]))
+    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, 'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name+"_l2"+str(hparams.l2_rate)]))
   if hparams.bidirectional:
     hparams.save_dir = hparams.save_dir + "_bidi_"
   if hparams.attention_mechanism is not None:

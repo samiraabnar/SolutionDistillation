@@ -32,7 +32,7 @@ class SentimentLSTM(object):
 
     logits = lstm_output_dic['logits']
 
-    predictions = tf.random.multinomial(logits, num_samples=1)
+    predictions = tf.multinomial(logits, num_samples=1)
 
     loss = tf.reduce_mean(
       tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=tf.one_hot(labels, depth=2), label_smoothing=0.01))

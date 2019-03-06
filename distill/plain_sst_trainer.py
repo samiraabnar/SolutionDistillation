@@ -30,7 +30,7 @@ tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
-tf.app.flags.DEFINE_float("learning_rate", 0.05, "")
+tf.app.flags.DEFINE_float("learning_rate", 0.1, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.00001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
@@ -74,10 +74,10 @@ class PlainSSTTrainer(object):
 
     loss += loss_l2
 
-    starter_learning_rate = 0.0001
+    starter_learning_rate = self.config.learning_rate
     learning_rate = tf.train.exponential_decay(starter_learning_rate, self.global_step,
                                                10000, 0.96, staircase=True)
-    opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    opt = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)

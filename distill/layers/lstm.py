@@ -44,7 +44,7 @@ class LSTM(object):
     self.batch_size = inputs.get_shape()[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       embedded_input = self.embedding_layer.apply(inputs, is_train)
-      embedded_input = tf_layers.layer_norm(embedded_input)
+      #embedded_input = tf_layers.layer_norm(embedded_input)
       tf.logging.info("embedded_input")
       tf.logging.info(embedded_input)
 

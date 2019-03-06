@@ -4,6 +4,8 @@ from distill.data_util.prep_sst import SST
 from distill.data_util.vocab import PretrainedVocab
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
 from distill.models.sentiment_lstm import SentimentLSTM
+from distill.layers.lstm import LSTM
+from distill.layers.bilstm import BiLSTM
 
 from distill.common.distill_util import get_logit_distill_loss
 import os
@@ -15,7 +17,7 @@ tf.app.flags.DEFINE_string("task_name", "sst_distill", "")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
-tf.app.flags.DEFINE_string("model_type", "tree_to_plain", "")
+tf.app.flags.DEFINE_string("model_type", "bidi_to_plain", "")
 tf.app.flags.DEFINE_integer("hidden_dim", 50, "")
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
@@ -43,7 +45,7 @@ hparams = tf.app.flags.FLAGS
 
 
 class SSTDistiller(object):
-  def __init__(self, config, student_model_class, teacher_model_class):
+  def __init__(self, config, student_model, teacher_model):
     self.config = config
     self.sst = SST("data/sst")
     self.config.vocab_size = len(self.sst.vocab)
@@ -52,8 +54,8 @@ class SSTDistiller(object):
                                  self.config.embedding_dim)
     self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
 
-    self.student = student_model_class(self.config, scope="student")
-    self.teacher = teacher_model_class(self.config, scope="teacher")
+    self.student = student_model
+    self.teacher = teacher_model
 
   def get_train_op(self, loss, params):
     # add training op
@@ -167,5 +169,8 @@ if __name__ == '__main__':
   if hparams.save_dir is None:
     hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, hparams.loss_type,'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name]))
 
-  trainer = SSTDistiller(config=hparams, student_model_class=SentimentLSTM, teacher_model_class=SentimentTreeLSTM)
+  sentiment_lstm = SentimentLSTM(hparams, model=LSTM, scope="student")
+  sentiment_bi_lstm = SentimentLSTM(hparams, model=BiLSTM, scope="teacher")
+
+  trainer = SSTDistiller(config=hparams, student_model=sentiment_lstm, teacher_model=sentiment_bi_lstm)
   trainer.train()

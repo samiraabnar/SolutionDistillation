@@ -106,7 +106,8 @@ class PretrainedVocab(Vocab):
     self.word_to_index = {}
     self.index_to_word = {}
     self.unknown = '<unk>'
-    self.predefineds = {self.unknown: np.zeros(embedding_dim)}
+    self.predefineds = {self.unknown: np.random.uniform(
+      -0.05, 0.05, embedding_dim).astype(np.float32)}
     self.path = path
     self.pre_training_path = pre_training_path
     self.dimension = embedding_dim

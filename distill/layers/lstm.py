@@ -36,8 +36,6 @@ class LSTM(object):
         # Create the fully connected layers
       with tf.variable_scope("Projection"):
         # Initialize the weights and biases
-        self.input_fully_connected_weights = tf.contrib.layers.xavier_initializer()
-
         self.output_fully_connected_weights = tf.contrib.layers.xavier_initializer()
 
   def apply(self, inputs, inputs_length, is_train=True):
@@ -51,11 +49,11 @@ class LSTM(object):
       #embedded_input = tf_layers.layer_norm(embedded_input)
 
       # Create the fully connected layers
-      with tf.variable_scope("InputProjection", reuse=tf.AUTO_REUSE):
-        embedded_input = tf.contrib.layers.fully_connected(embedded_input,
-                                                   num_outputs=self.hidden_dim,
-                                                   weights_initializer=self.input_fully_connected_weights,
-                                                   biases_initializer=None)
+      # with tf.variable_scope("InputProjection", reuse=tf.AUTO_REUSE):
+      #   embedded_input = tf.contrib.layers.fully_connected(embedded_input,
+      #                                              num_outputs=self.hidden_dim,
+      #                                              weights_initializer=self.input_fully_connected_weights,
+      #                                              biases_initializer=None)
 
 
       # Run the data through the RNN layers
@@ -85,7 +83,7 @@ class LSTM(object):
 
       # Sum over all representations for each sentence!
       inputs_mask = tf.expand_dims(tf.cast(tf.sequence_mask(inputs_length), tf.float32),-1)
-      sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
+      sentence_reps = tf.gather_nd(lstm_outputs, root_indices)#tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
 
       tf.logging.info("final output:")
       tf.logging.info(sentence_reps)
@@ -93,6 +91,7 @@ class LSTM(object):
       # Create the fully connected layers
       with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
         logits = tf.contrib.layers.fully_connected(sentence_reps,
+                                                    activation_fn=None,
                                                     num_outputs=self.output_dim,
                                                     weights_initializer=self.output_fully_connected_weights,
                                                     biases_initializer=None)

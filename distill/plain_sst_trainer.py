@@ -19,18 +19,18 @@ tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
 tf.app.flags.DEFINE_string("model_type", "plain_lstm", "")
-tf.app.flags.DEFINE_integer("hidden_dim", 50, "")
+tf.app.flags.DEFINE_integer("hidden_dim", 168, "")
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
-tf.app.flags.DEFINE_integer("output_dim", 2, "")
+tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_string("attention_mechanism", None, "")
 
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
-tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
+tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.95, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
-tf.app.flags.DEFINE_float("learning_rate", 0.1, "")
+tf.app.flags.DEFINE_float("learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.00001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
@@ -74,19 +74,19 @@ class PlainSSTTrainer(object):
 
     loss += loss_l2
 
-    base_learning_rate = self.config.learning_rate
-    start_learning_rate = 0.01
+    base_learning_rate = 0.001
+    start_learning_rate = 0.0005
     warmup_steps = 1000
     slope = (base_learning_rate - start_learning_rate) / warmup_steps
     warmup_rate = slope * tf.cast(self.global_step,
                                   tf.float32) + start_learning_rate
 
     decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
-                                                     10000, 0.96, staircase=True)
+                                                     1000, 0.90, staircase=False)
     learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
                              decay_learning_rate)
 
-    opt = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
+    opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)

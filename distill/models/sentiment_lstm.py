@@ -32,10 +32,18 @@ class SentimentLSTM(object):
 
     logits = lstm_output_dic['logits']
 
-    predictions = tf.argmax(logits, axis=-1)
+    if self.config.output_dim > 1:
+      predictions = tf.argmax(logits, axis=-1)
+    else:
+      predictions = tf.cast(tf.round(tf.nn.sigmoid(logits)), tf.int64)
 
-    loss = tf.reduce_mean(
-      tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=tf.one_hot(labels, depth=2), label_smoothing=0.001))
+
+    if self.config.output_dim > 1:
+      loss = tf.reduce_mean(
+        tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=tf.one_hot(labels, depth=2)))
+    else:
+      loss = tf.reduce_mean(
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=tf.cast(tf.expand_dims(labels,axis=-1), dtype=tf.float32)))
 
     root_accuracy = tf.reduce_mean(tf.cast(tf.math.equal(predictions, labels), dtype=tf.float32))
     total_matchings = tf.reduce_sum(tf.cast(tf.math.equal(predictions, labels), dtype=tf.float32))

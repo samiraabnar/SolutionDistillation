@@ -163,19 +163,22 @@ class SSTDistiller(object):
     tf.summary.scalar("accuracy", teacher_test_output_dic["root_accuracy"], family="teacher_test")
 
 
-    update_op, learning_rate = self.get_train_op(teacher_train_output_dic[self.config.loss_type],
+    update_op, teacher_learning_rate = self.get_train_op(teacher_train_output_dic[self.config.loss_type],
                                                  teacher_train_output_dic["trainable_vars"],
                                                  start_learning_rate=0.05,
-                                                 base_learning_rate=0.1, warmup_steps=100,
+                                                 base_learning_rate=0.1, warmup_steps=1000,
                                                  scope="main")
 
     distill_loss = get_logit_distill_loss(student_train_output_dic['logits'],teacher_train_output_dic['logits'])
     tf.summary.scalar("distill loss", distill_loss, family="student_train")
 
-    distill_op, learning_rate = self.get_train_op(distill_loss, student_train_output_dic["trainable_vars"],
-                                                  start_learning_rate=0.01,
-                                                  base_learning_rate=0.1, warmup_steps=1000,
+    distill_op, distill_learning_rate = self.get_train_op(distill_loss, student_train_output_dic["trainable_vars"],
+                                                  start_learning_rate=0.001,
+                                                  base_learning_rate=0.1, warmup_steps=10000,
                                                   scope="distill")
+
+    tf.summary.scalar("learning_rate", teacher_learning_rate, family="teacher_train")
+    tf.summary.scalar("learning_rate", distill_learning_rate, family="student_train")
 
 
 

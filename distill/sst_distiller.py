@@ -64,7 +64,7 @@ class SSTDistiller(object):
     self.student = student_model
     self.teacher = teacher_model
 
-  def get_train_op(self, loss, params, scope=""):
+  def get_train_op(self, loss, params, start_learning_rate, base_learning_rate, warmup_steps, scope=""):
     # add training op
     with tf.variable_scope(scope):
       self.global_step = tf.train.get_or_create_global_step()
@@ -73,9 +73,16 @@ class SSTDistiller(object):
 
       loss += loss_l2
 
-      starter_learning_rate = 1.0
-      learning_rate = tf.train.exponential_decay(starter_learning_rate, self.global_step,
+      slope = (base_learning_rate - start_learning_rate) / warmup_steps
+      warmup_rate = slope * tf.cast(self.global_step,
+                                    tf.float32) + start_learning_rate
+
+      decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
                                                  1000, 0.96, staircase=True)
+      learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
+                               decay_learning_rate)
+
+
       opt = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
       grads_and_vars = opt.compute_gradients(loss, params)
       gradients, variables = zip(*grads_and_vars)
@@ -158,12 +165,16 @@ class SSTDistiller(object):
 
     update_op, learning_rate = self.get_train_op(teacher_train_output_dic[self.config.loss_type],
                                                  teacher_train_output_dic["trainable_vars"],
+                                                 start_learning_rate=0.05,
+                                                 base_learning_rate=0.1, warmup_steps=100,
                                                  scope="main")
 
     distill_loss = get_logit_distill_loss(student_train_output_dic['logits'],teacher_train_output_dic['logits'])
     tf.summary.scalar("distill loss", distill_loss, family="student_train")
 
     distill_op, learning_rate = self.get_train_op(distill_loss, student_train_output_dic["trainable_vars"],
+                                                  start_learning_rate=0.01,
+                                                  base_learning_rate=0.1, warmup_steps=1000,
                                                   scope="distill")
 
 

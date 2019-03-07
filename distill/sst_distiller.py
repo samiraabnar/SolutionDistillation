@@ -181,7 +181,7 @@ class SSTDistiller(object):
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
       for _ in np.arange(self.config.training_iterations):
         sess.run(update_op)
-        #sess.run(distill_op)
+        sess.run(distill_op)
 
 
 if __name__ == '__main__':

@@ -27,11 +27,11 @@ tf.app.flags.DEFINE_string("attention_mechanism", None, "")
 
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
-tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.85, "")
+tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.001, "")
-tf.app.flags.DEFINE_float("l2_rate", 0.0001, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.0005, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 25, "")
 tf.app.flags.DEFINE_integer("training_iterations", 30000, "")
@@ -74,19 +74,19 @@ class PlainSSTTrainer(object):
 
     loss += loss_l2
 
-    base_learning_rate = 0.001
-    start_learning_rate = 0.0005
+    base_learning_rate = 0.0002
+    start_learning_rate = 0.00001
     warmup_steps = 1000
     slope = (base_learning_rate - start_learning_rate) / warmup_steps
     warmup_rate = slope * tf.cast(self.global_step,
                                   tf.float32) + start_learning_rate
 
-    #decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
-    #                                                 1000, 0.90, staircase=False)
-    #learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
-    #                         decay_learning_rate)
+    decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
+                                                     1000, 0.90, staircase=False)
+    learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
+                             decay_learning_rate)
 
-    learning_rate = 0.0002
+    #learning_rate = 0.0002
     opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)

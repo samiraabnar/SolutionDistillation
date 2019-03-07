@@ -96,6 +96,7 @@ class LSTM(object):
                                                     weights_initializer=self.output_fully_connected_weights,
                                                     biases_initializer=None)
 
+
       tf.logging.info("logits")
       tf.logging.info(logits)
 

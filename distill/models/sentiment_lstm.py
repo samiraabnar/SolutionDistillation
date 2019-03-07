@@ -37,6 +37,8 @@ class SentimentLSTM(object):
     else:
       predictions = tf.cast(tf.round(tf.nn.sigmoid(logits)), tf.int64)
 
+    tf.logging.info("predictions")
+    tf.logging.info(predictions)
 
     if self.config.output_dim > 1:
       loss = tf.reduce_mean(

@@ -41,7 +41,7 @@ tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
 tf.app.flags.DEFINE_boolean("bidirectional", False, "If the LSTM layer is bidirectional")
 
 
-tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.300d.txt", "pretrained embedding path")
+tf.app.flags.DEFINE_string("pretrained_embedding_path", "data/sst/filtered_glove.txt", "pretrained embedding path")
 tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 
 

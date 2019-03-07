@@ -47,8 +47,11 @@ class SentimentLSTM(object):
       loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=tf.cast(tf.expand_dims(labels,axis=-1), dtype=tf.float32)))
 
-    root_accuracy = tf.reduce_mean(tf.cast(tf.math.equal(predictions, labels), dtype=tf.float32))
-    total_matchings = tf.reduce_sum(tf.cast(tf.math.equal(predictions, labels), dtype=tf.float32))
+    tf.logging.info("labels")
+    tf.logging.info(labels)
+
+    root_accuracy = tf.reduce_mean(tf.cast(tf.math.equal(predictions, tf.expand_dims(labels,axis=-1)), dtype=tf.float32))
+    total_matchings = tf.reduce_sum(tf.cast(tf.math.equal(predictions, tf.expand_dims(labels,axis=-1)), dtype=tf.float32))
 
     return {'predictions': predictions,
             'logits': logits,

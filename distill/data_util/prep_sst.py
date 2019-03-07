@@ -43,7 +43,7 @@ def get_word_embs(word_emb_path, word_emb_size, vocabulary_size=99002):
   return word_emb_matrix, word2id
 
 class SST(object):
-  def __init__(self, data_path, pretrained=True, pretrained_path="/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt", embedding_size=100):
+  def __init__(self, data_path, pretrained=True, pretrained_path="data/sst/filtered_glove.txt", embedding_size=300):
     self.data_path = data_path
 
     self.vocab_path = os.path.join(data_path, "pretrained_" if pretrained else '' +"vocab")
@@ -236,8 +236,8 @@ def build_sst():
 def build_full_sst():
   sst_prep = SST(data_path="data/sst/",
                  pretrained=True,
-                 pretrained_path="/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt",
-                 embedding_size=100)
+                 pretrained_path="data/sst/filtered_glove.txt",
+                 embedding_size=300)
   sst_prep.load_data()
 
   sst_prep.build_tfrecords(sst_prep.get_all_tf_features, mode="train", feature_type="full")

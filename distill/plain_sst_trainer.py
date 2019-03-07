@@ -171,8 +171,9 @@ class PlainSSTTrainer(object):
     # self.global_step = tf.train.get_or_create_global_step()
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
       for _ in np.arange(self.config.training_iterations):
-        sess.run(update_op,
+        _, total_matchings = sess.run([update_op, train_output_dic['total_matchings']],
                  feed_dict={self.pretrained_embeddings_ph: self.pretrained_word_embeddings})
+        print(total_matchings)
 
 
 

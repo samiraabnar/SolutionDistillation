@@ -44,7 +44,7 @@ tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
 
 
-tf.app.flags.DEFINE_string("pretrained_embedding_path", "data/sst/filtered_glove.txt/", "pretrained embedding path")
+tf.app.flags.DEFINE_string("pretrained_embedding_path", "data/sst/filtered_glove.txt", "pretrained embedding path")
 tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 
 

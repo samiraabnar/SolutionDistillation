@@ -11,6 +11,4 @@ def get_logit_distill_loss(student_logits, teacher_logits, softmax_temperature=1
 
 
 def get_single_state_rsa_distill_loss(student_states, teacher_states):
-  student_sim_mat = tf.
-
-  return loss
+  pass

@@ -1,16 +1,19 @@
 import tensorflow as tf
 from distill.layers.lstm import LSTM
+from distill.layers.bilstm import BiLSTM
+
 
 
 class SentimentLSTM(object):
-  def __init__(self, config, scope="SentimentLSTM"):
+  def __init__(self, config, model=LSTM, scope="SentimentLSTM"):
     self.config = config
     self.scope=scope
-    self.lstm = LSTM(input_dim=config.input_dim,
+    self.lstm = model(input_dim=config.input_dim,
                               hidden_dim=config.hidden_dim,
                               output_dim=config.output_dim,
                               input_keep_prob=config.input_dropout_keep_prob,
                               hidden_keep_prob=config.input_dropout_keep_prob,
+                              attention_mechanism=self.config.attention_mechanism,
                               depth=config.depth,
                               scope=scope)
 
@@ -29,10 +32,10 @@ class SentimentLSTM(object):
 
     logits = lstm_output_dic['logits']
 
-    predictions = tf.argmax(logits, axis=1)
+    predictions = tf.argmax(logits, axis=-1)
 
-    loss = tf.reduce_sum(
-      tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels))
+    loss = tf.reduce_mean(
+      tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=tf.one_hot(labels, depth=2), label_smoothing=0.001))
 
     root_accuracy = tf.reduce_mean(tf.cast(tf.math.equal(predictions, labels), dtype=tf.float32))
     total_matchings = tf.reduce_sum(tf.cast(tf.math.equal(predictions, labels), dtype=tf.float32))

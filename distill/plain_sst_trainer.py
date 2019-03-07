@@ -2,6 +2,8 @@ import tensorflow as tf
 import numpy as np
 from distill.data_util.prep_sst import SST
 from distill.models.sentiment_lstm import SentimentLSTM
+from distill.layers.lstm import LSTM
+from distill.layers.bilstm import BiLSTM
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
 
 from distill.common.util import cosine_decay_with_warmup
@@ -21,19 +23,22 @@ tf.app.flags.DEFINE_integer("hidden_dim", 50, "")
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 2, "")
+tf.app.flags.DEFINE_string("attention_mechanism", None, "")
+
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
-tf.app.flags.DEFINE_float("learning_rate", 0.05, "")
-tf.app.flags.DEFINE_float("l2_rate", 0.0001, "")
+tf.app.flags.DEFINE_float("learning_rate", 1.0, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.00001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
-tf.app.flags.DEFINE_integer("training_iterations", 15000, "")
+tf.app.flags.DEFINE_integer("training_iterations", 30000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
+tf.app.flags.DEFINE_boolean("bidirectional", False, "If the LSTM layer is bidirectional")
 
 
 tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.300d.txt", "pretrained embedding path")
@@ -56,11 +61,13 @@ class PlainSSTTrainer(object):
     self.config.input_dim = len(self.word2id)
     print("Input dim:", self.config.input_dim)
 
-    self.sentimen_lstm = model_class(self.config)
+    if hparams.bidirectional:
+      lstm = BiLSTM
+    else:
+      lstm = LSTM
+    self.sentimen_lstm = model_class(self.config, model=lstm)
 
   def get_train_op(self, loss, params):
-    # add training op
-    # Learning rate is linear from step 0 to self.FLAGS.lr_warmup. Then it decays as 1/sqrt(timestep).
 
     self.global_step = tf.train.get_or_create_global_step()
 
@@ -68,11 +75,14 @@ class PlainSSTTrainer(object):
 
     loss += loss_l2
 
-    opt = tf.train.AdamOptimizer(learning_rate=0.001)
+    starter_learning_rate = self.config.learning_rate
+    learning_rate = tf.train.exponential_decay(starter_learning_rate, self.global_step,
+                                               10000, 0.96, staircase=True)
+    opt = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)
-    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 10)
+    clipped_gradients, _ = tf.clip_by_global_norm(gradients, 5)
     self.param_norm = tf.global_norm(params)
 
     # Include batch norm mean and variance in gradient descent updates
@@ -81,13 +91,13 @@ class PlainSSTTrainer(object):
       # Fetch self.updates to apply gradients to all trainable parameters.
       updates = opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step)
 
-    return updates, self.config.learning_rate
+    return updates, learning_rate
 
   def get_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))
     dataset = dataset.map(SST.parse_full_sst_tree_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=SST.get_padded_shapes(), drop_remainder=True)
-    dataset = dataset.shuffle(buffer_size=8544)
+    dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     iterator = dataset.make_initializable_iterator()
 
@@ -95,7 +105,7 @@ class PlainSSTTrainer(object):
     dev_dataset = dev_dataset.map(SST.parse_full_sst_tree_examples)
     dev_dataset = dev_dataset.shuffle(buffer_size=1101)
     dev_dataset = dev_dataset.repeat()
-    dev_dataset = dev_dataset.padded_batch(1101, padded_shapes=SST.get_padded_shapes(),
+    dev_dataset = dev_dataset.padded_batch(1000, padded_shapes=SST.get_padded_shapes(),
                                            drop_remainder=True)
     dev_iterator = dev_dataset.make_initializable_iterator()
 
@@ -103,7 +113,7 @@ class PlainSSTTrainer(object):
     test_dataset = test_dataset.map(SST.parse_full_sst_tree_examples)
     test_dataset = test_dataset.shuffle(buffer_size=2210)
     test_dataset = test_dataset.repeat()
-    test_dataset = test_dataset.padded_batch(2210, padded_shapes=SST.get_padded_shapes(),
+    test_dataset = test_dataset.padded_batch(1000, padded_shapes=SST.get_padded_shapes(),
                                            drop_remainder=True)
     test_iterator = test_dataset.make_initializable_iterator()
 
@@ -121,7 +131,6 @@ class PlainSSTTrainer(object):
     tf.summary.scalar("total_matchings", train_output_dic["total_matchings"], family="train")
     tf.summary.scalar("positive_ratio", tf.reduce_mean(tf.cast(train_output_dic['labels'], tf.float32)), family="train")
     tf.summary.scalar("predicted_positive_ratio", tf.reduce_mean(tf.cast(train_output_dic['predictions'], tf.float32)), family="train")
-
 
     dev_output_dic = self.sentimen_lstm.apply(dev_iterator.get_next(), is_train=False)
     tf.summary.scalar("loss", dev_output_dic[self.config.loss_type], family="dev")
@@ -161,6 +170,10 @@ class PlainSSTTrainer(object):
 
 if __name__ == '__main__':
   if hparams.save_dir is None:
-    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, 'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name]))
+    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, 'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name+"_l2"+str(hparams.l2_rate)]))
+  if hparams.bidirectional:
+    hparams.save_dir = hparams.save_dir + "_bidi_"
+  if hparams.attention_mechanism is not None:
+    hparams.save_dir = hparams.save_dir + "_"+hparams.attention_mechanism+"_"
   trainer = PlainSSTTrainer(hparams, model_class=SentimentLSTM)
   trainer.train()

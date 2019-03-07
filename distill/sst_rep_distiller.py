@@ -11,6 +11,8 @@ from distill.layers.bilstm import BiLSTM
 from distill.common.distill_util import get_logit_distill_loss
 import os
 
+from distill.sst_distiller import SSTDistiller
+
 tf.logging.set_verbosity(tf.logging.INFO)
 
 tf.app.flags.DEFINE_string("exp_name", "trial", "")
@@ -51,18 +53,9 @@ tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 hparams = tf.app.flags.FLAGS
 
 
-class SSTDistiller(object):
+class SSTRepDistiller(SSTDistiller):
   def __init__(self, config, student_model, teacher_model):
-    self.config = config
-    self.sst = SST("data/sst")
-    self.config.vocab_size = len(self.sst.vocab)
-
-    self.vocab = PretrainedVocab(self.config.data_path, self.config.pretrained_embedding_path,
-                                 self.config.embedding_dim)
-    self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
-
-    self.student = student_model
-    self.teacher = teacher_model
+    super(self, SSTRepDistiller)
 
   def get_train_op(self, loss, params, scope=""):
     # add training op
@@ -73,10 +66,10 @@ class SSTDistiller(object):
 
       loss += loss_l2
 
-      starter_learning_rate = 1.0
+      starter_learning_rate = 0.0001
       learning_rate = tf.train.exponential_decay(starter_learning_rate, self.global_step,
                                                  1000, 0.96, staircase=True)
-      opt = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
+      opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
       grads_and_vars = opt.compute_gradients(loss, params)
       gradients, variables = zip(*grads_and_vars)
       self.gradient_norm = tf.global_norm(gradients)
@@ -156,8 +149,8 @@ class SSTDistiller(object):
     tf.summary.scalar("accuracy", teacher_test_output_dic["root_accuracy"], family="teacher_test")
 
 
-    update_op, learning_rate = self.get_train_op(teacher_train_output_dic[self.config.loss_type],
-                                                 teacher_train_output_dic["trainable_vars"],
+    update_op, learning_rate = self.get_train_op(student_train_output_dic[self.config.loss_type],
+                                  student_train_output_dic["trainable_vars"],
                                                  scope="main")
 
     distill_loss = get_logit_distill_loss(student_train_output_dic['logits'],teacher_train_output_dic['logits'])

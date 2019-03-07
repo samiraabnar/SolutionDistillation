@@ -35,7 +35,7 @@ tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.00001, "")
-tf.app.flags.DEFINE_float("l2_rate", 0.00001, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.0005, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 30000, "")
@@ -83,7 +83,7 @@ class SSTDistiller(object):
                                decay_learning_rate)
 
 
-      opt = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
+      opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
       grads_and_vars = opt.compute_gradients(loss, params)
       gradients, variables = zip(*grads_and_vars)
       self.gradient_norm = tf.global_norm(gradients)
@@ -165,16 +165,16 @@ class SSTDistiller(object):
 
     update_op, teacher_learning_rate = self.get_train_op(teacher_train_output_dic[self.config.loss_type],
                                                  teacher_train_output_dic["trainable_vars"],
-                                                 start_learning_rate=0.05,
-                                                 base_learning_rate=0.1, warmup_steps=1000,
+                                                 start_learning_rate=0.0005,
+                                                 base_learning_rate=0.001, warmup_steps=1000,
                                                  scope="main")
 
     distill_loss = get_logit_distill_loss(student_train_output_dic['logits'],teacher_train_output_dic['logits'])
     tf.summary.scalar("distill loss", distill_loss, family="student_train")
 
     distill_op, distill_learning_rate = self.get_train_op(distill_loss, student_train_output_dic["trainable_vars"],
-                                                  start_learning_rate=0.001,
-                                                  base_learning_rate=0.1, warmup_steps=10000,
+                                                  start_learning_rate=0.0001,
+                                                  base_learning_rate=0.001, warmup_steps=10000,
                                                   scope="distill")
 
     tf.summary.scalar("learning_rate", teacher_learning_rate, family="teacher_train")

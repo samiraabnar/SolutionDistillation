@@ -56,11 +56,11 @@ class BiLSTM(object):
       tf.logging.info(embedded_input)
 
       # Create the fully connected layers
-      with tf.variable_scope("InputProjection", reuse=tf.AUTO_REUSE):
-        embedded_input = tf.contrib.layers.fully_connected(embedded_input,
-                                                   num_outputs=self.hidden_dim,
-                                                   weights_initializer=self.input_fully_connected_weights,
-                                                   biases_initializer=None)
+      # with tf.variable_scope("InputProjection", reuse=tf.AUTO_REUSE):
+      #   embedded_input = tf.contrib.layers.fully_connected(embedded_input,
+      #                                              num_outputs=self.hidden_dim,
+      #                                              weights_initializer=self.input_fully_connected_weights,
+      #                                              biases_initializer=None)
 
 
       # Run the data through the RNN layers
@@ -108,6 +108,7 @@ class BiLSTM(object):
       # Create the fully connected layers
       with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
         logits = tf.contrib.layers.fully_connected(sentence_reps,
+                                                    activation_fn=None,
                                                     num_outputs=self.output_dim,
                                                     weights_initializer=self.output_fully_connected_weights,
                                                     biases_initializer=None)

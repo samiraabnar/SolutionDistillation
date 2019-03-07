@@ -83,7 +83,8 @@ class LSTM(object):
 
       # Sum over all representations for each sentence!
       inputs_mask = tf.expand_dims(tf.cast(tf.sequence_mask(inputs_length), tf.float32),-1)
-      sentence_reps = tf.gather_nd(lstm_outputs, root_indices)#tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
+      # sentence_reps = tf.gather_nd(lstm_outputs, root_indices)#tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
+      sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
 
       tf.logging.info("final output:")
       tf.logging.info(sentence_reps)

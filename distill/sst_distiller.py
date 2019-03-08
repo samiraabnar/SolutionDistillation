@@ -27,7 +27,7 @@ tf.app.flags.DEFINE_string("model_type", "bidi_to_plain", "")
 tf.app.flags.DEFINE_integer("hidden_dim", 50, "")
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
-tf.app.flags.DEFINE_integer("output_dim", 2, "")
+tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_string("attention_mechanism", None, "")
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")

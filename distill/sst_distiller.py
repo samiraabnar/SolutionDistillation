@@ -18,12 +18,12 @@ tf.app.flags.DEFINE_string("task_name", "sst_distill", "")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
-tf.app.flags.DEFINE_string("teacher_model_type", "bidi", "")
-tf.app.flags.DEFINE_string("student_model_type", "plain", "")
+tf.app.flags.DEFINE_string("teacher_model", "tree", "")
+tf.app.flags.DEFINE_string("student_model", "plain", "")
 tf.app.flags.DEFINE_boolean("pretrain_teacher", True, "")
 tf.app.flags.DEFINE_integer("teacher_pretraining_iters", 100, "")
 
-tf.app.flags.DEFINE_string("model_type", "bidi_to_plain", "")
+tf.app.flags.DEFINE_string("model_type", "tree_to_plain", "")
 tf.app.flags.DEFINE_integer("hidden_dim", 50, "")
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
@@ -206,8 +206,11 @@ if __name__ == '__main__':
             "bidi": BiLSTM,
             "tree": TreeLSTM}
 
-  student = SentimentLSTM(hparams, model=LSTM, scope="student")
-  teacher = SentimentLSTM(hparams, model=BiLSTM, scope="teacher")
+  student = SentimentLSTM(hparams, model=Models[hparams.student_model], scope="student")
+  if hparams.teacher_model == "tree":
+    teacher = SentimentTreeLSTM(hparams, model=Models[hparams.teacher_model], scope="teacher")
+  else:
+    teacher = SentimentLSTM(hparams, model=Models[hparams.teacher_model], scope="teacher")
 
   trainer = SSTDistiller(config=hparams, student_model=student, teacher_model=teacher)
   trainer.train()

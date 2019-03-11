@@ -15,6 +15,7 @@ class SentimentLSTM(object):
                               hidden_keep_prob=config.input_dropout_keep_prob,
                               attention_mechanism=self.config.attention_mechanism,
                               depth=config.depth,
+                              sent_rep_mode=self.config.sent_rep_mode,
                               scope=scope)
 
 

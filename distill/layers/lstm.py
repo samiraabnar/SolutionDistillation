@@ -4,7 +4,7 @@ from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
 class LSTM(object):
-  def __init__(self, input_dim, hidden_dim, output_dim, attention_mechanism=None, input_keep_prob=0.8, hidden_keep_prob=0.8,depth=1, scope="LSTM"):
+  def __init__(self, input_dim, hidden_dim, output_dim, attention_mechanism=None, input_keep_prob=0.8, hidden_keep_prob=0.8,depth=1, sent_rep_mode="all",scope="LSTM"):
     self.input_dim = input_dim
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
@@ -13,6 +13,7 @@ class LSTM(object):
     self.hidden_keep_prob = hidden_keep_prob
     self.num_layers = depth
     self.attention_mechanism = attention_mechanism
+    self.sent_rep_mode = sent_rep_mode
 
   def create_vars(self, pretrained_word_embeddings, reuse=False):
     # Create the embeddings
@@ -95,7 +96,12 @@ class LSTM(object):
       # Sum over all representations for each sentence!
       inputs_mask = tf.expand_dims(tf.cast(tf.sequence_mask(inputs_length), tf.float32),-1)
       # sentence_reps = tf.gather_nd(lstm_outputs, root_indices)#tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
-      sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
+      if self.sent_rep_mode == "all":
+        sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1) / tf.expand_dims(tf.cast(inputs_length, tf.float32), -1)
+      elif self.sent_rep_mode == "final":
+        sentence_reps = tf.gather_nd(lstm_outputs, root_indices)
+      else:
+        sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
 
       tf.logging.info("final output:")
       tf.logging.info(sentence_reps)

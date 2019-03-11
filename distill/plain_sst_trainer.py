@@ -24,7 +24,7 @@ tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_string("attention_mechanism", None, "")
-tf.app.flags.DEFINE_string("sent_rep_mode", 'last', "")
+tf.app.flags.DEFINE_string("sent_rep_mode", 'all', "all| final| ")
 
 
 
@@ -180,7 +180,7 @@ class PlainSSTTrainer(object):
 
 if __name__ == '__main__':
   if hparams.save_dir is None:
-    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, 'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name+"_l2"+str(hparams.l2_rate)]))
+    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type,'sent_rep_'+hparams.sent_rep_mode, 'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name+"_l2"+str(hparams.l2_rate)]))
   if hparams.bidirectional:
     hparams.save_dir = hparams.save_dir + "_bidi_"
   if hparams.attention_mechanism is not None:

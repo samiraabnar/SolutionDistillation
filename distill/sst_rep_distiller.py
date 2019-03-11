@@ -24,11 +24,16 @@ tf.app.flags.DEFINE_string("rep_loss_mode", 'squared', "representation loss type
 
 
 tf.app.flags.DEFINE_string("model_type", "rep_bidi_to_plain", "")
-tf.app.flags.DEFINE_integer("hidden_dim", 64, "")
-tf.app.flags.DEFINE_integer("depth", 1, "")
+tf.app.flags.DEFINE_integer("student_hidden_dim", 64, "")
+tf.app.flags.DEFINE_integer("student_depth", 1, "")
+tf.app.flags.DEFINE_integer("teacher_hidden_dim", 128, "")
+tf.app.flags.DEFINE_integer("teacher_depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")
-tf.app.flags.DEFINE_string("attention_mechanism", None, "")
+tf.app.flags.DEFINE_string("student_attention_mechanism", None, "")
+tf.app.flags.DEFINE_string("teacher_attention_mechanism", None, "")
+tf.app.flags.DEFINE_string("sent_rep_mode", 'last', "")
+
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
@@ -51,19 +56,69 @@ tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 hparams = tf.app.flags.FLAGS
 
 
+class Hparam(object):
+  def __init__(self, input_dim,
+               hidden_dim,
+               output_dim,
+               depth,
+               attention_mechanism,
+               batch_size,
+               pretrained_embedding_path,
+               input_dropout_keep_prob,
+               hidden_dropout_keep_prob,
+               loss_type,
+               sent_rep_mode):
+    self.input_dim = input_dim
+    self.hidden_dim = hidden_dim
+    self.output_dim = output_dim
+    self.depth = depth
+    self.attention_mechanism = attention_mechanism
+    self.batch_size = batch_size
+    self.pretrained_embedding_path = pretrained_embedding_path
+    self.input_dropout_keep_prob = input_dropout_keep_prob
+    self.hidden_dropout_keep_prob = hidden_dropout_keep_prob
+    self.loss_type = loss_type
+    self.sent_rep_mode = sent_rep_mode
+
 if __name__ == '__main__':
   if hparams.save_dir is None:
-    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.rep_loss_mode, hparams.model_type, hparams.loss_type,'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name]))
+    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.rep_loss_mode, hparams.model_type, hparams.loss_type,'std_depth'+str(hparams.student_depth),'teacher_depth'+str(hparams.teacher_depth),'std_hidden_dim'+str(hparams.student_hidden_dim),'teacher_hidden_dim'+str(hparams.teacher_hidden_dim),hparams.exp_name]))
 
   Models = {"plain": LSTM,
             "bidi": BiLSTM,
             "tree": TreeLSTM}
 
-  student = SentimentLSTM(hparams, model=Models[hparams.student_model], scope="student")
+
+  student_params = Hparam(input_dim=hparams.input_dim,
+                          hidden_dim=hparams.student_hidden_dim,
+                          output_dim=hparams.output_dim,
+                          depth=hparams.student_depth,
+                          attention_mechanism=hparams.student_attention_mechanism,
+                          batch_size=hparams.batch_size,
+                          pretrained_embedding_path=hparams.pretrained_embedding_path,
+                          input_dropout_keep_prob=hparams.input_dropout_keep_prob,
+                          hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
+                          loss_type=hparams.loss_type,
+                          sent_rep_mode=hparams.sent_rep_mode)
+
+  teacher_params = Hparam(input_dim=hparams.input_dim,
+                          hidden_dim=hparams.teacher_hidden_dim,
+                          output_dim=hparams.output_dim,
+                          depth=hparams.teacher_depth,
+                          attention_mechanism=hparams.teacher_attention_mechanism,
+                          batch_size=hparams.batch_size,
+                          pretrained_embedding_path=hparams.pretrained_embedding_path,
+                          input_dropout_keep_prob=hparams.input_dropout_keep_prob,
+                          hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
+                          loss_type=hparams.loss_type,
+                          sent_rep_mode=hparams.sent_rep_mode)
+
+
+  student = SentimentLSTM(student_params, model=Models[hparams.student_model], scope="student")
   if hparams.teacher_model == "tree":
-    teacher = SentimentTreeLSTM(hparams, model=Models[hparams.teacher_model], scope="teacher")
+    teacher = SentimentTreeLSTM(teacher_params, model=Models[hparams.teacher_model], scope="teacher")
   else:
-    teacher = SentimentLSTM(hparams, model=Models[hparams.teacher_model], scope="teacher")
+    teacher = SentimentLSTM(teacher_params, model=Models[hparams.teacher_model], scope="teacher")
 
   trainer = SSTRepDistiller(config=hparams, student_model=student, teacher_model=teacher)
   trainer.train()

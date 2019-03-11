@@ -197,7 +197,7 @@ class SSTRepDistiller(SSTDistiller):
 
     distill_loss = get_single_state_rsa_distill_loss(student_train_output_dic['sents_reps'],
                                                      teacher_train_output_dic['sents_reps'],
-                                                     mode="sigmoid_cross_ent")
+                                                     mode=self.config.rep_loss_mode)
     tf.summary.scalar("distill loss", distill_loss, family="student_train")
 
     teacher_update_op, teacher_learning_rate = self.get_train_op(teacher_train_output_dic[self.config.loss_type],

@@ -20,7 +20,7 @@ tf.app.flags.DEFINE_string("teacher_model", "bidi", "")
 tf.app.flags.DEFINE_string("student_model", "plain", "")
 tf.app.flags.DEFINE_boolean("pretrain_teacher", True, "")
 tf.app.flags.DEFINE_integer("teacher_pretraining_iters", 100, "")
-tf.app.flags.DEFINE_string("rep_loss_mode", 'sigmoid_cross_ent', "representation loss type")
+tf.app.flags.DEFINE_string("rep_loss_mode", 'softmax_cross_ent', "representation loss type (squared,softmax_cross_ent,sigmoid_cross_ent")
 
 
 tf.app.flags.DEFINE_string("model_type", "rep_bidi_to_plain", "")

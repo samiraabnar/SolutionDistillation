@@ -18,8 +18,10 @@ def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='squa
 
   if mode == 'squared':
     rsa_score = tf.reduce_mean(squared_dist_rsm(student_rsm,teacher_rsm))
-  else:
+  elif mode == 'softmax_cross_ent':
     rsa_score = tf.reduce_mean(sigmoid_cross_entropy_rsa(student_rsm, teacher_rsm))
+  else:
+    rsa_score = tf.reduce_mean(softmax_cross_entropy_rsa(student_rsm, teacher_rsm))
 
   return rsa_score
 
@@ -28,6 +30,11 @@ def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='squa
 def sigmoid_cross_entropy_rsa(d_a, d_b):
   rsa = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
     logits=d_a, labels=tf.nn.sigmoid(d_b)))
+  return rsa
+
+def softmax_cross_entropy_rsa(d_a, d_b):
+  rsa = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
+    logits=d_a, labels=tf.nn.softmax(d_b)))
   return rsa
 
 def squared_dist_rsm(A, B):

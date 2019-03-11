@@ -21,7 +21,7 @@ class FeedforwardSelfAttention(object):
                                                           biases_initializer=self.input_fully_connected_biases)
 
       attention_mask = (1 - tf.cast(tf.sequence_mask(input_length), tf.float32)) * -999999999
-      attention_score = attention_score + attention_mask
+      attention_score = attention_score + tf.expand_dims(attention_mask,-1)
       attention_score = tf.nn.softmax(attention_score)
 
       #attention_out = tf.squeeze(

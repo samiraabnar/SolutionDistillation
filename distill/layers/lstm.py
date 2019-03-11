@@ -83,7 +83,7 @@ class LSTM(object):
 
       if self.attention_mechanism is not None:
         with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
-          lstm_outputs = self.attention.apply(lstm_outputs, is_train)
+          lstm_outputs = self.attention.apply(lstm_outputs, inputs_length, is_train)
 
 
       tf.logging.info("LSTM output before projection")

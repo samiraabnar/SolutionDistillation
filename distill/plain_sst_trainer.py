@@ -24,6 +24,8 @@ tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_string("attention_mechanism", None, "")
+tf.app.flags.DEFINE_string("sent_rep_mode", 'last', "")
+
 
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")

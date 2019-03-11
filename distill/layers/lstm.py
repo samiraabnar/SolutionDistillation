@@ -21,12 +21,23 @@ class LSTM(object):
       self.embedding_layer.create_vars(pretrained_word_embeddings)
 
       # Build the RNN layers
-      with tf.variable_scope("LSTM_Cell"):
-        lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim, forget_bias=1.0)
-        dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
+      with tf.variable_scope("LSTM_Cells"):
+        lstm0 = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0, name="L0")
+        dropout_lstm0 = tf.contrib.rnn.DropoutWrapper(lstm0,
                                                output_keep_prob=self.hidden_keep_prob)
-        self.multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
-        self.multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
+
+        lstms = [lstm0]
+        drop_lstms = [dropout_lstm0]
+
+        lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0, name="L1")
+        dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
+                                                      output_keep_prob=self.hidden_keep_prob)
+        if self.num_layers > 1:
+          lstms.extend([lstm] * (self.num_layers-1))
+          drop_lstms.extend([dropout_lstm] * (self.num_layers - 1))
+
+        self.multi_lstm_cell = tf.contrib.rnn.MultiRNNCell(lstms)
+        self.multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell(drop_lstms)
 
       if self.attention_mechanism is not None:
         with tf.variable_scope("Attention"):

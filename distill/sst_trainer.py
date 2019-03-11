@@ -63,7 +63,7 @@ class SSTTrainer(object):
     base_learning_rate = 0.001
     start_learning_rate = 0.0001
     warmup_steps = 1000
-    
+
     slope = (base_learning_rate - start_learning_rate) / warmup_steps
     warmup_rate = slope * tf.cast(self.global_step,
                                   tf.float32) + start_learning_rate

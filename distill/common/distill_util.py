@@ -11,4 +11,7 @@ def get_logit_distill_loss(student_logits, teacher_logits, softmax_temperature=1
 
 
 def get_single_state_rsa_distill_loss(student_states, teacher_states):
-  pass
+  teacher_states = tf.stop_gradient(teacher_states)
+  return tf.losses.mean_pairwise_squared_error(
+    teacher_states,
+    student_states)

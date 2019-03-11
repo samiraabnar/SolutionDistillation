@@ -11,6 +11,8 @@ from distill.layers.bilstm import BiLSTM
 from distill.common.distill_util import get_logit_distill_loss
 import os
 
+from distill.pipelines import SSTDistiller
+
 tf.logging.set_verbosity(tf.logging.INFO)
 
 tf.app.flags.DEFINE_string("exp_name", "trial", "")

@@ -16,7 +16,7 @@ def get_single_state_rsa_distill_loss(student_states, teacher_states):
   teacher_rsm = squared_dist_rsm(teacher_states,teacher_states)
   student_rsm = squared_dist_rsm(student_states, student_states)
 
-  rsa_score = tf.reduce_mean(teacher_rsm,student_rsm)
+  rsa_score = tf.reduce_mean(squared_dist_rsm(teacher_rsm,student_rsm))
 
   return rsa_score
 

@@ -1,1 +1,3 @@
- export PYTHONPATH=$PYTHONPATH:/home/samira/Codes/SolutionDistillation/
+ #!/bin/bash
+
+ export PYTHONPATH=$PYTHONPATH:~/Codes/SolutionDistillation/

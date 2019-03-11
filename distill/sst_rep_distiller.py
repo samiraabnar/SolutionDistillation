@@ -20,6 +20,8 @@ tf.app.flags.DEFINE_string("teacher_model", "bidi", "")
 tf.app.flags.DEFINE_string("student_model", "plain", "")
 tf.app.flags.DEFINE_boolean("pretrain_teacher", True, "")
 tf.app.flags.DEFINE_integer("teacher_pretraining_iters", 100, "")
+tf.app.flags.DEFINE_string("rep_loss_mode", 'sigmoid_cross_ent', "representation loss type")
+
 
 tf.app.flags.DEFINE_string("model_type", "rep_bidi_to_plain", "")
 tf.app.flags.DEFINE_integer("hidden_dim", 64, "")
@@ -51,7 +53,7 @@ hparams = tf.app.flags.FLAGS
 
 if __name__ == '__main__':
   if hparams.save_dir is None:
-    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type, hparams.loss_type,'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name]))
+    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.rep_loss_mode, hparams.model_type, hparams.loss_type,'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name]))
 
   Models = {"plain": LSTM,
             "bidi": BiLSTM,

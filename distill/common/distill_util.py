@@ -10,18 +10,25 @@ def get_logit_distill_loss(student_logits, teacher_logits, softmax_temperature=1
   return loss
 
 
-def get_single_state_rsa_distill_loss(student_states, teacher_states):
+def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='squared'):
   teacher_states = tf.stop_gradient(teacher_states)
 
   teacher_rsm = squared_dist_rsm(teacher_states,teacher_states)
   student_rsm = squared_dist_rsm(student_states, student_states)
 
-  rsa_score = tf.reduce_mean(squared_dist_rsm(teacher_rsm,student_rsm))
+  if mode == 'squared':
+    rsa_score = tf.reduce_mean(squared_dist_rsm(student_rsm,teacher_rsm))
+  else:
+    rsa_score = tf.reduce_mean(sigmoid_cross_entropy_rsa(student_rsm, teacher_rsm))
 
   return rsa_score
 
 
 
+def sigmoid_cross_entropy_rsa(d_a, d_b):
+  rsa = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+    logits=d_a, labels=tf.nn.sigmoid(d_b)))
+  return rsa
 
 def squared_dist_rsm(A, B):
   assert A.shape.as_list() == B.shape.as_list()
@@ -42,8 +49,7 @@ if __name__ == '__main__':
     d_a = squared_dist_rsm(a,a)
     d_b = squared_dist_rsm(b,b)
 
-    rsa = tf.resquared_dist_rsm(d_a, d_b)
+    rsa = tf.reduce_mean(squared_dist_rsm(d_a, d_b))
 
     with tf.Session() as sess:
-      print(sess.run(d_a))
-      print(sess.run(d_b))
+      print(sess.run(rsa))

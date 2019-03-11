@@ -184,11 +184,13 @@ class TreeLSTM(object):
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(length - 1, dtype=tf.int32), 1)], axis=-1)
 
       root_logits = tf.gather_nd(logits, root_indices)
+      sentence_reps = tf.gather_nd(outputs, root_indices)
 
       return {'outputs': outputs,
               'logits': logits,
               'root_logits': root_logits,
-              'root_indices': root_indices}
+              'root_indices': root_indices,
+              'sents_reps': sentence_reps}
 
   def combine_children(self, left_tensor, right_tensor, c_state, h_state, is_train=True):
     state = tf.nn.rnn_cell.LSTMStateTuple(c_state, h_state)

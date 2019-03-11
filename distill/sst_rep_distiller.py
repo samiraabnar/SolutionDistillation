@@ -7,7 +7,7 @@ from distill.layers.bilstm import BiLSTM
 
 import os
 
-from distill.pipelines import SSTDistiller
+from distill.pipelines import SSTRepDistiller
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -63,5 +63,5 @@ if __name__ == '__main__':
   else:
     teacher = SentimentLSTM(hparams, model=Models[hparams.teacher_model], scope="teacher")
 
-  trainer = SSTDistiller(config=hparams, student_model=student, teacher_model=teacher)
+  trainer = SSTRepDistiller(config=hparams, student_model=student, teacher_model=teacher)
   trainer.train()

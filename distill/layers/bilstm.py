@@ -117,6 +117,7 @@ class BiLSTM(object):
             'raw_outputs': lstm_outputs,
             'embedded_inputs': embedded_input,
             'raw_inputs': inputs,
+            'sents_reps': sentence_reps
     }
 
 

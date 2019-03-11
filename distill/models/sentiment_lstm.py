@@ -63,4 +63,5 @@ class SentimentLSTM(object):
             'embedded_inputs': lstm_output_dic['embedded_inputs'],
             'raw_inputs': lstm_output_dic['raw_inputs'],
             'total_matchings': total_matchings,
-            'trainable_vars': tf.trainable_variables(scope=self.scope)}
+            'trainable_vars': tf.trainable_variables(scope=self.scope),
+            'sents_reps': lstm_output_dic['sents_reps']}

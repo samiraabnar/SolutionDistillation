@@ -76,4 +76,5 @@ class SentimentTreeLSTM(object):
             'full_loss': full_loss,
             'root_loss': root_loss,
             'root_accuracy': root_accuracy,
-            'trainable_vars': tf.trainable_variables(scope=self.scope)}
+            'trainable_vars': tf.trainable_variables(scope=self.scope),
+            'sents_reps': tree_lstm_output_dic['sents_reps']}

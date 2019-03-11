@@ -16,7 +16,7 @@ class FeedforwardSelfAttention(object):
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       attention_score = tf.contrib.layers.fully_connected(input_keys,
                                                           num_outputs=1,
-                                                          activation=tf.nn.relu,
+                                                          activation_fn=None,
                                                           weights_initializer=self.input_fully_connected_weights,
                                                           biases_initializer=self.input_fully_connected_biases)
 

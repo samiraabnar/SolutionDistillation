@@ -202,7 +202,7 @@ class SSTRepDistiller(SSTDistiller):
                                                          teacher_train_output_dic["trainable_vars"],
                                                          start_learning_rate=0.0005,
                                                          base_learning_rate=0.001, warmup_steps=1000,
-                                                         scope="main")
+                                                         scope="teacher_main")
 
     distill_op, distill_learning_rate = self.get_train_op(distill_loss, student_train_output_dic["trainable_vars"],
                                                           start_learning_rate=0.0001,
@@ -212,7 +212,7 @@ class SSTRepDistiller(SSTDistiller):
     student_update_op, distill_learning_rate = self.get_train_op(student_train_output_dic[self.config.loss_type], student_train_output_dic["trainable_vars"],
                                                           start_learning_rate=0.00005,
                                                           base_learning_rate=0.001, warmup_steps=10000,
-                                                          scope="distill")
+                                                          scope="student_main")
 
 
 

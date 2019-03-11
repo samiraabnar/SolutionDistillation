@@ -39,8 +39,11 @@ if __name__ == '__main__':
     a = tf.constant([[1,1],[2,2],[3,3]])
     b = tf.constant([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
 
-    d_a = squared_dist(a,a)
-    d_b = squared_dist(b,b)
+    d_a = squared_dist_rsm(a,a)
+    d_b = squared_dist_rsm(b,b)
+
+    rsa = tf.resquared_dist_rsm(d_a, d_b)
+
     with tf.Session() as sess:
       print(sess.run(d_a))
       print(sess.run(d_b))

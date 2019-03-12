@@ -22,47 +22,46 @@ class SentimentLSTM(object):
   def build_graph(self, pretrained_word_embeddings):
     self.lstm.create_vars(pretrained_word_embeddings)
 
-    # Create the fully connected layers
-    with tf.variable_scope("Projection"):
-      # Initialize the weights and biases
-      self.output_fully_connected_weights = tf.contrib.layers.xavier_initializer()
+    # Output embedding
+    self.output_embedding_mat = tf.get_variable("output_embedding_mat",
+                                                [self.config.vocab_size, self.config.hidden_dim],
+                                                dtype=tf.float32)
+
+    self.output_embedding_bias = tf.get_variable("output_embedding_bias",
+                                                 [self.config.vocab_size],
+                                                 dtype=tf.float32)
 
 
   def apply(self, examples, is_train=True):
-    example_id, length, is_leaf, left_children, right_children, node_word_ids, labels, binary_labels, \
-    root_label, root_binary_label, seq_lengths, seq_inputs = examples
+    example_ids, inputs, inputs_length, labels = examples
+    inputs_mask = tf.sequence_mask(inputs_length)
+    lstm_output_dic = self.lstm.apply(inputs=inputs, inputs_length=labels, is_train=is_train)
 
-    labels = root_binary_label
+    seq_states = lstm_output_dic['raw_outputs']
 
-    lstm_output_dic = self.lstm.apply(inputs=seq_inputs, inputs_length=seq_lengths, is_train=is_train)
+    def output_embedding(current_output):
+      return tf.add(
+        tf.matmul(
+          current_output,
+          tf.transpose(self.output_embedding_mat)),
+        self.output_embedding_bias)
 
-    with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
-      logits = tf.contrib.layers.fully_connected(lstm_output_dic['sent_reps'],
-                                                 activation_fn=None,
-                                                 num_outputs=self.config.output_dim,
-                                                 weights_initializer=self.output_fully_connected_weights,
-                                                 biases_initializer=None)
+    logits = tf.map_fn(output_embedding, seq_states)
+    predictions = tf.arg_max(logits, axis=1)
+    logits = tf.reshape(logits, [-1, self.config.vocab_size])
+    loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
+      labels=tf.reshape(labels, [-1]),
+      logits=logits) * tf.cast(tf.reshape(inputs_mask, [-1]), tf.float32)
 
-    tf.logging.info("logits")
-    tf.logging.info(logits)
+    loss = tf.reduce_sum(loss)
+
+    return {'loss': loss,
+            'predictions': predictions,
+            'logits': logits}
 
 
-    logits = lstm_output_dic['logits']
 
-    if self.config.output_dim > 1:
-      predictions = tf.argmax(logits, axis=-1)
-    else:
-      predictions = tf.cast(tf.round(tf.nn.sigmoid(logits)), tf.int64)
 
-    tf.logging.info("predictions")
-    tf.logging.info(predictions)
-
-    if self.config.output_dim > 1:
-      loss = tf.reduce_mean(
-        tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=tf.one_hot(labels, depth=2)))
-    else:
-      loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=tf.cast(tf.expand_dims(labels,axis=-1), dtype=tf.float32)))
 
     tf.logging.info("labels")
     tf.logging.info(labels)

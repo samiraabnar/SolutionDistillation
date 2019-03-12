@@ -45,10 +45,7 @@ class LSTM(object):
           self.attention = FeedforwardSelfAttention(scope="attention")
           self.attention.create_vars()
 
-        # Create the fully connected layers
-      with tf.variable_scope("Projection"):
-        # Initialize the weights and biases
-        self.output_fully_connected_weights = tf.contrib.layers.xavier_initializer()
+
 
   def apply(self, inputs, inputs_length, is_train=True):
     self.batch_size = inputs.get_shape()[0]
@@ -106,23 +103,13 @@ class LSTM(object):
       tf.logging.info("final output:")
       tf.logging.info(sentence_reps)
 
-      # Create the fully connected layers
-      with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
-        logits = tf.contrib.layers.fully_connected(sentence_reps,
-                                                    activation_fn=None,
-                                                    num_outputs=self.output_dim,
-                                                    weights_initializer=self.output_fully_connected_weights,
-                                                    biases_initializer=None)
 
 
-      tf.logging.info("logits")
-      tf.logging.info(logits)
-
-    return {'logits': logits,
+    return {
             'raw_outputs': lstm_outputs,
             'embedded_inputs': embedded_input,
             'raw_inputs': inputs,
-            'sents_reps': sentence_reps
+            'sents_reps': sentence_reps,
     }
 
 

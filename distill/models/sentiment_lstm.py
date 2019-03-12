@@ -37,7 +37,7 @@ class SentimentLSTM(object):
     lstm_output_dic = self.lstm.apply(inputs=seq_inputs, inputs_length=seq_lengths, is_train=is_train)
 
     with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
-      logits = tf.contrib.layers.fully_connected(lstm_output_dic['sent_reps'],
+      logits = tf.contrib.layers.fully_connected(lstm_output_dic['sents_reps'],
                                                  activation_fn=None,
                                                  num_outputs=self.config.output_dim,
                                                  weights_initializer=self.output_fully_connected_weights,

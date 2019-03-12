@@ -47,7 +47,6 @@ class SentimentLSTM(object):
     tf.logging.info(logits)
 
 
-    logits = lstm_output_dic['logits']
 
     if self.config.output_dim > 1:
       predictions = tf.argmax(logits, axis=-1)

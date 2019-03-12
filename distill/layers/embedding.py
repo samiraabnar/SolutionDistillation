@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 class Embedding(object):
-  def __init__(self, vocab_size=None, embedding_dim=None, tuned_embedding_dim=10, keep_prob=1.0, scope="EmbeddingLayer"):
+  def __init__(self, vocab_size=None, embedding_dim=None, tuned_embedding_dim=5, keep_prob=1.0, scope="EmbeddingLayer"):
     self.vocab_size = vocab_size
     self.embedding_dim = embedding_dim
     self.keep_prob = keep_prob

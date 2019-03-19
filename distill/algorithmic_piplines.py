@@ -66,6 +66,7 @@ class AlgorithmicTrainer(Trainer):
     dev_loss = self.compute_loss(dev_output_dic['logits'], dev_output_dic['targets'])
     test_loss = self.compute_loss(test_output_dic['logits'], test_output_dic['targets'])
 
+    train_output_dic['loss'] = train_loss
     tf.summary.scalar("loss", train_loss, family="train")
     tf.summary.scalar("loss", dev_loss, family="dev")
     tf.summary.scalar("loss", test_loss, family="test")

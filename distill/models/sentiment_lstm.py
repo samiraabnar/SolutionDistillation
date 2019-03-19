@@ -1,4 +1,6 @@
 import tensorflow as tf
+
+from distill.layers.embedding import Embedding
 from distill.layers.lstm import LSTM
 from distill.layers.bilstm import BiLSTM
 
@@ -18,12 +20,18 @@ class SentimentLSTM(object):
 
 
   def build_graph(self, pretrained_word_embeddings):
-    self.lstm.create_vars(pretrained_word_embeddings)
+    with tf.variable_scope(self.scope):
+      self.embedding_layer = Embedding(vocab_size=self.config.vocab_size,
+                                       pretrained_embedding_dim=self.config.embedding_dim,
+                                       keep_prob=self.config.input_dropout_keep_prob)
+      self.embedding_layer.create_vars(pretrained_word_embeddings=pretrained_word_embeddings)
 
-    # Create the fully connected layers
-    with tf.variable_scope("Projection"):
-      # Initialize the weights and biases
-      self.output_fully_connected_weights = tf.contrib.layers.xavier_initializer()
+      self.lstm.create_vars()
+
+      # Create the fully connected layers
+      with tf.variable_scope("Projection"):
+        # Initialize the weights and biases
+        self.output_fully_connected_weights = tf.contrib.layers.xavier_initializer()
 
 
   def apply(self, examples, is_train=True):

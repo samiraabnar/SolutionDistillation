@@ -41,11 +41,14 @@ class Trainer(object):
     return updates, learning_rate
 
   def train(self):
-    tf.logging.info("start training:")
     update_op, scaffold, train_output_dic, dev_output_dic, test_output_dic = self.build_train_graph()
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
-      for _ in np.arange(self.config.training_iterations):
+      tf.logging.info("start training:")
+      for i in np.arange(self.config.training_iterations):
         sess.run(update_op)
+        if (i % 100) == 0:
+          tf.logging.info(i, sess.run(train_output_dic['loss']))
+
 
   def get_data_itaratoes(self):
     raise NotImplementedError()

@@ -61,6 +61,7 @@ class PlainSSTTrainer(object):
                                  self.config.embedding_dim)
     self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
     self.config.input_dim = len(self.word2id)
+    self.config.vocab_size = len(self.word2id)
 
     if hparams.bidirectional:
       lstm = BiLSTM

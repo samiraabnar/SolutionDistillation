@@ -47,7 +47,8 @@ class Trainer(object):
       for i in np.arange(self.config.training_iterations):
         sess.run(update_op)
         if (i % 100) == 0:
-          tf.logging.info(i, sess.run(train_output_dic['loss']))
+          tf.logging.info(i)
+          tf.logging.info(sess.run(train_output_dic['loss']))
 
 
   def get_data_itaratoes(self):

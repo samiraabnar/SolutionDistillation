@@ -8,15 +8,13 @@ class SentimentLSTM(object):
   def __init__(self, config, model=LSTM, scope="SentimentLSTM"):
     self.config = config
     self.scope=scope
-    self.lstm = model(input_dim=config.input_dim,
-                              hidden_dim=config.hidden_dim,
-                              output_dim=config.output_dim,
-                              input_keep_prob=config.input_dropout_keep_prob,
-                              hidden_keep_prob=config.input_dropout_keep_prob,
-                              attention_mechanism=self.config.attention_mechanism,
-                              depth=config.depth,
-                              sent_rep_mode=self.config.sent_rep_mode,
-                              scope=scope)
+    self.lstm = model(hidden_dim=config.hidden_dim,
+                      output_dim=config.output_dim,
+                      hidden_keep_prob=config.input_dropout_keep_prob,
+                      attention_mechanism=self.config.attention_mechanism,
+                      depth=config.depth,
+                      sent_rep_mode=self.config.sent_rep_mode,
+                      scope=scope)
 
 
   def build_graph(self, pretrained_word_embeddings):

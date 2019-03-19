@@ -108,3 +108,5 @@ def cosine_decay_with_warmup(global_step,
                              learning_rate)
   return tf.where(global_step > total_steps, 0.0, learning_rate,
                   name='learning_rate')
+
+

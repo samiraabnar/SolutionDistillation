@@ -4,23 +4,18 @@ from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
 class LSTM(object):
-  def __init__(self, input_dim, hidden_dim, output_dim, attention_mechanism=None, input_keep_prob=0.8, hidden_keep_prob=0.8,depth=1, sent_rep_mode="all",scope="LSTM"):
-    self.input_dim = input_dim
+  def __init__(self, hidden_dim, output_dim, attention_mechanism=None, hidden_keep_prob=0.8,depth=1, sent_rep_mode="all",scope="LSTM"):
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
     self.scope = scope
-    self.input_keep_prob = input_keep_prob
     self.hidden_keep_prob = hidden_keep_prob
     self.num_layers = depth
     self.attention_mechanism = attention_mechanism
     self.sent_rep_mode = sent_rep_mode
 
-  def create_vars(self, pretrained_word_embeddings, reuse=False):
+  def create_vars(self, reuse=False):
     # Create the embeddings
     with tf.variable_scope(self.scope, reuse=reuse):
-      self.embedding_layer = Embedding(vocab_size=self.input_dim, keep_prob=self.input_keep_prob)
-      self.embedding_layer.create_vars(pretrained_word_embeddings)
-
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cells"):
         lstm0 = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0, name="L0")
@@ -50,10 +45,9 @@ class LSTM(object):
   def apply(self, inputs, inputs_length, is_train=True):
     self.batch_size = inputs.get_shape()[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-      embedded_input = self.embedding_layer.apply(inputs, is_train)
       #embedded_input = tf_layers.layer_norm(embedded_input)
       tf.logging.info("embedded_input")
-      tf.logging.info(embedded_input)
+      tf.logging.info(inputs)
 
       #embedded_input = tf_layers.layer_norm(embedded_input)
 
@@ -73,7 +67,7 @@ class LSTM(object):
 
         lstm_outputs, final_state = tf.nn.dynamic_rnn(
           cell,
-          embedded_input,
+          inputs,
           dtype=tf.float32,
           sequence_length=inputs_length)
         #lstm_outputs = tf_layers.layer_norm(lstm_outputs)
@@ -107,8 +101,6 @@ class LSTM(object):
 
     return {
             'raw_outputs': lstm_outputs,
-            'embedded_inputs': embedded_input,
-            'raw_inputs': inputs,
             'sents_reps': sentence_reps,
     }
 

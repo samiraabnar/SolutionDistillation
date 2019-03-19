@@ -42,8 +42,8 @@ class SentimentLSTM(object):
 
     batch_size = tf.shape(seq_inputs)[0]
     with tf.variable_scope(self.scope, reuse=reuse):
-      embedded_input = self.embedding_layer.apply(seq_inputs, is_train)
-      lstm_output_dic = self.lstm.apply(inputs=embedded_input, inputs_length=seq_lengths, is_train=is_train)
+      embedded_inputs = self.embedding_layer.apply(seq_inputs, is_train)
+      lstm_output_dic = self.lstm.apply(inputs=embedded_inputs, inputs_length=seq_lengths, is_train=is_train)
 
       with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
         logits = tf.contrib.layers.fully_connected(lstm_output_dic['sents_reps'],
@@ -85,8 +85,8 @@ class SentimentLSTM(object):
             'root_loss': loss,
             'root_accuracy': root_accuracy,
             'raw_outputs': lstm_output_dic['raw_outputs'],
-            'embedded_inputs': lstm_output_dic['embedded_inputs'],
-            'raw_inputs': lstm_output_dic['raw_inputs'],
+            'embedded_inputs': embedded_inputs,
+            'raw_inputs': seq_inputs,
             'total_matchings': total_matchings,
             'trainable_vars': tf.trainable_variables(scope=self.scope),
             'sents_reps': lstm_output_dic['sents_reps']}

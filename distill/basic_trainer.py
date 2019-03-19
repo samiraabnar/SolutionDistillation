@@ -44,6 +44,7 @@ class Trainer(object):
     update_op, scaffold, train_output_dic, dev_output_dic, test_output_dic = self.build_train_graph()
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
       tf.logging.info("start training:")
+      tf.logging.info(self.config.training_iterations)
       for i in np.arange(self.config.training_iterations):
         sess.run(update_op)
         if (i % 100) == 0:

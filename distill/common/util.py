@@ -110,3 +110,21 @@ def cosine_decay_with_warmup(global_step,
                   name='learning_rate')
 
 
+def lower_endian_to_number(l, base):
+  """Helper function: convert a list of digits in the given base to a number."""
+  return sum([d * (base**i) for i, d in enumerate(l)])
+
+
+def number_to_lower_endian(n, base):
+  """Helper function: convert a number to a list of digits in the given base."""
+  if n < base:
+    return [n]
+  return [n % base] + number_to_lower_endian(n // base, base)
+
+
+def random_number_lower_endian(length, base):
+  """Helper function: generate a random number as a lower-endian digits list."""
+  if length == 1:  # Last digit can be 0 only if length is 1.
+    return [np.random.randint(base)]
+  prefix = [np.random.randint(base) for _ in range(length - 1)]
+  return prefix + [np.random.randint(base - 1) + 1]  # Last digit is not 0.

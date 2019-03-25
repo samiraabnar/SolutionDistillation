@@ -78,8 +78,8 @@ class AlgorithmicTrainer(Trainer):
     tf.summary.scalar("loss", test_loss, family="test")
 
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")
-    self.add_metric_summaries(dev_output_dic['logits'], dev_output_dic['targets'], "train")
-    self.add_metric_summaries(test_output_dic['logits'], test_output_dic['targets'], "train")
+    self.add_metric_summaries(dev_output_dic['logits'], dev_output_dic['targets'], "dev")
+    self.add_metric_summaries(test_output_dic['logits'], test_output_dic['targets'], "test")
 
 
 

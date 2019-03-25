@@ -2,7 +2,8 @@
 import tensorflow as tf
 
 from distill.algorithmic_piplines import AlgorithmicTrainer
-from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40
+from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40, AlgorithmicAdditionBinary40, \
+  AlgorithmicMultiplicationBinary40, AlgorithmicSortProblem
 from distill.layers.tree_lstm import TreeLSTM
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
 from distill.models.sentiment_lstm import SentimentLSTM
@@ -17,7 +18,7 @@ from distill.pipelines import SSTRepDistiller
 tf.logging.set_verbosity(tf.logging.INFO)
 
 tf.app.flags.DEFINE_string("exp_name", "trial", "")
-tf.app.flags.DEFINE_string("task_name", "identity_algorithmic", "")
+tf.app.flags.DEFINE_string("task_name", "identity", "identity | addition| multiplication | sort")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
@@ -44,7 +45,7 @@ tf.app.flags.DEFINE_float("l2_rate", 0.0005, "")
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 30000, "")
 
-tf.app.flags.DEFINE_integer("vocab_size", 2, "")
+tf.app.flags.DEFINE_integer("vocab_size", 3, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
 
 
@@ -113,7 +114,13 @@ if __name__ == '__main__':
 
 
 
-  model = Models[hparams.model](model_params, scope="Transformer")
 
-  trainer = AlgorithmicTrainer(hparams, model, AlgorithmicIdentityBinary40('data/alg'))
+  tasks = {'identity': AlgorithmicIdentityBinary40('data/alg'),
+           'addition': AlgorithmicAdditionBinary40('data/alg'),
+           'multiplication': AlgorithmicMultiplicationBinary40('data/alg'),
+           'sort': AlgorithmicSortProblem('data/alg')}
+
+  hparams.vocab_size = tasks[hparams.task_name].num_symbols + 1
+  model = Models[hparams.model](model_params, scope="Transformer")
+  trainer = AlgorithmicTrainer(hparams, model, tasks[hparams.task_name])
   trainer.train()

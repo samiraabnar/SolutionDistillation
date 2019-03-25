@@ -211,7 +211,7 @@ class AlgorithmicMultiplicationBinary40(Algorithmic):
 class AlgorithmicReverseProblem(Algorithmic):
   """Problem spec for sorting numbers."""
   def __init__(self, data_path):
-    super(AlgorithmicSortProblem, self).__init__(data_path=data_path)
+    super(AlgorithmicReverseProblem, self).__init__(data_path=data_path)
     self.task_name = 'sort'
 
   @property

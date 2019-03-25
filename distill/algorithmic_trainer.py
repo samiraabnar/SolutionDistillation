@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from distill.algorithmic_piplines import AlgorithmicTrainer
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40, AlgorithmicAdditionBinary40, \
-  AlgorithmicMultiplicationBinary40, AlgorithmicSortProblem
+  AlgorithmicMultiplicationBinary40, AlgorithmicSortProblem, AlgorithmicReverseProblem
 from distill.layers.tree_lstm import TreeLSTM
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
 from distill.models.sentiment_lstm import SentimentLSTM
@@ -18,7 +18,7 @@ from distill.pipelines import SSTRepDistiller
 tf.logging.set_verbosity(tf.logging.INFO)
 
 tf.app.flags.DEFINE_string("exp_name", "trial", "")
-tf.app.flags.DEFINE_string("task_name", "identity", "identity | addition| multiplication | sort")
+tf.app.flags.DEFINE_string("task_name", "identity", "identity | addition| multiplication | sort | reverse")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
@@ -97,6 +97,14 @@ if __name__ == '__main__':
             "bidi": BiLSTM,
             "transformer": Transformer}
 
+  tasks = {'identity': AlgorithmicIdentityBinary40('data/alg'),
+           'addition': AlgorithmicAdditionBinary40('data/alg'),
+           'multiplication': AlgorithmicMultiplicationBinary40('data/alg'),
+           'sort': AlgorithmicSortProblem('data/alg'),
+           'reverse': AlgorithmicReverseProblem('data/alg')}
+
+  hparams.vocab_size = tasks[hparams.task_name].num_symbols + 1
+  
   model_params = Hparam(input_dim=hparams.input_dim,
                           hidden_dim=hparams.hidden_dim,
                           output_dim=hparams.output_dim,
@@ -113,14 +121,6 @@ if __name__ == '__main__':
                           )
 
 
-
-
-  tasks = {'identity': AlgorithmicIdentityBinary40('data/alg'),
-           'addition': AlgorithmicAdditionBinary40('data/alg'),
-           'multiplication': AlgorithmicMultiplicationBinary40('data/alg'),
-           'sort': AlgorithmicSortProblem('data/alg')}
-
-  hparams.vocab_size = tasks[hparams.task_name].num_symbols + 1
   model = Models[hparams.model](model_params, scope="Transformer")
   trainer = AlgorithmicTrainer(hparams, model, tasks[hparams.task_name])
   trainer.train()

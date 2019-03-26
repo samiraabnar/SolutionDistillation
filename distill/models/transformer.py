@@ -191,7 +191,7 @@ class Transformer(object):
           output: [batch_size, decoded length]
           score: [batch_size, float]}
     """
-    inputs, targets, lengths = examples
+    inputs, targets, inputs_lengths, targets_lengths = examples
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
       # Calculate attention bias for encoder self-attention and decoder

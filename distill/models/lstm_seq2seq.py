@@ -28,8 +28,8 @@ class LSTMSeq2Seq(object):
 
   def create_vars(self, reuse=False):
     with tf.variable_scope(self.scope, reuse=reuse):
-      self.embedding_layer = EmbeddingSharedWeights(vocab_size=self.config.vocab_size,
-                                       embedding_dim=self.config.embedding_dim)
+      self.embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
+                                       embedding_dim=self.hparams.embedding_dim)
       self.embedding_layer.create_vars()
       with tf.variable_scope("encoder"):
         self.lstm_encoder.create_vars()
@@ -38,10 +38,10 @@ class LSTMSeq2Seq(object):
 
       # Output embedding
       self.output_embedding_mat = tf.get_variable("output_embedding_mat",
-                                                  [self.config.embedding_dim, self.config.hidden_dim],
+                                                  [self.hparams.embedding_dim, self.hparams.hidden_dim],
                                                   dtype=tf.float32)
       self.output_embedding_bias = tf.get_variable("output_embedding_bias",
-                                                   [self.config.embedding_dim],
+                                                   [self.hparams.embedding_dim],
                                                    dtype=tf.float32)
 
 

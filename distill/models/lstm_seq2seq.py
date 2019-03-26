@@ -45,8 +45,8 @@ class LSTMSeq2Seq(object):
                                                    dtype=tf.float32)
 
 
-  def apply(self, inputs, targets,input_lengths, target_length, is_train=True, reuse=tf.AUTO_REUSE):
-
+  def apply(self, examples, is_train=True, reuse=tf.AUTO_REUSE):
+    inputs, targets, input_lengths, target_length = examples
     with tf.variable_scope(self.scope, reuse=reuse):
       embedded_inputs = self.embedding_layer.apply(inputs)
       embedded_targets = self.embedding_layer.apply(targets)

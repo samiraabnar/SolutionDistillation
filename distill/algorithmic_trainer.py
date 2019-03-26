@@ -2,8 +2,8 @@
 import tensorflow as tf
 
 from distill.algorithmic_piplines import AlgorithmicTrainer
-from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40, AlgorithmicAdditionBinary40, \
-  AlgorithmicMultiplicationBinary40, AlgorithmicSortProblem, AlgorithmicReverseProblem
+from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicAdditionDecimal40, \
+  AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
 from distill.layers.tree_lstm import TreeLSTM
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
@@ -135,9 +135,9 @@ if __name__ == '__main__':
             "transformer": Transformer}
 
 
-  tasks = {'identity': AlgorithmicIdentityBinary40('data/alg'),
-           'addition': AlgorithmicAdditionBinary40('data/alg'),
-           'multiplication': AlgorithmicMultiplicationBinary40('data/alg'),
+  tasks = {'identity': AlgorithmicIdentityDecimal40('data/alg'),
+           'addition': AlgorithmicAdditionDecimal40('data/alg'),
+           'multiplication': AlgorithmicMultiplicationDecimal40('data/alg'),
            'sort': AlgorithmicSortProblem('data/alg'),
            'reverse': AlgorithmicReverseProblem('data/alg')}
 

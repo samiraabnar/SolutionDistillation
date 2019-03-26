@@ -13,7 +13,7 @@ from distill.layers.bilstm import BiLSTM
 
 import os
 
-from distill.models.transformer import Transformer
+from distill.models.transformer import Transformer, UniversalTransformer
 from distill.pipelines import SSTRepDistiller
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -22,7 +22,7 @@ tf.app.flags.DEFINE_string("exp_name", "trial", "")
 tf.app.flags.DEFINE_string("task_name", "identity", "identity | addition| multiplication | sort | reverse")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
-tf.app.flags.DEFINE_string("model", "transformer", "transformer | lstm | bilstm")
+tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer | lstm | bilstm")
 
 
 tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
@@ -154,7 +154,8 @@ if __name__ == '__main__':
 
   Models = {"lstm": LSTMSeq2Seq,
             "lstm_bidi": BidiLSTMSeq2Seq,
-            "transformer": Transformer}
+            "transformer": Transformer,
+            "utransformer": UniversalTransformer}
 
 
   tasks = {'identity': AlgorithmicIdentityDecimal40('data/alg'),
@@ -200,6 +201,7 @@ if __name__ == '__main__':
 
 
   model_params = {"transformer": transformer_params,
+                  "utransformer": transformer_params,
                   "lstm": lstm_params,
                   "bilstm": lstm_params}
 

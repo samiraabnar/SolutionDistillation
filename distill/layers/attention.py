@@ -47,8 +47,8 @@ class MultiHeadScaledDotProductAttention(object):
     self.attention_dropout_keepprob = attention_dropout_keepprob
     self.scope = scope
 
-  def create_vars(self):
-    with tf.variable_scope(self.scope):
+  def create_vars(self, reuse=tf.AUTO_REUSE):
+    with tf.variable_scope(self.scope, reuse=reuse):
       # Layers for linearly projecting the queries, keys, and values.
       self.q_dense_layer = tf.layers.Dense(self.hidden_dim, use_bias=False, name="q")
       self.k_dense_layer = tf.layers.Dense(self.hidden_dim, use_bias=False, name="k")

@@ -67,8 +67,6 @@ class TransformerEncoder(object):
     return self.output_normalization.apply(encoder_inputs, is_train)
 
 
-
-
 class TransformerDecoder(object):
   def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, scope="TransformerDecoder"):
     self.hidden_dim = hidden_dim
@@ -134,8 +132,6 @@ class TransformerDecoder(object):
     return self.output_normalization.apply(decoder_inputs, is_train)
 
 
-
-
 class UniversalTransformerEncoder(TransformerEncoder):
   def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, scope="TransformerEncoder"):
     super(UniversalTransformerEncoder, self).__init__(hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, scope)
@@ -168,9 +164,6 @@ class UniversalTransformerEncoder(TransformerEncoder):
       # Create final layer normalization layer.
       self.output_normalization = LayerNormalization(self.hidden_dim)
       self.output_normalization.create_vars()
-
-
-
 
 
 class UniversalTransformerDecoder(TransformerDecoder):
@@ -216,10 +209,6 @@ class UniversalTransformerDecoder(TransformerDecoder):
       self.output_normalization.create_vars()
 
 
-
-
-
-
 class Transformer(object):
   """Transformer model for sequence to sequence data.
   Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
@@ -240,7 +229,6 @@ class Transformer(object):
     self.initializer_gain = hparams.initializer_gain
     self.scope = scope
 
-
   def create_vars(self, reuse=False):
     self.initializer = tf.variance_scaling_initializer(
       self.initializer_gain, mode="fan_avg", distribution="uniform")
@@ -259,8 +247,6 @@ class Transformer(object):
       self.embedding_softmax_layer.create_vars()
       self.encoder_stack.create_vars(reuse=False)
       self.decoder_stack.create_vars(reuse=False)
-
-
 
   def apply(self, examples, reuse=tf.AUTO_REUSE, is_train=True):
     """Calculate target logits or inferred target sequences.
@@ -356,6 +342,31 @@ class Transformer(object):
           attention_bias)
 
       return outputs
+
+
+class UniversalTransformer(Transformer):
+
+  def __init__(self, hparams, scope="Transformer"):
+    super(UniversalTransformer, self).__init__(hparams, scope)
+
+  def create_vars(self, reuse=False):
+    self.initializer = tf.variance_scaling_initializer(
+      self.initializer_gain, mode="fan_avg", distribution="uniform")
+
+    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
+      self.embedding_softmax_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
+                                                       method="matmul" if tpu else "gather")
+
+      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+                                              self.dropout_keep_prob,
+                                              scope="TransformerEncoder")
+      self.decoder_stack = UniversalTransformerDecoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+                                              self.dropout_keep_prob,
+                                              scope="TransformerDecoder")
+
+      self.embedding_softmax_layer.create_vars()
+      self.encoder_stack.create_vars(reuse=tf.AUTO_REUSE)
+      self.decoder_stack.create_vars(reuse=tf.AUTO_REUSE)
 
 
 if __name__ == '__main__':

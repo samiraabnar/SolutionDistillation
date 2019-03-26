@@ -7,22 +7,22 @@ from distill.layers.bilstm import BiLSTM
 
 
 class LSTMSeq2Seq(object):
-  def __init__(self, config, model=LSTM, scope="Seq2SeqLSTM"):
-    self.config = config
+  def __init__(self, hparams, model=LSTM, scope="Seq2SeqLSTM"):
+    self.hparams = hparams
     self.scope=scope
-    self.lstm_encoder = model(hidden_dim=config.hidden_dim,
-                      output_dim=config.hidden_dim,
-                      hidden_keep_prob=config.hidden_dropout_keep_prob,
-                      attention_mechanism=self.config.attention_mechanism,
-                      depth=config.depth,
-                      sent_rep_mode=self.config.sent_rep_mode,
+    self.lstm_encoder = model(hidden_dim=hparams.hidden_dim,
+                      output_dim=hparams.hidden_dim,
+                      hidden_keep_prob=hparams.hidden_dropout_keep_prob,
+                      attention_mechanism=self.hparams.attention_mechanism,
+                      depth=hparams.depth,
+                      sent_rep_mode=self.hparams.sent_rep_mode,
                       scope=scope+"_encoder")
-    self.lstm_decoder = model(hidden_dim=config.hidden_dim,
-                              output_dim=config.hidden_dim,
-                              hidden_keep_prob=config.hidden_dropout_keep_prob,
-                              attention_mechanism=self.config.attention_mechanism,
-                              depth=config.depth,
-                              sent_rep_mode=self.config.sent_rep_mode,
+    self.lstm_decoder = model(hidden_dim=hparams.hidden_dim,
+                              output_dim=hparams.hidden_dim,
+                              hidden_keep_prob=hparams.hidden_dropout_keep_prob,
+                              attention_mechanism=self.hparams.attention_mechanism,
+                              depth=hparams.depth,
+                              sent_rep_mode=self.hparams.sent_rep_mode,
                               scope=scope+"_decoder")
 
 
@@ -81,9 +81,9 @@ class LSTMSeq2Seq(object):
             }
 
 
-class BidiLSTMSeq2Seq(object):
-  def __init__(self, config, scope="Seq2SeqLSTM"):
-    super(BidiLSTMSeq2Seq, self,).__init__(config, model=BiLSTM, scope=scope)
+class BidiLSTMSeq2Seq(LSTMSeq2Seq):
+  def __init__(self, hparams, scope="Seq2SeqLSTM"):
+    super(BidiLSTMSeq2Seq, self,).__init__(hparams, model=BiLSTM, scope=scope)
 
 
 if __name__ == '__main__':
@@ -99,7 +99,6 @@ if __name__ == '__main__':
   iterator = dataset.make_initializable_iterator()
 
   example = iterator.get_next()
-  inputs, targets, inputs_lengths, targets_lengths = example
 
 
   class Config(object):
@@ -120,7 +119,7 @@ if __name__ == '__main__':
   model = LSTMSeq2Seq(Config(), model=LSTM, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 
-  outputs = model.apply(inputs, targets, inputs_lengths, targets_lengths)
+  outputs = model.apply(example)
   predictions = outputs['predictions']
 
   global_step = tf.train.get_or_create_global_step()

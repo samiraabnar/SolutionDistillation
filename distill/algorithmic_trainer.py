@@ -123,12 +123,7 @@ class LSTMHparam(object):
 
 
 if __name__ == '__main__':
-  if hparams.save_dir is None:
-    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name,
-                                    '_'.join([hparams.model,
-                                              'depth'+str(hparams.depth),
-                                              'hidden_dim'+str(hparams.hidden_dim),
-                                              hparams.exp_name]))
+
 
   Models = {"lstm": LSTMSeq2Seq,
             "lstm_bidi": BidiLSTMSeq2Seq,
@@ -180,6 +175,14 @@ if __name__ == '__main__':
   model_params = {"transformer": transformer_params,
                   "lstm": lstm_params,
                   "bilstm": lstm_params}
+
+
+  if hparams.save_dir is None:
+    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name,
+                                    '_'.join([hparams.model,
+                                              'depth'+str(model_params[hparams.model].depth),
+                                              'hidden_dim'+str(model_params[hparams.model].hidden_dim),
+                                              hparams.exp_name]))
 
   model = Models[hparams.model](model_params[hparams.model], scope=hparams.model)
   trainer = AlgorithmicTrainer(hparams, model, tasks[hparams.task_name])

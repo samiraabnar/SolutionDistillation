@@ -70,7 +70,6 @@ class TransformerHparam(object):
                initializer_gain,
                vocab_size,
                label_smoothing,
-               attention_mechanism,
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size

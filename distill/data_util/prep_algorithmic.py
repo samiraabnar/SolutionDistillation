@@ -337,29 +337,29 @@ class AlgorithmicSortProblem(Algorithmic):
 
 if __name__ == '__main__':
     bin_iden = AlgorithmicSortProblem('data/alg')
-    bin_iden.build_tfrecords(5000, 'train')
-    bin_iden.build_tfrecords(1000, 'dev')
-    bin_iden.build_tfrecords(1000, 'test')
+    bin_iden.build_tfrecords(100000, 'train')
+    bin_iden.build_tfrecords(10000, 'dev')
+    bin_iden.build_tfrecords(10000, 'test')
 
     bin_iden = AlgorithmicReverseProblem('data/alg')
-    bin_iden.build_tfrecords(5000, 'train')
-    bin_iden.build_tfrecords(1000, 'dev')
-    bin_iden.build_tfrecords(1000, 'test')
+    bin_iden.build_tfrecords(100000, 'train')
+    bin_iden.build_tfrecords(10000, 'dev')
+    bin_iden.build_tfrecords(10000, 'test')
 
     bin_iden = AlgorithmicMultiplicationDecimal40('data/alg')
-    bin_iden.build_tfrecords(5000, 'train')
-    bin_iden.build_tfrecords(1000, 'dev')
-    bin_iden.build_tfrecords(1000, 'test')
+    bin_iden.build_tfrecords(100000, 'train')
+    bin_iden.build_tfrecords(10000, 'dev')
+    bin_iden.build_tfrecords(10000, 'test')
 
     bin_iden = AlgorithmicAdditionDecimal40('data/alg')
-    bin_iden.build_tfrecords(5000, 'train')
-    bin_iden.build_tfrecords(1000, 'dev')
-    bin_iden.build_tfrecords(1000, 'test')
+    bin_iden.build_tfrecords(100000, 'train')
+    bin_iden.build_tfrecords(10000, 'dev')
+    bin_iden.build_tfrecords(10000, 'test')
 
     bin_iden = AlgorithmicIdentityDecimal40('data/alg')
-    bin_iden.build_tfrecords(5000, 'train')
-    bin_iden.build_tfrecords(1000, 'dev')
-    bin_iden.build_tfrecords(1000, 'test')
+    bin_iden.build_tfrecords(100000, 'train')
+    bin_iden.build_tfrecords(10000, 'dev')
+    bin_iden.build_tfrecords(10000, 'test')
 
 
     dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))

@@ -93,8 +93,8 @@ if __name__ == '__main__':
                                               'hidden_dim'+str(hparams.hidden_dim),
                                               hparams.exp_name]))
 
-  Models = {"plain": LSTMSeq2Seq,
-            "bidi": BidiLSTMSeq2Seq,
+  Models = {"lstm": LSTMSeq2Seq,
+            "lstm_bidi": BidiLSTMSeq2Seq,
             "transformer": Transformer}
 
 

@@ -102,11 +102,13 @@ class LSTMHparam(object):
                label_smoothing,
                attention_mechanism,
                sent_rep_mode,
+               embedding_dim,
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
+    self.embedding_dim = embedding_dim
     self.depth = depth
     self.batch_size = batch_size
     self.pretrained_embedding_path = pretrained_embedding_path
@@ -169,7 +171,8 @@ if __name__ == '__main__':
                                          vocab_size=hparams.vocab_size,
                                          label_smoothing=hparams.label_smoothing,
                                          attention_mechanism=None,
-                                         sent_rep_mode="final"
+                                         sent_rep_mode="final",
+                                         embedding_dim = 100
                                          )
 
 

@@ -85,7 +85,8 @@ class AlgorithmicTrainer(Trainer):
 
     update_op, learning_rate = self.get_train_op(train_loss, train_output_dic["trainable_vars"],
                                                  start_learning_rate=0.0005,
-                                                 base_learning_rate=0.001, warmup_steps=1000
+                                                 base_learning_rate=self.model.hparams.learning_rate, warmup_steps=self.model.hparams.learning_rate_warmup_steps,
+                                                 clip_gradient_norm=self.model.hparams.clip_grad_norm
                                                  )
     tf.summary.scalar("learning_rate", learning_rate, family="train")
 

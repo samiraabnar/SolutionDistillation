@@ -26,23 +26,23 @@ tf.app.flags.DEFINE_string("model", "transformer", "transformer | lstm | bilstm"
 
 
 tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
-tf.app.flags.DEFINE_integer("depth", 1, "")
+tf.app.flags.DEFINE_integer("depth", 2, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_integer("number_of_heads", 4, "")
-tf.app.flags.DEFINE_integer("ff_filter_size", 5, "")
-tf.app.flags.DEFINE_float("initializer_gain", 0.1, "")
+tf.app.flags.DEFINE_integer("ff_filter_size", 512, "")
+tf.app.flags.DEFINE_float("initializer_gain", 1.0, "")
 tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
 
 
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
-tf.app.flags.DEFINE_float("learning_rate", 0.00001, "")
+tf.app.flags.DEFINE_float("learning_rate", 0.1, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.0005, "")
 
 
-tf.app.flags.DEFINE_integer("batch_size", 32, "")
+tf.app.flags.DEFINE_integer("batch_size", 128, "")
 tf.app.flags.DEFINE_integer("training_iterations", 30000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 3, "")
@@ -120,6 +120,20 @@ class LSTMHparam(object):
     self.label_smoothing = label_smoothing
     self.attention_mechanism = attention_mechanism
     self.sent_rep_mode = sent_rep_mode
+    self.clip_grad_norm = 0.  # i.e. no gradient clipping
+    self.optimizer_adam_epsilon = 1e-9
+    self.learning_rate = 0.1
+    self.learning_rate_warmup_steps = 4000
+    self.initializer_gain = 1.0
+    self.num_hidden_layers = 6
+    self.initializer = "uniform_unit_scaling"
+    self.weight_decay = 0.0
+    self.optimizer_adam_beta1 = 0.9
+    self.optimizer_adam_beta2 = 0.98
+    self.num_sampled_classes = 0
+    self.label_smoothing = 0.1
+    self.clip_grad_norm = 0.  # i.e. no gradient clipping
+    self.optimizer_adam_epsilon = 1e-9
 
 
 if __name__ == '__main__':
@@ -182,6 +196,7 @@ if __name__ == '__main__':
                                     '_'.join([hparams.model,
                                               'depth'+str(model_params[hparams.model].depth),
                                               'hidden_dim'+str(model_params[hparams.model].hidden_dim),
+                                              'batch_size'+str(model_params[hparams.model].batch_size),
                                               hparams.exp_name]))
 
   model = Models[hparams.model](model_params[hparams.model], scope=hparams.model)

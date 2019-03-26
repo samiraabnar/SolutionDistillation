@@ -6,7 +6,8 @@ class Trainer(object):
     self.config = config
     self.model = model_obj
 
-  def get_train_op(self, loss, params, start_learning_rate, base_learning_rate, warmup_steps, scope=""):
+  def get_train_op(self, loss, params, start_learning_rate, base_learning_rate, warmup_steps,
+                   clip_gradient_norm=0,  scope=""):
     # add training op
     with tf.variable_scope(scope):
       self.global_step = tf.train.get_or_create_global_step()
@@ -25,18 +26,20 @@ class Trainer(object):
                                decay_learning_rate)
 
 
-      opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
+      opt = tf.train.AdamOptimizer(learning_rate=learning_rate,
+                                   beta1=self.model.hparams.optimizer_adam_beta1,
+                                   beta2=self.model.hparams.optimizer_adam_beta2)
       grads_and_vars = opt.compute_gradients(loss, params)
       gradients, variables = zip(*grads_and_vars)
-      self.gradient_norm = tf.global_norm(gradients)
-      clipped_gradients, _ = tf.clip_by_global_norm(gradients, 5)
+      if clip_gradient_norm > 0:
+        gradient_norm, _ = tf.clip_by_global_norm(gradients, clip_gradient_norm)
       self.param_norm = tf.global_norm(params)
 
       # Include batch norm mean and variance in gradient descent updates
       update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
       with tf.control_dependencies(update_ops):
         # Fetch self.updates to apply gradients to all trainable parameters.
-        updates = opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step)
+        updates = opt.apply_gradients(zip(gradients, params), global_step=self.global_step)
 
     return updates, learning_rate
 

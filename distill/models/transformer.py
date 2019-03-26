@@ -149,19 +149,19 @@ class UniversalTransformerEncoder(TransformerEncoder):
         self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
                                                                   attention_dropout_keepprob=self.dropout_keep_prob,
-                                                                  scope="Attention"+str(i))
+                                                                  scope="Attention")
         feed_forward_network = FeedFowardNetwork(hidden_size=self.hidden_dim,
                                                  filter_size=self.ff_filter_size,
                                                  relu_dropout_keepprob=self.dropout_keep_prob,
                                                  allow_pad=True,
-                                                 scope="FF"+str(i))
+                                                 scope="FF")
 
         wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
                                    postprocess_dropout_keepprob = self.dropout_keep_prob)
-        wrapped_self_attention.create_vars()
+        wrapped_self_attention.create_vars(reuse=tf.AUTO_REUSE)
         wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
                                    postprocess_dropout_keepprob = self.dropout_keep_prob)
-        wrapped_ff.create_vars()
+        wrapped_ff.create_vars(reuse=tf.AUTO_REUSE)
 
         self.layers.append([wrapped_self_attention, wrapped_ff])
 
@@ -169,36 +169,14 @@ class UniversalTransformerEncoder(TransformerEncoder):
       self.output_normalization = LayerNormalization(self.hidden_dim)
       self.output_normalization.create_vars()
 
-  def apply(self, inputs, attention_bias, inputs_padding, is_train=True,  reuse=tf.AUTO_REUSE):
-
-    encoder_inputs = inputs
-    with tf.variable_scope(self.scope, reuse=reuse):
-      for n, layer in enumerate(self.layers):
-        # Run inputs through the sublayers.
-        self_attention_layer = layer[0]
-        feed_forward_network = layer[1]
-
-        tf.logging.info("encoder inputs:")
-        tf.logging.info(encoder_inputs)
-
-        encoder_inputs = self_attention_layer.apply(x=encoder_inputs, y=encoder_inputs, is_train=is_train, bias=attention_bias)
-        encoder_inputs = feed_forward_network.apply(x=encoder_inputs, is_train=is_train,
-                                                    padding=inputs_padding)
-
-    return self.output_normalization.apply(encoder_inputs, is_train)
 
 
 
 
 class UniversalTransformerDecoder(TransformerDecoder):
   def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, scope="TransformerDecoder"):
-    self.hidden_dim = hidden_dim
-    self.number_of_heads = number_of_heads
-    self.depth = depth
-    self.dropout_keep_prob = dropout_keep_prob
-    self.ff_filter_size = ff_filter_size
+    super(UniversalTransformerDecoder, self).__init__(hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, scope)
 
-    self.scope = scope
 
   def create_vars(self, reuse=False):
 
@@ -209,16 +187,16 @@ class UniversalTransformerDecoder(TransformerDecoder):
         self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
                                                                   attention_dropout_keepprob=self.dropout_keep_prob,
-                                                                  scope="SelfAttention"+str(i))
+                                                                  scope="SelfAttention")
         enc_dec_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
                                                                   attention_dropout_keepprob=self.dropout_keep_prob,
-                                                                  scope="EncDecAttention" + str(i))
+                                                                  scope="EncDecAttention")
         feed_forward_network = FeedFowardNetwork(self.hidden_dim,
                                                  self.ff_filter_size,
                                                  self.dropout_keep_prob,
                                                  allow_pad=True,
-                                                 scope="FF"+str(i))
+                                                 scope="FF")
 
         wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
                                    postprocess_dropout_keepprob = self.dropout_keep_prob)
@@ -227,32 +205,15 @@ class UniversalTransformerDecoder(TransformerDecoder):
         wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
                                    postprocess_dropout_keepprob = self.dropout_keep_prob)
 
-        wrapped_self_attention.create_vars()
-        wrapped_enc_dec_attention.create_vars()
-        wrapped_ff.create_vars()
+        wrapped_self_attention.create_vars(reuse=tf.AUTO_REUSE)
+        wrapped_enc_dec_attention.create_vars(reuse=tf.AUTO_REUSE)
+        wrapped_ff.create_vars(reuse=tf.AUTO_REUSE)
 
         self.layers.append([wrapped_self_attention,wrapped_enc_dec_attention,wrapped_ff])
 
       # Create final layer normalization layer.
       self.output_normalization = LayerNormalization(self.hidden_dim)
       self.output_normalization.create_vars()
-
-  def apply(self, inputs, encoder_outputs, decoder_self_attention_bias, attention_bias, is_train=True,  reuse=tf.AUTO_REUSE):
-    decoder_inputs = inputs
-    with tf.variable_scope(self.scope, reuse=reuse):
-      for n, layer in enumerate(self.layers):
-        # Run inputs through the sublayers.
-        self_attention_layer = layer[0]
-        enc_dec_attention = layer[1]
-        feed_forward_network = layer[2]
-
-        decoder_inputs = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
-                                                    bias=decoder_self_attention_bias)
-        decoder_inputs = self_attention_layer.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
-                                                    bias=attention_bias)
-        decoder_inputs = feed_forward_network.apply(x=decoder_inputs, is_train=is_train)
-
-    return self.output_normalization.apply(decoder_inputs, is_train)
 
 
 

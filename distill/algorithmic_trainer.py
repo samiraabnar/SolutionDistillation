@@ -170,6 +170,10 @@ if __name__ == '__main__':
                                          )
 
 
-  model = Models[hparams.model](model_params, scope=hparams.model)
+  model_params = {"transformer": transformer_params,
+                  "lstm": lstm_params,
+                  "bilstm": lstm_params}
+
+  model = Models[hparams.model](model_params[hparams.model], scope=hparams.model)
   trainer = AlgorithmicTrainer(hparams, model, tasks[hparams.task_name])
   trainer.train()

@@ -43,7 +43,7 @@ class LSTM(object):
 
 
   def apply(self, inputs, inputs_length, is_train=True):
-    self.batch_size = inputs.get_shape()[0]
+    self.batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       #embedded_input = tf_layers.layer_norm(embedded_input)
       tf.logging.info("embedded_input")
@@ -71,6 +71,9 @@ class LSTM(object):
           dtype=tf.float32,
           sequence_length=inputs_length)
         #lstm_outputs = tf_layers.layer_norm(lstm_outputs)
+
+        tf.logging.info("seq_outputs"),
+        tf.logging.info(lstm_outputs)
 
       if self.attention_mechanism is not None:
         with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
@@ -102,6 +105,7 @@ class LSTM(object):
     return {
             'raw_outputs': lstm_outputs,
             'sents_reps': sentence_reps,
+            'seq_outputs': lstm_outputs,
     }
 
 

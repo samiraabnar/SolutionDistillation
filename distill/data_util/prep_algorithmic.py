@@ -18,7 +18,9 @@ class Algorithmic(object):
     features = tf.train.Features(feature={
       "inputs": tf.train.Feature(int64_list=tf.train.Int64List(value=example['inputs'])),
       "targets": tf.train.Feature(int64_list=tf.train.Int64List(value=example['targets'])),
-      "length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example['length']]))
+      "inputs_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example['inputs_length']])),
+      "targets_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example['targets_length']]))
+
     })
     return features
 
@@ -38,21 +40,23 @@ class Algorithmic(object):
   @staticmethod
   def parse_examples(example):
     """Load an example from TF record format."""
-    features = {"length": tf.FixedLenFeature([], tf.int64),
+    features = {"inputs_length": tf.FixedLenFeature([], tf.int64),
+                "targets_length": tf.FixedLenFeature([], tf.int64),
                 "targets": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
                 "inputs": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
                 }
     parsed_example = tf.parse_single_example(example, features=features)
 
-    lengths = parsed_example["length"]
+    inputs_lengths = parsed_example["inputs_length"]
+    targets_length = parsed_example["targets_length"]
     inputs = parsed_example["inputs"]
     labels = parsed_example["targets"]
 
-    return inputs, labels, lengths
+    return inputs, labels, inputs_lengths, targets_length
 
   @staticmethod
   def get_padded_shapes():
-    return [None], [None], []
+    return [None], [None], [], []
 
   def get_tfrecord_path(self, mode):
     return os.path.join(self.data_path, self.task_name +"_"+mode + ".tfr")
@@ -97,7 +101,7 @@ class AlgorithmicIdentityBinary40(Algorithmic):
       l = np.random.randint(max_length) + 1
       inputs = [np.random.randint(self.num_symbols) for _ in range(l)]
 
-      yield {"inputs": inputs, "targets": inputs, 'length':l}
+      yield {"inputs": inputs, "targets": inputs, 'inputs_length':l, "targets_length": len(inputs)}
 
 
 class AlgorithmicAdditionBinary40(Algorithmic):
@@ -151,7 +155,7 @@ class AlgorithmicAdditionBinary40(Algorithmic):
           n2, self.base)
       inputs = n1 + [self.base] + n2
       targets = number_to_lower_endian(result, self.base)
-      yield {"inputs": inputs, "targets": targets, "length": l1+l2+1}
+      yield {"inputs": inputs, "targets": targets, "inputs_length": l1+l2+1, "targets_length": len(targets)}
 
 
 class AlgorithmicMultiplicationBinary40(Algorithmic):
@@ -205,7 +209,7 @@ class AlgorithmicMultiplicationBinary40(Algorithmic):
           n2, self.base)
       inputs = n1 + [self.base] + n2
       targets = number_to_lower_endian(result, self.base)
-      yield {"inputs": inputs, "targets": targets, 'length': len(inputs)}
+      yield {"inputs": inputs, "targets": targets, 'inputs_length': len(inputs), "targets_length": len(targets)}
 
 
 class AlgorithmicReverseProblem(Algorithmic):
@@ -267,7 +271,7 @@ class AlgorithmicReverseProblem(Algorithmic):
       # Targets are simply the sorted inputs.
       targets = list(reversed(inputs))
 
-      yield {"inputs": inputs, "targets": targets, "length": len(inputs)}
+      yield {"inputs": inputs, "targets": targets, "inputs_length": len(inputs), "targets_length": len(targets)}
 
 
 class AlgorithmicSortProblem(Algorithmic):
@@ -329,7 +333,7 @@ class AlgorithmicSortProblem(Algorithmic):
       # Targets are simply the sorted inputs.
       targets = list(sorted(inputs))
 
-      yield {"inputs": inputs, "targets": targets, "length": len(inputs)}
+      yield {"inputs": inputs, "targets": targets, "inputs_length": len(inputs), 'targets_length': len(targets)}
 
 if __name__ == '__main__':
     bin_iden = AlgorithmicSortProblem('data/alg')
@@ -364,10 +368,10 @@ if __name__ == '__main__':
     iterator = dataset.make_initializable_iterator()
 
     example = iterator.get_next()
-    inputs, labels, lengths = example
+    inputs, labels, inputs_lengths, targets_lengths = example
     global_step = tf.train.get_or_create_global_step()
     scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                         iterator.initializer))
     with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
-      print(sess.run([inputs, labels, lengths]))
+      print(sess.run([inputs, labels, inputs_lengths]))
 

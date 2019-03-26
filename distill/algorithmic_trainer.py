@@ -5,6 +5,7 @@ from distill.algorithmic_piplines import AlgorithmicTrainer
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40, AlgorithmicAdditionBinary40, \
   AlgorithmicMultiplicationBinary40, AlgorithmicSortProblem, AlgorithmicReverseProblem
 from distill.layers.tree_lstm import TreeLSTM
+from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
 from distill.models.sentiment_lstm import SentimentLSTM
 from distill.layers.lstm import LSTM
@@ -21,8 +22,7 @@ tf.app.flags.DEFINE_string("exp_name", "trial", "")
 tf.app.flags.DEFINE_string("task_name", "identity", "identity | addition| multiplication | sort | reverse")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
-
-tf.app.flags.DEFINE_string("model", "transformer", "")
+tf.app.flags.DEFINE_string("model", "transformer", "transformer | lstm | bilstm")
 
 
 tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
@@ -93,9 +93,10 @@ if __name__ == '__main__':
                                               'hidden_dim'+str(hparams.hidden_dim),
                                               hparams.exp_name]))
 
-  Models = {"plain": LSTM,
-            "bidi": BiLSTM,
+  Models = {"plain": LSTMSeq2Seq,
+            "bidi": BidiLSTMSeq2Seq,
             "transformer": Transformer}
+
 
   tasks = {'identity': AlgorithmicIdentityBinary40('data/alg'),
            'addition': AlgorithmicAdditionBinary40('data/alg'),
@@ -104,7 +105,7 @@ if __name__ == '__main__':
            'reverse': AlgorithmicReverseProblem('data/alg')}
 
   hparams.vocab_size = tasks[hparams.task_name].num_symbols + 1
-  
+
   model_params = Hparam(input_dim=hparams.input_dim,
                           hidden_dim=hparams.hidden_dim,
                           output_dim=hparams.output_dim,
@@ -121,6 +122,6 @@ if __name__ == '__main__':
                           )
 
 
-  model = Models[hparams.model](model_params, scope="Transformer")
+  model = Models[hparams.model](model_params, scope=hparams.model)
   trainer = AlgorithmicTrainer(hparams, model, tasks[hparams.task_name])
   trainer.train()

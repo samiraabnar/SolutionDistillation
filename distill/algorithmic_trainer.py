@@ -144,11 +144,11 @@ if __name__ == '__main__':
   hparams.vocab_size = tasks[hparams.task_name].num_symbols + 1
 
   transformer_params = TransformerHparam(input_dim=hparams.input_dim,
-                          hidden_dim=hparams.hidden_dim,
-                          output_dim=hparams.output_dim,
-                          depth=hparams.depth,
-                          number_of_heads=hparams.number_of_heads,
-                          ff_filter_size=hparams.ff_filter_size,
+                          hidden_dim=128,
+                          output_dim=None,
+                          depth=2,
+                          number_of_heads=1,
+                          ff_filter_size=512,
                           initializer_gain=hparams.initializer_gain,
                           batch_size=hparams.batch_size,
                           pretrained_embedding_path=hparams.pretrained_embedding_path,
@@ -157,10 +157,11 @@ if __name__ == '__main__':
                           vocab_size=hparams.vocab_size,
                           label_smoothing=hparams.label_smoothing
                           )
+
   lstm_params = LSTMHparam(input_dim=hparams.input_dim,
-                                         hidden_dim=hparams.hidden_dim,
+                                         hidden_dim=128,
                                          output_dim=hparams.output_dim,
-                                         depth=hparams.depth,
+                                         depth=2,
                                          number_of_heads=hparams.number_of_heads,
                                          ff_filter_size=hparams.ff_filter_size,
                                          initializer_gain=hparams.initializer_gain,

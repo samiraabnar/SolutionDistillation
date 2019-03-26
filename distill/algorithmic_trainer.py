@@ -56,7 +56,7 @@ tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 hparams = tf.app.flags.FLAGS
 
 
-class Hparam(object):
+class TransformerHparam(object):
   def __init__(self, input_dim,
                hidden_dim,
                output_dim,
@@ -70,6 +70,7 @@ class Hparam(object):
                initializer_gain,
                vocab_size,
                label_smoothing,
+               attention_mechanism,
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -84,6 +85,39 @@ class Hparam(object):
     self.ff_filter_size = ff_filter_size
     self.initializer_gain = initializer_gain
     self.label_smoothing = label_smoothing
+
+
+class LSTMHparam(object):
+  def __init__(self, input_dim,
+               hidden_dim,
+               output_dim,
+               depth,
+               batch_size,
+               pretrained_embedding_path,
+               input_dropout_keep_prob,
+               hidden_dropout_keep_prob,
+               number_of_heads,
+               ff_filter_size,
+               initializer_gain,
+               vocab_size,
+               label_smoothing,
+               attention_mechanism,
+               ):
+    self.input_dim = input_dim
+    self.vocab_size = vocab_size
+    self.hidden_dim = hidden_dim
+    self.output_dim = output_dim
+    self.depth = depth
+    self.batch_size = batch_size
+    self.pretrained_embedding_path = pretrained_embedding_path
+    self.input_dropout_keep_prob = input_dropout_keep_prob
+    self.hidden_dropout_keep_prob = hidden_dropout_keep_prob
+    self.number_of_heads = number_of_heads
+    self.ff_filter_size = ff_filter_size
+    self.initializer_gain = initializer_gain
+    self.label_smoothing = label_smoothing
+    self.attention_mechanism = attention_mechanism
+
 
 if __name__ == '__main__':
   if hparams.save_dir is None:
@@ -106,7 +140,7 @@ if __name__ == '__main__':
 
   hparams.vocab_size = tasks[hparams.task_name].num_symbols + 1
 
-  model_params = Hparam(input_dim=hparams.input_dim,
+  transformer_params = TransformerHparam(input_dim=hparams.input_dim,
                           hidden_dim=hparams.hidden_dim,
                           output_dim=hparams.output_dim,
                           depth=hparams.depth,
@@ -120,6 +154,21 @@ if __name__ == '__main__':
                           vocab_size=hparams.vocab_size,
                           label_smoothing=hparams.label_smoothing
                           )
+  lstm_params = LSTMHparam(input_dim=hparams.input_dim,
+                                         hidden_dim=hparams.hidden_dim,
+                                         output_dim=hparams.output_dim,
+                                         depth=hparams.depth,
+                                         number_of_heads=hparams.number_of_heads,
+                                         ff_filter_size=hparams.ff_filter_size,
+                                         initializer_gain=hparams.initializer_gain,
+                                         batch_size=hparams.batch_size,
+                                         pretrained_embedding_path=hparams.pretrained_embedding_path,
+                                         input_dropout_keep_prob=hparams.input_dropout_keep_prob,
+                                         hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
+                                         vocab_size=hparams.vocab_size,
+                                         label_smoothing=hparams.label_smoothing,
+                                         attention_mechanism="final"
+                                         )
 
 
   model = Models[hparams.model](model_params, scope=hparams.model)

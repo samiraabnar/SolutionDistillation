@@ -62,16 +62,16 @@ class Algorithmic(object):
     return os.path.join(self.data_path, self.task_name +"_"+mode + ".tfr")
 
 
-class AlgorithmicIdentityBinary40(Algorithmic):
-  """Problem spec for algorithmic binary identity task."""
+class AlgorithmicIdentityDecimal40(Algorithmic):
+  """Problem spec for algorithmic decimal identity task."""
 
   def __init__(self, data_path):
-    super(AlgorithmicIdentityBinary40, self).__init__(data_path=data_path)
-    self.task_name = 'identity_binary_40'
+    super(AlgorithmicIdentityDecimal40, self).__init__(data_path=data_path)
+    self.task_name = 'identity_decimal_40'
 
   @property
   def num_symbols(self):
-    return 2
+    return 10
 
   @property
   def train_length(self):
@@ -104,16 +104,16 @@ class AlgorithmicIdentityBinary40(Algorithmic):
       yield {"inputs": inputs, "targets": inputs, 'inputs_length':l, "targets_length": len(inputs)}
 
 
-class AlgorithmicAdditionBinary40(Algorithmic):
-  """Problem spec for algorithmic binary addition task."""
+class AlgorithmicAdditionDecimal40(Algorithmic):
+  """Problem spec for algorithmic decimal addition task."""
 
   def __init__(self, data_path):
-    super(AlgorithmicAdditionBinary40, self).__init__(data_path=data_path)
-    self.task_name = 'addition_binary_40'
+    super(AlgorithmicAdditionDecimal40, self).__init__(data_path=data_path)
+    self.task_name = 'addition_decimal_40'
 
   @property
   def num_symbols(self):
-    return 2
+    return 10
 
   @property
   def train_length(self):
@@ -125,7 +125,7 @@ class AlgorithmicAdditionBinary40(Algorithmic):
 
   @property
   def base(self):
-    return 2
+    return 10
 
   def generator(self, number_of_examples, mode="train"):  # pylint: disable=arguments-differ
     """Generator for the addition task.
@@ -158,15 +158,15 @@ class AlgorithmicAdditionBinary40(Algorithmic):
       yield {"inputs": inputs, "targets": targets, "inputs_length": l1+l2+1, "targets_length": len(targets)}
 
 
-class AlgorithmicMultiplicationBinary40(Algorithmic):
-  """Problem spec for algorithmic binary multiplication task."""
+class AlgorithmicMultiplicationDecimal40(Algorithmic):
+  """Problem spec for algorithmic decimal multiplication task."""
   def __init__(self, data_path):
-    super(AlgorithmicMultiplicationBinary40, self).__init__(data_path=data_path)
-    self.task_name = 'multiplication_binary_40'
+    super(AlgorithmicMultiplicationDecimal40, self).__init__(data_path=data_path)
+    self.task_name = 'multiplication_decimal_40'
 
   @property
   def num_symbols(self):
-    return 2
+    return 10
 
   @property
   def train_length(self):
@@ -178,7 +178,7 @@ class AlgorithmicMultiplicationBinary40(Algorithmic):
 
   @property
   def base(self):
-    return 2
+    return 10
 
   def generator(self, number_of_examples, mode="train"):  # pylint: disable=arguments-differ
     """Generator for the multiplication task.
@@ -346,17 +346,17 @@ if __name__ == '__main__':
     bin_iden.build_tfrecords(1000, 'dev')
     bin_iden.build_tfrecords(1000, 'test')
 
-    bin_iden = AlgorithmicMultiplicationBinary40('data/alg')
+    bin_iden = AlgorithmicMultiplicationDecimal40('data/alg')
     bin_iden.build_tfrecords(5000, 'train')
     bin_iden.build_tfrecords(1000, 'dev')
     bin_iden.build_tfrecords(1000, 'test')
 
-    bin_iden = AlgorithmicAdditionBinary40('data/alg')
+    bin_iden = AlgorithmicAdditionDecimal40('data/alg')
     bin_iden.build_tfrecords(5000, 'train')
     bin_iden.build_tfrecords(1000, 'dev')
     bin_iden.build_tfrecords(1000, 'test')
 
-    bin_iden = AlgorithmicIdentityBinary40('data/alg')
+    bin_iden = AlgorithmicIdentityDecimal40('data/alg')
     bin_iden.build_tfrecords(5000, 'train')
     bin_iden.build_tfrecords(1000, 'dev')
     bin_iden.build_tfrecords(1000, 'test')

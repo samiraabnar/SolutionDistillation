@@ -101,6 +101,7 @@ class LSTMHparam(object):
                vocab_size,
                label_smoothing,
                attention_mechanism,
+               sent_rep_mode,
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -116,6 +117,7 @@ class LSTMHparam(object):
     self.initializer_gain = initializer_gain
     self.label_smoothing = label_smoothing
     self.attention_mechanism = attention_mechanism
+    self.sent_rep_mode = sent_rep_mode
 
 
 if __name__ == '__main__':
@@ -166,7 +168,8 @@ if __name__ == '__main__':
                                          hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
                                          vocab_size=hparams.vocab_size,
                                          label_smoothing=hparams.label_smoothing,
-                                         attention_mechanism="final"
+                                         attention_mechanism=None,
+                                         sent_rep_mode="final"
                                          )
 
 

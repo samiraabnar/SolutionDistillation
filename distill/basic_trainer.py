@@ -38,24 +38,26 @@ class Trainer(object):
 
       # Include batch norm mean and variance in gradient descent updates
       update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-      with tf.control_dependencies(update_ops):
-        # Fetch self.updates to apply gradients to all trainable parameters.
-        updates = opt.apply_gradients(zip(gradients, params), global_step=self.global_step)
+      updates = opt.apply_gradients(zip(gradients, params), global_step=self.global_step)
 
-    return updates, learning_rate
+      # Create an ExponentialMovingAverage object
+      ema = tf.train.ExponentialMovingAverage(decay=0.9999)
+
+      with tf.control_dependencies([update_ops,updates]):
+        training_op = ema.apply(tf.trainable_variables())
+
+    return training_op, learning_rate
 
 
   def train(self):
     update_op, scaffold, train_output_dic, _, _ = self.build_train_graph()
-    dev_output_dic, test_output_dic = self.build_eval_graph()
+
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
       tf.logging.info("start training:")
       tf.logging.info(self.config.training_iterations)
       for i in np.arange(self.config.training_iterations):
         sess.run(update_op)
-        if (i % 100) == 0:
-          tf.logging.info(i)
-          tf.logging.info(sess.run(dev_output_dic['loss']))
+
 
 
   def get_data_itaratoes(self):

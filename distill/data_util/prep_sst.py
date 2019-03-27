@@ -304,8 +304,8 @@ def test():
     print(out_computed_root_binary_label[0])
 
 if __name__ == '__main__':
-  #build_full_sst()
-  #test()
+  build_full_sst()
+  test()
 
   print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="train", feature_type="full", add_subtrees=True))))
   print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="test", feature_type="full", add_subtrees=True))))

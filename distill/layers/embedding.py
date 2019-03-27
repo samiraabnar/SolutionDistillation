@@ -1,8 +1,12 @@
 import tensorflow as tf
 
 class Embedding(object):
-  def __init__(self, vocab_size=None, pretrained_embedding_dim=0, tuned_embedding_dim=5, keep_prob=1.0, scope="EmbeddingLayer"):
-    self.vocab_size = vocab_size
+  def __init__(self, pretrained_embedding_dim, tuned_embedding_dim, keep_prob, vocab_size=None, scope="EmbeddingLayer"):
+    if vocab_size is not None:
+      self.vocab_size = vocab_size
+    else:
+      self.vocab_size = pretrained_embedding_dim.shape[0]
+
     self.pretrained_embedding_dim = pretrained_embedding_dim
     self.keep_prob = keep_prob
     self.scope = scope

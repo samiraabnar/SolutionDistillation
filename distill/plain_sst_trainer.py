@@ -106,26 +106,26 @@ class PlainSSTTrainer(object):
     return updates, learning_rate
 
   def get_data_itaratoes(self):
-    dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))
+    dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train", add_subtrees=True))
     dataset = dataset.map(SST.parse_full_sst_tree_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=SST.get_padded_shapes(), drop_remainder=True)
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     iterator = dataset.make_initializable_iterator()
 
-    dev_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="dev"))
+    dev_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="dev", add_subtrees=True))
     dev_dataset = dev_dataset.map(SST.parse_full_sst_tree_examples)
-    dev_dataset = dev_dataset.shuffle(buffer_size=1101)
+    dev_dataset = dev_dataset.shuffle(buffer_size=1000)
     dev_dataset = dev_dataset.repeat()
-    dev_dataset = dev_dataset.padded_batch(1101, padded_shapes=SST.get_padded_shapes(),
+    dev_dataset = dev_dataset.padded_batch(1000, padded_shapes=SST.get_padded_shapes(),
                                            drop_remainder=True)
     dev_iterator = dev_dataset.make_initializable_iterator()
 
-    test_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="test"))
+    test_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="test", add_subtrees=True))
     test_dataset = test_dataset.map(SST.parse_full_sst_tree_examples)
-    test_dataset = test_dataset.shuffle(buffer_size=2210)
+    test_dataset = test_dataset.shuffle(buffer_size=1000)
     test_dataset = test_dataset.repeat()
-    test_dataset = test_dataset.padded_batch(2210, padded_shapes=SST.get_padded_shapes(),
+    test_dataset = test_dataset.padded_batch(1000, padded_shapes=SST.get_padded_shapes(),
                                            drop_remainder=True)
     test_iterator = test_dataset.make_initializable_iterator()
 
@@ -166,17 +166,16 @@ class PlainSSTTrainer(object):
                                                         test_iterator.initializer),
                                  init_feed_dict={self.pretrained_embeddings_ph: self.pretrained_word_embeddings})
 
-    return update_op, scaffold, train_output_dic
+    return update_op, scaffold, train_output_dic, dev_output_dic, test_output_dic
 
   def train(self):
-    update_op, scaffold, train_output_dic = self.build_train_graph()
+    update_op, scaffold, train_output_dic, dev_output_dic, test_output_dic = self.build_train_graph()
 
     # self.global_step = tf.train.get_or_create_global_step()
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
-      for _ in np.arange(self.config.training_iterations):
-        _ = sess.run([update_op],
+      for i in np.arange(self.config.training_iterations):
+        i = sess.run([update_op],
                  feed_dict={self.pretrained_embeddings_ph: self.pretrained_word_embeddings})
-
 
 
 if __name__ == '__main__':

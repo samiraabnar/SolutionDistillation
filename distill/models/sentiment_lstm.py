@@ -23,7 +23,8 @@ class SentimentLSTM(object):
     with tf.variable_scope(self.scope):
       self.embedding_layer = Embedding(vocab_size=self.config.vocab_size,
                                        pretrained_embedding_dim=self.config.embedding_dim,
-                                       keep_prob=self.config.input_dropout_keep_prob)
+                                       keep_prob=self.config.input_dropout_keep_prob,
+                                       tuned_embedding_dim=0)
       self.embedding_layer.create_vars(pretrained_word_embeddings=pretrained_word_embeddings)
 
       self.lstm.create_vars()

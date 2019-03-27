@@ -4,7 +4,7 @@ import os
 import itertools
 from collections import OrderedDict
 from tqdm import tqdm
-from distill.data_util.trees import Tree, leftTraverse
+from distill.data_util.trees import Tree, leftTraverse, get_subtrees
 from distill.data_util.vocab import Vocab, PretrainedVocab
 
 
@@ -43,9 +43,9 @@ def get_word_embs(word_emb_path, word_emb_size, vocabulary_size=99002):
   return word_emb_matrix, word2id
 
 class SST(object):
-  def __init__(self, data_path, pretrained=True, pretrained_path="data/sst/filtered_glove.txt", embedding_size=300):
+  def __init__(self, data_path, add_subtrees=False, pretrained=True, pretrained_path="data/sst/filtered_glove.txt", embedding_size=300):
     self.data_path = data_path
-
+    self.add_subtrees = add_subtrees
     self.vocab_path = os.path.join(data_path, "pretrained_" if pretrained else '' +"vocab")
 
     if pretrained:
@@ -140,7 +140,14 @@ class SST(object):
       file = os.path.join(self.data_path, tag + ".txt")
       print("Loading %s trees.." % file)
       with open(file, 'r') as fid:
-        self.data[tag] = [Tree(line) for line in fid.readlines()]
+        self.data[tag] = []
+        for line in fid.readlines():
+          tree = Tree(line)
+          if self.add_subtrees:
+            sub_trees = get_subtrees(tree.root)
+            self.data[tag].extend(sub_trees)
+          else:
+            self.data[tag].append(tree)
 
   def build_tfrecords(self,tf_feature_fn, mode, feature_type="tree"):
     tf_example_features = []
@@ -148,7 +155,8 @@ class SST(object):
       if example['root_label'] != 2:
        tf_example_features.append(tf_feature_fn(example))
 
-    with tf.python_io.TFRecordWriter(os.path.join(self.data_path,feature_type+"_" + mode + ".tfr")) as tf_record_writer:
+    subtree_name_token = '_allsubs' if self.add_subtrees else ''
+    with tf.python_io.TFRecordWriter(os.path.join(self.data_path,feature_type+"_" + mode + subtree_name_token + ".tfr")) as tf_record_writer:
       for example in tqdm(tf_example_features):
         tf_record = tf.train.Example(features=example)
         tf_record_writer.write(tf_record.SerializeToString())
@@ -222,8 +230,10 @@ class SST(object):
     return [], [], [None], [None], [None], [None], [None], [None], [], [], [], [None]
 
   @staticmethod
-  def get_tfrecord_path(datapath, mode, feature_type="full"):
-    return os.path.join(datapath, feature_type + "_" + mode + ".tfr")
+  def get_tfrecord_path(datapath, mode, feature_type="full", add_subtrees=True):
+
+    subtree_name_token = '_allsubs' if add_subtrees else ''
+    return os.path.join(datapath, feature_type + "_" + mode + subtree_name_token + ".tfr")
 
 def build_sst():
 
@@ -235,6 +245,7 @@ def build_sst():
 
 def build_full_sst():
   sst_prep = SST(data_path="data/sst/",
+                 add_subtrees=True,
                  pretrained=True,
                  pretrained_path="data/sst/filtered_glove.txt",
                  embedding_size=300)
@@ -293,5 +304,10 @@ def test():
     print(out_computed_root_binary_label[0])
 
 if __name__ == '__main__':
-  build_full_sst()
-  test()
+  #build_full_sst()
+  #test()
+
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="train", feature_type="full", add_subtrees=True))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="test", feature_type="full", add_subtrees=True))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="dev", feature_type="full", add_subtrees=True))))
+

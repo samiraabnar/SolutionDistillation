@@ -38,7 +38,7 @@ tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.9, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.8, "")
 
-tf.app.flags.DEFINE_float("learning_rate", 0.1, "")
+tf.app.flags.DEFINE_float("learning_rate", 0.01, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.0005, "")
 
 

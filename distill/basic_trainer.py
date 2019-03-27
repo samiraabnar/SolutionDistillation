@@ -21,14 +21,15 @@ class Trainer(object):
                                     tf.float32) + start_learning_rate
 
       decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
-                                                 1000, 0.96, staircase=True)
+                                                       0, 0.96, staircase=True)
       learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
                                decay_learning_rate)
 
 
       opt = tf.train.AdamOptimizer(learning_rate=learning_rate,
                                    beta1=self.model.hparams.optimizer_adam_beta1,
-                                   beta2=self.model.hparams.optimizer_adam_beta2)
+                                   beta2=self.model.hparams.optimizer_adam_beta2,
+                                   epsilon=self.model.hparams.optimizer_adam_epsilon)
       grads_and_vars = opt.compute_gradients(loss, params)
       gradients, variables = zip(*grads_and_vars)
       if clip_gradient_norm > 0:

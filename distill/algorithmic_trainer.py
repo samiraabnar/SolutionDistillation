@@ -86,10 +86,10 @@ class TransformerHparam(object):
     self.label_smoothing = label_smoothing
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
-    self.learning_rate = 0.1
-    self.learning_rate_warmup_steps = 4000
+    self.learning_rate = 0.001
+    self.learning_rate_warmup_steps = 1000
     self.initializer_gain = 1.0
-    self.num_hidden_layers = 6
+    self.num_hidden_layers = 2
     self.initializer = "uniform_unit_scaling"
     self.weight_decay = 0.0
     self.optimizer_adam_beta1 = 0.9

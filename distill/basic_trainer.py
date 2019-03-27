@@ -36,14 +36,14 @@ class Trainer(object):
         gradient_norm, _ = tf.clip_by_global_norm(gradients, clip_gradient_norm)
       self.param_norm = tf.global_norm(params)
 
+      updates = opt.apply_gradients(zip(gradients, params), global_step=self.global_step)
       # Include batch norm mean and variance in gradient descent updates
       update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-      updates = opt.apply_gradients(zip(gradients, params), global_step=self.global_step)
 
       # Create an ExponentialMovingAverage object
       ema = tf.train.ExponentialMovingAverage(decay=0.9999)
 
-      with tf.control_dependencies([update_ops,updates]):
+      with tf.control_dependencies(update_ops):
         training_op = ema.apply(tf.trainable_variables())
 
     return training_op, learning_rate

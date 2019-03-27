@@ -35,19 +35,6 @@ class AlgorithmicTrainer(Trainer):
 
     return train_iterator, dev_iterator, test_iterator
 
-  def get_eval_data_itaratoes(self):
-    dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="dev"))
-    dataset = dataset.map(self.task.parse_examples)
-    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
-    dev_iterator = dataset.make_one_shot_iterator()
-
-    dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="test"))
-    dataset = dataset.map(self.task.parse_examples)
-    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
-    test_iterator = dataset.make_one_shot_iterator()
-
-    return dev_iterator, test_iterator
-
   def compute_loss(self,logits, targets):
     xentropy, weights = padded_cross_entropy_loss(
       logits, targets, self.config.label_smoothing, self.config.vocab_size)

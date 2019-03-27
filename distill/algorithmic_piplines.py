@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+from distill.basic_evaluator import Evaluator
 from distill.basic_trainer import Trainer
 from distill.common.metrics import padded_cross_entropy_loss, get_eval_metrics
 
@@ -103,3 +104,12 @@ class AlgorithmicTrainer(Trainer):
                                  init_feed_dict={})
 
     return update_op, scaffold, train_output_dic, dev_output_dic, test_output_dic
+
+
+class AlgorithmicEvaluator(Evaluator):
+  def __init__(self, config, model_obj, task):
+    super(AlgorithmicEvaluator, self).__init__(config, model_obj)
+    self.task = task
+
+
+

@@ -4,9 +4,8 @@ from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
 class BiLSTM(object):
-  def __init__(self, input_dim, hidden_dim, output_dim, attention_mechanism=None, input_keep_prob=0.8,
-               hidden_keep_prob=0.8,depth=1, sent_rep_mode="all", scope="LSTM"):
-    self.input_dim = input_dim
+  def __init__(self, hidden_dim, output_dim, attention_mechanism=None, input_keep_prob=0.8,
+               hidden_keep_prob=0.8,depth=1, sent_rep_mode="all", scope="biLSTM"):
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
     self.scope = scope
@@ -16,12 +15,9 @@ class BiLSTM(object):
     self.attention_mechanism = attention_mechanism
     self.sent_rep_mode = sent_rep_mode
 
-  def create_vars(self, pretrained_word_embeddings, reuse=False):
+  def create_vars(self, reuse=False):
     # Create the embeddings
     with tf.variable_scope(self.scope, reuse=reuse):
-      self.embedding_layer = Embedding(vocab_size=self.input_dim, keep_prob=self.input_keep_prob)
-      self.embedding_layer.create_vars(pretrained_word_embeddings)
-
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cell"):
         lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim, forget_bias=1.0)
@@ -42,29 +38,10 @@ class BiLSTM(object):
           self.attention = FeedforwardSelfAttention(scope="attention")
           self.attention.create_vars()
 
-        # Create the fully connected layers
-      with tf.variable_scope("Projection"):
-        # Initialize the weights and biases
-        self.input_fully_connected_weights = tf.contrib.layers.xavier_initializer()
-
-        self.output_fully_connected_weights = tf.contrib.layers.xavier_initializer()
 
   def apply(self, inputs, inputs_length, is_train=True):
     self.batch_size = inputs.get_shape()[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-      embedded_input = self.embedding_layer.apply(inputs, is_train)
-      #embedded_input = tf_layers.layer_norm(embedded_input)
-      tf.logging.info("embedded_input")
-      tf.logging.info(embedded_input)
-
-      # Create the fully connected layers
-      # with tf.variable_scope("InputProjection", reuse=tf.AUTO_REUSE):
-      #   embedded_input = tf.contrib.layers.fully_connected(embedded_input,
-      #                                              num_outputs=self.hidden_dim,
-      #                                              weights_initializer=self.input_fully_connected_weights,
-      #                                              biases_initializer=None)
-
-
       # Run the data through the RNN layers
       with tf.variable_scope("LSTM_Cell", reuse=tf.AUTO_REUSE):
         fw_cell = self.fw_multi_lstm_cell
@@ -76,15 +53,10 @@ class BiLSTM(object):
         lstm_outputs, final_state = tf.nn.bidirectional_dynamic_rnn(
           cell_fw=fw_cell,
           cell_bw=bw_cell,
-          inputs=embedded_input,
+          inputs=inputs,
           sequence_length=inputs_length,
           dtype=tf.float32,
         )
-
-        #lstm_outputs = tf_layers.layer_norm(lstm_outputs)
-
-
-
 
       # concatenation output from forward and backward layers.
       fw_outputs, bw_outputs = tf.unstack(lstm_outputs)
@@ -107,23 +79,17 @@ class BiLSTM(object):
       if self.sent_rep_mode == "all": # Sum over all representations for each sentence!
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1) / tf.expand_dims(tf.cast(inputs_length, tf.float32), -1)
       elif self.sent_rep_mode == "final":
-        sentence_reps = tf.gather_nd(lstm_outputs, root_indices)
+        fw_sentence_reps = tf.gather_nd(fw_outputs, root_indices)
+        bw_sentence_reps = bw_outputs[:,-1]
+        sentence_reps = tf.concat([fw_sentence_reps,bw_sentence_reps], axis=-1)
       else:
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
 
-      # Create the fully connected layers
-      with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
-        logits = tf.contrib.layers.fully_connected(sentence_reps,
-                                                    activation_fn=None,
-                                                    num_outputs=self.output_dim,
-                                                    weights_initializer=self.output_fully_connected_weights,
-                                                    biases_initializer=None)
 
-    return {'logits': logits,
+    return {
             'raw_outputs': lstm_outputs,
-            'embedded_inputs': embedded_input,
-            'raw_inputs': inputs,
-            'sents_reps': sentence_reps
+            'sents_reps': sentence_reps,
+            'seq_outputs': lstm_outputs,
     }
 
 

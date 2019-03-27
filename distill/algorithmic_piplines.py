@@ -11,7 +11,7 @@ class AlgorithmicTrainer(Trainer):
     self.task = task
 
 
-  def get_data_itaratoes(self):
+  def get_train_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="train"))
     dataset = dataset.map(self.task.parse_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
@@ -21,20 +21,36 @@ class AlgorithmicTrainer(Trainer):
 
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="dev"))
     dataset = dataset.map(self.task.parse_examples)
-    dataset = dataset.padded_batch(10000, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     dev_iterator = dataset.make_initializable_iterator()
 
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="test"))
     dataset = dataset.map(self.task.parse_examples)
-    dataset = dataset.padded_batch(10000, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     test_iterator = dataset.make_initializable_iterator()
 
     return train_iterator, dev_iterator, test_iterator
 
+  def get_eval_data_itaratoes(self):
+    dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="dev"))
+    dataset = dataset.map(self.task.parse_examples)
+    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.shuffle(buffer_size=1000)
+    dataset = dataset.repeat()
+    dev_iterator = dataset.make_initializable_iterator()
+
+    dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="test"))
+    dataset = dataset.map(self.task.parse_examples)
+    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.shuffle(buffer_size=1000)
+    dataset = dataset.repeat()
+    test_iterator = dataset.make_initializable_iterator()
+
+    return dev_iterator, test_iterator
 
   def compute_loss(self,logits, targets):
     xentropy, weights = padded_cross_entropy_loss(
@@ -43,7 +59,6 @@ class AlgorithmicTrainer(Trainer):
 
     return loss
 
-
   def add_metric_summaries(self, logits, labels, family):
     eval_metrics = get_eval_metrics(logits, labels, self.model.hparams)
     for metric in eval_metrics:
@@ -51,10 +66,8 @@ class AlgorithmicTrainer(Trainer):
       tf.logging.info(eval_metrics[metric])
       tf.summary.scalar(metric, tf.reduce_mean(eval_metrics[metric]), family=family)
 
-
-
   def build_train_graph(self):
-    train_iterator, dev_iterator, test_iterator = self.get_data_itaratoes()
+    train_iterator, dev_iterator, test_iterator = self.get_train_data_itaratoes()
 
     train_examples = train_iterator.get_next()
     dev_examples = dev_iterator.get_next()
@@ -97,3 +110,24 @@ class AlgorithmicTrainer(Trainer):
                                  init_feed_dict={})
 
     return update_op, scaffold, train_output_dic, dev_output_dic, test_output_dic
+
+  def build_eval_graph(self):
+    dev_iterator, test_iterator = self.get_eval_data_itaratoes()
+
+    dev_examples = dev_iterator.get_next()
+    test_examples = test_iterator.get_next()
+
+    dev_output_dic = self.model.apply(dev_examples, is_train=False)
+    test_output_dic = self.model.apply(test_examples, is_train=False)
+
+    dev_loss = self.compute_loss(dev_output_dic['logits'], dev_output_dic['targets'])
+    test_loss = self.compute_loss(test_output_dic['logits'], test_output_dic['targets'])
+
+    tf.summary.scalar("loss", dev_loss, family="dev")
+    tf.summary.scalar("loss", test_loss, family="test")
+
+    self.add_metric_summaries(dev_output_dic['logits'], dev_output_dic['targets'], "dev")
+    self.add_metric_summaries(test_output_dic['logits'], test_output_dic['targets'], "test")
+
+
+    return dev_output_dic, test_output_dic

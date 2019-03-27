@@ -97,13 +97,18 @@ class PlainSSTTrainer(object):
     clipped_gradients, _ = tf.clip_by_global_norm(gradients, 5)
     #self.param_norm = tf.global_norm(params)
 
-    # Include batch norm mean and variance in gradient descent updates
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    with tf.control_dependencies(update_ops):
-      # Fetch self.updates to apply gradients to all trainable parameters.
-      updates = opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step)
+    # Fetch self.updates to apply gradients to all trainable parameters.
+    updates = opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step)
 
-    return updates, learning_rate
+    # Create an ExponentialMovingAverage object
+    ema = tf.train.ExponentialMovingAverage(decay=0.9999)
+
+    with tf.control_dependencies([updates]):
+      training_op = ema.apply(tf.trainable_variables())
+
+
+
+    return training_op, learning_rate
 
   def get_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train", add_subtrees=True))

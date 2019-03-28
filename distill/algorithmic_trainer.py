@@ -39,7 +39,7 @@ tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.9, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.8, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.01, "")
-tf.app.flags.DEFINE_float("l2_rate", 0.0005, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.00005, "")
 
 
 tf.app.flags.DEFINE_integer("batch_size", 128, "")
@@ -87,7 +87,7 @@ class TransformerHparam(object):
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.learning_rate = 0.005
-    self.learning_rate_warmup_steps = 2000
+    self.learning_rate_warmup_steps = 4000
     self.initializer_gain = 1.0
     self.num_hidden_layers = 2
     self.initializer = "uniform_unit_scaling"

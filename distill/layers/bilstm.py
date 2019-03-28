@@ -20,20 +20,28 @@ class BiLSTM(object):
     with tf.variable_scope(self.scope, reuse=reuse):
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cell"):
-        lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim, forget_bias=1.0)
-        dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
+        fw_lstm_0 = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim, forget_bias=1.0)
+        dropout_fw_lstm_0 = tf.contrib.rnn.DropoutWrapper(fw_lstm_0,
                                                output_keep_prob=self.hidden_keep_prob)
+        fw_lstm_1 = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim, forget_bias=1.0)
+        dropout_fw_lstm_1 = tf.contrib.rnn.DropoutWrapper(fw_lstm_1,
+                                                       output_keep_prob=self.hidden_keep_prob)
 
-        self.fw_multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
-        self.fw_multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
+        self.fw_multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([fw_lstm_0]+[fw_lstm_1] * (self.num_layers - 1))
+        self.fw_multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_fw_lstm_0]+[dropout_fw_lstm_1] * (self.num_layers - 1))
 
-        lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
-        dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
-                                               output_keep_prob=self.hidden_keep_prob)
-        self.bw_multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm] * self.num_layers)
-        self.bw_multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell([dropout_lstm] * self.num_layers)
+        bw_lstm_0 = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim, forget_bias=1.0)
+        dropout_bw_lstm_0 = tf.contrib.rnn.DropoutWrapper(bw_lstm_0,
+                                                          output_keep_prob=self.hidden_keep_prob)
+        bw_lstm_1 = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim, forget_bias=1.0)
+        dropout_bw_lstm_1 = tf.contrib.rnn.DropoutWrapper(bw_lstm_1,
+                                                          output_keep_prob=self.hidden_keep_prob)
 
-      if self.attention_mechanism is not None:
+        self.bw_multi_lstm_cell = tf.contrib.rnn.MultiRNNCell([bw_lstm_0] + [bw_lstm_1] * (self.num_layers - 1))
+        self.bw_multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell(
+          [dropout_bw_lstm_0] + [dropout_bw_lstm_1] * (self.num_layers - 1))
+
+    if self.attention_mechanism is not None:
         with tf.variable_scope("Attention"):
           self.attention = FeedforwardSelfAttention(scope="attention")
           self.attention.create_vars()

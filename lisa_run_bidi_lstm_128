@@ -23,6 +23,4 @@ LOGS_DIR=$HEAD_DIR/logs
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
-python $CODE_DIR/plain_sst_trainer.py --hidden_dim=128 --bidirectional=True --exp_name=_sepcells_ \
---pretrained_embedding_path=/home/samigpu/Codes/Data/word_embeddings/glove.6B/glove.6B.300d.txt \
---embedding_dim=300
+python $CODE_DIR/plain_sst_trainer.py --hidden_dim=128 --bidirectional=True --exp_name=_baseline_

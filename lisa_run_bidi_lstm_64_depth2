@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=plain_lstm_128
+#SBATCH --job-name=bidi_lstm_64
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
@@ -23,4 +23,4 @@ LOGS_DIR=$HEAD_DIR/logs
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
-python $CODE_DIR/plain_sst_trainer.py --hidden_dim=128 --bidirectional=False --exp_name=_baseline_
+python $CODE_DIR/plain_sst_trainer.py --hidden_dim=64 --bidirectional=True --exp_name=_baseline_

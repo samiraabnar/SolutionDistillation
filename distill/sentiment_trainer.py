@@ -19,7 +19,7 @@ from distill.pipelines import SSTRepDistiller
 tf.logging.set_verbosity(tf.logging.INFO)
 
 tf.app.flags.DEFINE_string("exp_name", "trial", "")
-tf.app.flags.DEFINE_string("task_name", "identity", "identity | addition| multiplication | sort | reverse")
+tf.app.flags.DEFINE_string("task_name", "sst")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer | lstm | bilstm")
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 
 
   Models = {"lstm": LSTMSeq2Seq,
-            "bilstm": BidiLSTMSeq2Seq,
+            "lstm_bidi": BidiLSTMSeq2Seq,
             "transformer": Transformer,
             "utransformer": UniversalTransformer}
 
@@ -214,5 +214,5 @@ if __name__ == '__main__':
                                               hparams.exp_name]))
 
   model = Models[hparams.model](model_params[hparams.model], scope=hparams.model)
-  trainer = AlgorithmicTrainer(hparams, model, tasks[hparams.task_name])
+  trainer = SentimentTrainer(hparams, model, tasks[hparams.task_name])
   trainer.train()

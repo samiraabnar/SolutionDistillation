@@ -48,7 +48,7 @@ class BiLSTM(object):
 
 
   def apply(self, inputs, inputs_length, is_train=True):
-    self.batch_size = inputs.get_shape()[0]
+    self.batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       # Run the data through the RNN layers
       with tf.variable_scope("LSTM_Cell", reuse=tf.AUTO_REUSE):

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -n 1
-#SBATCH --job-name=plain_lstm_64
+#SBATCH --job-name=lstm_algorithmic
 #SBATCH --time=5:00:00
 #SBATCH --partition=gpu
 

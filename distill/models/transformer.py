@@ -116,17 +116,20 @@ class TransformerDecoder(object):
       self.output_normalization = LayerNormalization(self.hidden_dim)
       self.output_normalization.create_vars()
 
-  def apply(self, inputs, encoder_outputs, decoder_self_attention_bias, attention_bias, is_train=True,  reuse=tf.AUTO_REUSE):
+  def apply(self, inputs, encoder_outputs, decoder_self_attention_bias, attention_bias, cache=None, is_train=True,  reuse=tf.AUTO_REUSE):
     decoder_inputs = inputs
     with tf.variable_scope(self.scope, reuse=reuse):
       for n, layer in enumerate(self.layers):
+        layer_name = "layer_%d" % n
+        layer_cache = cache[layer_name] if cache is not None else None
+
         # Run inputs through the sublayers.
         self_attention_layer = layer[0]
         enc_dec_attention = layer[1]
         feed_forward_network = layer[2]
 
         decoder_inputs = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
-                                                    bias=decoder_self_attention_bias)
+                                                    bias=decoder_self_attention_bias, cache=layer_cache)
         decoder_inputs = self_attention_layer.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
                                                     bias=attention_bias)
         decoder_inputs = feed_forward_network.apply(x=decoder_inputs, is_train=is_train)
@@ -275,11 +278,16 @@ class Transformer(object):
       # Run the inputs through the encoder layer to map the symbol
       # representations to continuous representations.
       encoder_outputs = self.encode(inputs, attention_bias, is_train)
+      tf.logging.info('encoder outputs')
+      tf.logging.info(encoder_outputs)
 
       if targets is None or not is_train:
         output_dic = self.predict(encoder_outputs, attention_bias)
-        logits = output_dic['outputs']
-        outputs = self.embedding_softmax_layer.apply(logits)
+        predictions = output_dic['outputs']
+        logits = self.embedding_softmax_layer.apply(predictions)
+        tf.logging.info('predict logits')
+        tf.logging.info(logits)
+        outputs = None
       else:
         outputs = self.decode(targets, encoder_outputs, attention_bias, is_train)
         logits = self.embedding_softmax_layer.linear(outputs)
@@ -415,6 +423,8 @@ class Transformer(object):
 
     # Add encoder output and attention bias to the cache.
     cache["encoder_outputs"] = encoder_outputs
+    tf.logging.info("cache_encode_outputs")
+    tf.logging.info(cache["encoder_outputs"])
     cache["encoder_decoder_attention_bias"] = encoder_decoder_attention_bias
 
     # Use beam search to find the top beam_size sequences and scores.

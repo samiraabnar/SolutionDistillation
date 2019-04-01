@@ -36,7 +36,7 @@ tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
 
 
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.9, "")
-tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.8, "")
+tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.01, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.00005, "")
@@ -98,6 +98,9 @@ class TransformerHparam(object):
     self.label_smoothing = 0.1
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
+    self.alpha = 1
+    self.beam_size = 1
+    self.extra_decode_length = 5
 
 class LSTMHparam(object):
   def __init__(self, input_dim,
@@ -135,7 +138,7 @@ class LSTMHparam(object):
     self.sent_rep_mode = sent_rep_mode
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
-    self.learning_rate = 0.005
+    self.learning_rate = 0.001
     self.learning_rate_warmup_steps = 4000
     self.initializer_gain = 1.0
     self.initializer = "uniform_unit_scaling"

@@ -14,6 +14,7 @@ class BiLSTM(object):
     self.num_layers = depth
     self.attention_mechanism = attention_mechanism
     self.sent_rep_mode = sent_rep_mode
+    self.sent_rep_dim = self.hidden_dim * 2
 
   def create_vars(self, reuse=False):
     # Create the embeddings

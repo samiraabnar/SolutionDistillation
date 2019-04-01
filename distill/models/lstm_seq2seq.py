@@ -38,7 +38,7 @@ class LSTMSeq2Seq(object):
 
       # Output embedding
       self.output_embedding_mat = tf.get_variable("output_embedding_mat",
-                                                  [self.hparams.embedding_dim, self.hparams.hidden_dim],
+                                                  [self.hparams.embedding_dim, self.lstm_decoder.sent_rep_dim],
                                                   dtype=tf.float32)
       self.output_embedding_bias = tf.get_variable("output_embedding_bias",
                                                    [self.hparams.embedding_dim],
@@ -46,6 +46,12 @@ class LSTMSeq2Seq(object):
 
 
   def apply(self, examples, is_train=True, reuse=tf.AUTO_REUSE):
+
+    def output_embedding(current_output):
+      return tf.add(
+        tf.matmul(current_output, tf.transpose(self.output_embedding_mat)),
+        self.output_embedding_bias)
+
     inputs, targets, input_lengths, target_length = examples
     with tf.variable_scope(self.scope, reuse=reuse):
       embedded_inputs = self.embedding_layer.apply(inputs)
@@ -57,16 +63,18 @@ class LSTMSeq2Seq(object):
         tf.logging.info("encoder_output")
         tf.logging.info(encoder_output)
       with tf.variable_scope("decoder"):
-        decoder_inputs = tf.concat([encoder_output, embedded_targets], axis=-1)
-        tf.logging.info('decoder_inputs')
-        tf.logging.info(decoder_inputs)
-        lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=target_length, is_train=is_train)
+        if is_train:
+          decoder_inputs = tf.concat([encoder_output, embedded_targets], axis=-1)
+          tf.logging.info('decoder_inputs')
+          tf.logging.info(decoder_inputs)
+          lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=target_length,
+                                                            is_train=is_train)
+        else:
+          lstm_decoder_output_dic = self.lstm_decoder.infer_apply(inputs=encoder_output, inputs_length=target_length,
+                                                                  output_embedding_fn=output_embedding, is_train=is_train)
 
       outputs = lstm_decoder_output_dic['seq_outputs']
-      def output_embedding(current_output):
-        return tf.add(
-          tf.matmul(current_output, tf.transpose(self.output_embedding_mat)),
-          self.output_embedding_bias)
+
 
       outputs = tf.map_fn(output_embedding, outputs)
 
@@ -87,11 +95,11 @@ class BidiLSTMSeq2Seq(LSTMSeq2Seq):
 
 
 if __name__ == '__main__':
-  from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40
+  from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40
 
   tf.logging.set_verbosity(tf.logging.INFO)
 
-  bin_iden = AlgorithmicIdentityBinary40('data/alg')
+  bin_iden = AlgorithmicIdentityDecimal40('data/alg')
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
@@ -119,11 +127,13 @@ if __name__ == '__main__':
   model = LSTMSeq2Seq(Config(), model=LSTM, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 
-  outputs = model.apply(example)
+  _ = model.apply(example, is_train=True)
+  outputs = model.apply(example, is_train=False)
+
   predictions = outputs['predictions']
 
   global_step = tf.train.get_or_create_global_step()
   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                       iterator.initializer))
   with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
-    print(sess.run([inputs, predictions]))
+    print(sess.run([predictions]))

@@ -36,7 +36,7 @@ tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_string("student_attention_mechanism", None, "")
 tf.app.flags.DEFINE_string("teacher_attention_mechanism", None, "")
-tf.app.flags.DEFINE_string("sent_rep_mode", 'last', "")
+tf.app.flags.DEFINE_string("sent_rep_mode", 'final', "")
 
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
@@ -44,7 +44,7 @@ tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.00001, "")
-tf.app.flags.DEFINE_float("l2_rate", 0.0005, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 30000, "")

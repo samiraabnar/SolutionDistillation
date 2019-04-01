@@ -137,14 +137,20 @@ class LSTM(object):
           tf.logging.info(last_state)
 
           tf.logging.info(inputs[:, step, :])
+
           last_lstm_prediction = output_embedding_fn(last_lstm_prediction)
+          last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
+          tf.logging.info('last_lstm_prediction')
+          tf.logging.info(last_lstm_prediction)
+          
           logits = embedding_layer.linear(last_lstm_prediction)
           prediction = tf.argmax(logits, axis=-1)
-
           embedded_prediction = embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]
+          tf.logging.info('embedded_prediction')
           tf.logging.info(embedded_prediction)
           cell_input = tf.concat([embedded_prediction, inputs[:, step, :]], axis=-1)
+          tf.logging.info('cell_input')
           tf.logging.info(cell_input)
           lstm_prediction, state = the_cell(cell_input, last_state)
           all_outputs = all_outputs.write(step, lstm_prediction)

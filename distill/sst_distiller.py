@@ -20,7 +20,7 @@ tf.app.flags.DEFINE_string("task_name", "sst_distill", "")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
-tf.app.flags.DEFINE_string("teacher_model", "tree", "")
+tf.app.flags.DEFINE_string("teacher_model", "bidi", "")
 tf.app.flags.DEFINE_string("student_model", "plain", "")
 tf.app.flags.DEFINE_boolean("pretrain_teacher", True, "")
 tf.app.flags.DEFINE_integer("teacher_pretraining_iters", 100, "")

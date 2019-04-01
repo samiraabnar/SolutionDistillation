@@ -36,7 +36,7 @@ tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
 
 
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.9, "")
-tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
+tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.8, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.01, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.00005, "")
@@ -128,8 +128,8 @@ class LSTMHparam(object):
     self.depth = depth
     self.batch_size = batch_size
     self.pretrained_embedding_path = pretrained_embedding_path
-    self.input_dropout_keep_prob = input_dropout_keep_prob
-    self.hidden_dropout_keep_prob = hidden_dropout_keep_prob
+    self.input_dropout_keep_prob = 0.85
+    self.hidden_dropout_keep_prob = 0.25
     self.number_of_heads = number_of_heads
     self.ff_filter_size = ff_filter_size
     self.initializer_gain = initializer_gain

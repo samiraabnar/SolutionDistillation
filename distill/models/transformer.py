@@ -284,7 +284,7 @@ class Transformer(object):
       if targets is None or not is_train:
         output_dic = self.predict(encoder_outputs, attention_bias)
         predictions = output_dic['outputs']
-        logits = self.embedding_softmax_layer.apply(predictions)
+        logits = tf.one_hot(indices=predictions, depth=self.hparams.vocab_size)
         tf.logging.info('predict logits')
         tf.logging.info(logits)
         outputs = None

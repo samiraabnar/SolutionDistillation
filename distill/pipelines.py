@@ -57,12 +57,14 @@ class Distiller(object):
         sess.run(update_op)
         sess.run(distill_op)
 
-class SSTDistiller(object):
+class SSTDistiller(Distiller):
   def __init__(self, config, student_model, teacher_model):
     super(SSTDistiller, self).__init__(config, student_model, teacher_model)
 
     self.sst = SST("data/sst")
     self.config.vocab_size = len(self.sst.vocab)
+    self.student.hparams.vocab_size = self.config.vocab_size
+    self.teacher.hparams.vocab_size = self.config.vocab_size
 
     self.vocab = PretrainedVocab(self.config.data_path, self.config.pretrained_embedding_path,
                                  self.config.embedding_dim)
@@ -195,13 +197,9 @@ class SSTDistiller(object):
     return update_op,distill_op, scaffold
 
 
-
-
-
 class SSTRepDistiller(SSTDistiller):
   def __init__(self, config, student_model, teacher_model):
     super(SSTRepDistiller, self).__init__(config, student_model, teacher_model)
-
 
   def build_train_graph(self):
     self.student.build_graph(self.pretrained_word_embeddings)
@@ -258,9 +256,9 @@ class SSTRepDistiller(SSTDistiller):
                                                           base_learning_rate=0.001, warmup_steps=10000,
                                                           scope="distill")
 
-    student_update_op, distill_learning_rate = self.get_train_op(student_train_output_dic[self.config.loss_type], student_train_output_dic["trainable_vars"],
+    student_update_op, student_learning_rate = self.get_train_op(student_train_output_dic[self.config.loss_type], student_train_output_dic["trainable_vars"],
                                                           start_learning_rate=0.00005,
-                                                          base_learning_rate=0.001, warmup_steps=10000,
+                                                          base_learning_rate=0.001, warmup_steps=1000,
                                                           scope="student_main")
 
 
@@ -278,9 +276,13 @@ class SSTRepDistiller(SSTDistiller):
     update_op, distill_op, student_update_op, scaffold  = self.build_train_graph()
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
       for _ in np.arange(self.config.training_iterations):
-        sess.run(update_op)
-        sess.run(distill_op)
-        sess.run(student_update_op)
+        if self.config.train_teacher:
+          sess.run(update_op)
+        if self.config.distill_rep:
+          sess.run(distill_op)
+        if self.config.train_student:
+          sess.run(student_update_op)
+
 
 class Seq2SeqDistiller(Distiller):
 

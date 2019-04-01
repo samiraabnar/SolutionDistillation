@@ -17,6 +17,10 @@ tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
 tf.app.flags.DEFINE_string("teacher_model", "bidi", "")
+tf.app.flags.DEFINE_boolean("train_teacher", True, "")
+tf.app.flags.DEFINE_boolean("train_student", False, "")
+tf.app.flags.DEFINE_boolean("distill_rep", True, "")
+
 tf.app.flags.DEFINE_string("student_model", "plain", "")
 tf.app.flags.DEFINE_boolean("pretrain_teacher", True, "")
 tf.app.flags.DEFINE_integer("teacher_pretraining_iters", 100, "")
@@ -24,10 +28,10 @@ tf.app.flags.DEFINE_string("rep_loss_mode", 'squared', "representation loss type
 
 
 tf.app.flags.DEFINE_string("model_type", "rep_bidi_to_plain", "")
-tf.app.flags.DEFINE_integer("student_hidden_dim", 64, "")
-tf.app.flags.DEFINE_integer("student_depth", 1, "")
+tf.app.flags.DEFINE_integer("student_hidden_dim", 128, "")
+tf.app.flags.DEFINE_integer("student_depth", 2, "")
 tf.app.flags.DEFINE_integer("teacher_hidden_dim", 128, "")
-tf.app.flags.DEFINE_integer("teacher_depth", 1, "")
+tf.app.flags.DEFINE_integer("teacher_depth", 2, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_string("student_attention_mechanism", None, "")
@@ -67,7 +71,8 @@ class Hparam(object):
                input_dropout_keep_prob,
                hidden_dropout_keep_prob,
                loss_type,
-               sent_rep_mode):
+               sent_rep_mode,
+               embedding_dim):
     self.input_dim = input_dim
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
@@ -79,6 +84,8 @@ class Hparam(object):
     self.hidden_dropout_keep_prob = hidden_dropout_keep_prob
     self.loss_type = loss_type
     self.sent_rep_mode = sent_rep_mode
+    self.vocab_size = None
+    self.embedding_dim = embedding_dim
 
 if __name__ == '__main__':
   if hparams.save_dir is None:
@@ -99,7 +106,8 @@ if __name__ == '__main__':
                           input_dropout_keep_prob=hparams.input_dropout_keep_prob,
                           hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
                           loss_type=hparams.loss_type,
-                          sent_rep_mode=hparams.sent_rep_mode)
+                          sent_rep_mode=hparams.sent_rep_mode,
+                          embedding_dim=hparams.embedding_dim)
 
   teacher_params = Hparam(input_dim=hparams.input_dim,
                           hidden_dim=hparams.teacher_hidden_dim,
@@ -111,7 +119,8 @@ if __name__ == '__main__':
                           input_dropout_keep_prob=hparams.input_dropout_keep_prob,
                           hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
                           loss_type=hparams.loss_type,
-                          sent_rep_mode=hparams.sent_rep_mode)
+                          sent_rep_mode=hparams.sent_rep_mode,
+                          embedding_dim=hparams.embedding_dim)
 
 
   student = SentimentLSTM(student_params, model=Models[hparams.student_model], scope="student")

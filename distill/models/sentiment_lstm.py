@@ -7,23 +7,23 @@ from distill.layers.bilstm import BiLSTM
 
 
 class SentimentLSTM(object):
-  def __init__(self, config, model=LSTM, scope="SentimentLSTM"):
-    self.config = config
+  def __init__(self, hparams, model=LSTM, scope="SentimentLSTM"):
+    self.hparams = hparams
     self.scope=scope
-    self.lstm = model(hidden_dim=config.hidden_dim,
-                      output_dim=config.output_dim,
-                      hidden_keep_prob=config.input_dropout_keep_prob,
-                      attention_mechanism=self.config.attention_mechanism,
-                      depth=config.depth,
-                      sent_rep_mode=self.config.sent_rep_mode,
+    self.lstm = model(hidden_dim=hparams.hidden_dim,
+                      output_dim=hparams.output_dim,
+                      hidden_keep_prob=hparams.input_dropout_keep_prob,
+                      attention_mechanism=self.hparams.attention_mechanism,
+                      depth=hparams.depth,
+                      sent_rep_mode=self.hparams.sent_rep_mode,
                       scope=scope)
 
 
   def build_graph(self, pretrained_word_embeddings):
     with tf.variable_scope(self.scope):
-      self.embedding_layer = Embedding(vocab_size=self.config.vocab_size,
-                                       pretrained_embedding_dim=self.config.embedding_dim,
-                                       keep_prob=self.config.input_dropout_keep_prob,
+      self.embedding_layer = Embedding(vocab_size=self.hparams.vocab_size,
+                                       pretrained_embedding_dim=self.hparams.embedding_dim,
+                                       keep_prob=self.hparams.input_dropout_keep_prob,
                                        tuned_embedding_dim=0)
       self.embedding_layer.create_vars(pretrained_word_embeddings=pretrained_word_embeddings)
 
@@ -49,7 +49,7 @@ class SentimentLSTM(object):
       with tf.variable_scope("OutputProjection", reuse=tf.AUTO_REUSE):
         logits = tf.contrib.layers.fully_connected(lstm_output_dic['sents_reps'],
                                                    activation_fn=None,
-                                                   num_outputs=self.config.output_dim,
+                                                   num_outputs=self.hparams.output_dim,
                                                    weights_initializer=self.output_fully_connected_weights,
                                                    biases_initializer=None)
 
@@ -58,7 +58,7 @@ class SentimentLSTM(object):
 
 
 
-      if self.config.output_dim > 1:
+      if self.hparams.output_dim > 1:
         predictions = tf.argmax(logits, axis=-1)
       else:
         predictions = tf.cast(tf.round(tf.nn.sigmoid(logits)), tf.int64)
@@ -66,7 +66,7 @@ class SentimentLSTM(object):
       tf.logging.info("predictions")
       tf.logging.info(predictions)
 
-      if self.config.output_dim > 1:
+      if self.hparams.output_dim > 1:
         loss = tf.reduce_mean(
           tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=tf.one_hot(labels, depth=2)))
       else:

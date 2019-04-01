@@ -111,7 +111,7 @@ class LSTM(object):
             'final_state': final_state
     }
 
-  def infer_apply(self, inputs, inputs_length, output_embedding_fn, init_state=None, is_train=True):
+  def infer_apply(self, inputs, inputs_length, output_embedding_fn, embedding_layer, init_state=None, is_train=True):
     self.batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       tf.logging.info("embedded_input")
@@ -138,9 +138,13 @@ class LSTM(object):
 
           tf.logging.info(inputs[:, step, :])
           last_lstm_prediction = output_embedding_fn(last_lstm_prediction)
+          logits = embedding_layer.linear(last_lstm_prediction)
+          prediction = tf.argmax(logits, axis=-1)
 
-          tf.logging.info(last_lstm_prediction)
-          cell_input = tf.concat([last_lstm_prediction, inputs[:, step, :]], axis=-1)
+          embedded_prediction = embedding_layer.apply(prediction)
+        
+          tf.logging.info(embedded_prediction)
+          cell_input = tf.concat([embedded_prediction, inputs[:, step, :]], axis=-1)
           tf.logging.info(cell_input)
           lstm_prediction, state = the_cell(cell_input, last_state)
           all_outputs = all_outputs.write(step, lstm_prediction)

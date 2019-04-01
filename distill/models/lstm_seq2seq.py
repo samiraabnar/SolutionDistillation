@@ -71,7 +71,8 @@ class LSTMSeq2Seq(object):
                                                             is_train=is_train)
         else:
           lstm_decoder_output_dic = self.lstm_decoder.infer_apply(inputs=encoder_output, inputs_length=target_length,
-                                                                  output_embedding_fn=output_embedding, is_train=is_train)
+                                                                  output_embedding_fn=output_embedding,
+                                                                  embedding_layer=self.embedding_layer,is_train=is_train)
 
       outputs = lstm_decoder_output_dic['seq_outputs']
 

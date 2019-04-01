@@ -162,7 +162,7 @@ class LSTM(object):
                                                         initial_prediction, init_state, 0),
                                                        parallel_iterations=32)
 
-        lstm_outputs = all_outputs.stack()
+        lstm_outputs = tf.concat(all_outputs.stack(), axis=1)
         tf.logging.info("seq_outputs"),
         tf.logging.info(lstm_outputs)
 

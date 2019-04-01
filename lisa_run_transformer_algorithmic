@@ -3,6 +3,7 @@
 #SBATCH -n 1
 #SBATCH --job-name=plain_lstm_64
 #SBATCH --time=5:00:00
+#SBATCH --mem=250G
 #SBATCH --partition=gpu
 
 module load eb

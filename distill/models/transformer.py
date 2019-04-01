@@ -321,25 +321,26 @@ class Transformer(object):
     with tf.name_scope("decode"):
       # Prepare inputs to decoder layers by shifting targets, adding positional
       # encoding and applying dropout.
-      decoder_inputs = self.embedding_softmax_layer.apply(targets)
-      with tf.name_scope("shift_targets"):
-        # Shift targets to the right, and remove the last element
-        decoder_inputs = tf.pad(
-          decoder_inputs, [[0, 0], [1, 0], [0, 0]])[:, :-1, :]
-      with tf.name_scope("add_pos_encoding"):
-        length = tf.shape(decoder_inputs)[1]
-        decoder_inputs += get_position_encoding(
-            length, self.hidden_dim)
-      if is_train:
-        decoder_inputs = tf.nn.dropout(
-            decoder_inputs, self.dropout_keep_prob)
+      if targets is not None:
+        decoder_inputs = self.embedding_softmax_layer.apply(targets)
+        with tf.name_scope("shift_targets"):
+          # Shift targets to the right, and remove the last element
+          decoder_inputs = tf.pad(
+            decoder_inputs, [[0, 0], [1, 0], [0, 0]])[:, :-1, :]
+        with tf.name_scope("add_pos_encoding"):
+          length = tf.shape(decoder_inputs)[1]
+          decoder_inputs += get_position_encoding(
+              length, self.hidden_dim)
+        if is_train:
+          decoder_inputs = tf.nn.dropout(
+              decoder_inputs, self.dropout_keep_prob)
 
-      # Run values
-      decoder_self_attention_bias = get_decoder_self_attention_bias(
-          length)
-      outputs = self.decoder_stack.apply(
-          decoder_inputs, encoder_outputs, decoder_self_attention_bias,
-          attention_bias)
+        # Run values
+        decoder_self_attention_bias = get_decoder_self_attention_bias(
+            length)
+        outputs = self.decoder_stack.apply(
+            decoder_inputs, encoder_outputs, decoder_self_attention_bias,
+            attention_bias)
 
       return outputs
 

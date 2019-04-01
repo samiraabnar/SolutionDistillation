@@ -41,8 +41,6 @@ class LSTM(object):
           self.attention = FeedforwardSelfAttention(scope="attention")
           self.attention.create_vars()
 
-
-
   def apply(self, inputs, inputs_length, init_state=None, is_train=True):
     self.batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
@@ -112,8 +110,6 @@ class LSTM(object):
             'seq_outputs': lstm_outputs,
             'final_state': final_state
     }
-
-
 
   def infer_apply(self, inputs, inputs_length, output_embedding_fn, init_state=None, is_train=True):
     self.batch_size = tf.shape(inputs)[0]

@@ -136,7 +136,7 @@ class LSTMHparam(object):
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.learning_rate = 0.005
-    self.learning_rate_warmup_steps = 1000
+    self.learning_rate_warmup_steps = 4000
     self.initializer_gain = 1.0
     self.initializer = "uniform_unit_scaling"
     self.weight_decay = 0.0
@@ -195,7 +195,7 @@ if __name__ == '__main__':
                                          label_smoothing=hparams.label_smoothing,
                                          attention_mechanism=None,
                                          sent_rep_mode="final",
-                                         embedding_dim = 100
+                                         embedding_dim = 32
                                          )
 
 

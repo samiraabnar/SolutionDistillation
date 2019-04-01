@@ -166,10 +166,10 @@ if __name__ == '__main__':
   hparams.vocab_size = tasks[hparams.task_name].num_symbols + 1
 
   transformer_params = TransformerHparam(input_dim=hparams.input_dim,
-                          hidden_dim=128,
+                          hidden_dim=hparams.hidden_dim,
                           output_dim=None,
-                          depth=2,
-                          number_of_heads=1,
+                          depth=hparams.depth,
+                          number_of_heads=4,
                           ff_filter_size=512,
                           initializer_gain=hparams.initializer_gain,
                           batch_size=hparams.batch_size,
@@ -181,7 +181,7 @@ if __name__ == '__main__':
                           )
 
   lstm_params = LSTMHparam(input_dim=hparams.input_dim,
-                                         hidden_dim=hparams.hidden_dropout_keep_prob,
+                                         hidden_dim=hparams.hidden_dim,
                                          output_dim=hparams.output_dim,
                                          depth=hparams.depth,
                                          number_of_heads=hparams.number_of_heads,

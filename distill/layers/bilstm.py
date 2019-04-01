@@ -115,7 +115,7 @@ class BiLSTM(object):
           bw_cell = self.bw_multi_dropout_lstm_cell
 
         if init_state is None:
-          init_state= fw_cell.zero_state(self.batch_size, tf.float32)
+          init_state= (fw_cell.zero_state(self.batch_size, tf.float32), bw_cell.zero_state(self.batch_size, tf.float32))
 
         all_outputs_tensor_array = tf.TensorArray(dtype=tf.float32, size=0,
                                      dynamic_size=True,
@@ -131,22 +131,25 @@ class BiLSTM(object):
           tf.logging.info(last_lstm_prediction)
 
           last_lstm_prediction = output_embedding_fn(last_lstm_prediction)
-          
-          cell_input = tf.concat([last_lstm_prediction, inputs[:, step, :]], axis=-1)
+
+          cell_input = tf.expand_dims(tf.concat([last_lstm_prediction, inputs[:, step, :]], axis=-1),axis=1)
+
           tf.logging.info(cell_input)
-          lstm_prediction, state = tf.nn.bidirectional_dynamic_rnn(cell_fw=fw_cell,
+          lstm_outs, state = tf.nn.bidirectional_dynamic_rnn(cell_fw=fw_cell,
                                                                    cell_bw=bw_cell,
                                                                    inputs=cell_input,
                                                                    dtype=tf.float32)
 
+          tf.logging.info(state)
           # concatenation output from forward and backward layers.
-          fw_outputs, bw_outputs = tf.unstack(lstm_prediction)
-          lstm_prediction = tf.concat([fw_outputs, bw_outputs], axis=-1)
-
+          fw_outputs, bw_outputs = tf.unstack(lstm_outs)
+          lstm_prediction = tf.concat([fw_outputs[:,-1,:], bw_outputs[:,-1,:]], axis=-1)
+          tf.logging.info('lstm_prediction')
+          tf.logging.info(lstm_prediction)
           all_outputs = all_outputs.write(step, lstm_prediction)
-          return all_outputs, lstm_prediction, state, tf.add(step, 1)
+          return all_outputs, lstm_prediction, last_state, tf.add(step, 1)
 
-        initial_prediction = tf.zeros([self.batch_size, self.hidden_dim])
+        initial_prediction = tf.zeros([self.batch_size, self.hidden_dim*2])
 
         timesteps = tf.reduce_max(inputs_length)
 

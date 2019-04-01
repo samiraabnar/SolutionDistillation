@@ -181,9 +181,9 @@ if __name__ == '__main__':
                           )
 
   lstm_params = LSTMHparam(input_dim=hparams.input_dim,
-                                         hidden_dim=128,
+                                         hidden_dim=hparams.hidden_dropout_keep_prob,
                                          output_dim=hparams.output_dim,
-                                         depth=2,
+                                         depth=hparams.depth,
                                          number_of_heads=hparams.number_of_heads,
                                          ff_filter_size=hparams.ff_filter_size,
                                          initializer_gain=hparams.initializer_gain,

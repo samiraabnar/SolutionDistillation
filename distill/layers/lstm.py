@@ -142,7 +142,7 @@ class LSTM(object):
           prediction = tf.argmax(logits, axis=-1)
 
           embedded_prediction = embedding_layer.apply(prediction)
-        
+
           tf.logging.info(embedded_prediction)
           cell_input = tf.concat([embedded_prediction, inputs[:, step, :]], axis=-1)
           tf.logging.info(cell_input)

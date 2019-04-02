@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=distill_plan2bidi_logit_standard
+#SBATCH --job-name=distill_plan2bidi_logit_rep_standard
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
@@ -23,4 +23,4 @@ LOGS_DIR=$HEAD_DIR/logs
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
-python $CODE_DIR/sst_rep_distiller.py --train_teacher=True --train_student=False --distill_rep=False --distill_logit=True --exp_name _standard_logits_trial_2
+python $CODE_DIR/sst_rep_distiller.py --train_teacher=True --train_student=False --distill_rep=True --distill_logit=True --exp_name _standard_logits_and_reps_trial_1

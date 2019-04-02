@@ -142,7 +142,7 @@ class LSTM(object):
           last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
           tf.logging.info('last_lstm_prediction')
           tf.logging.info(last_lstm_prediction)
-          
+
           logits = embedding_layer.linear(last_lstm_prediction)
           prediction = tf.argmax(logits, axis=-1)
           embedded_prediction = embedding_layer.apply(prediction)

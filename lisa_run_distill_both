@@ -23,4 +23,4 @@ LOGS_DIR=$HEAD_DIR/logs
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
-python $CODE_DIR/sst_rep_distiller.py --train_teacher=True --train_student=True --distill_rep=True --exp_name _both_trial_1
+python $CODE_DIR/sst_rep_distiller.py --train_teacher=True --train_student=True --distill_rep=True --exp_name _both_trial_2

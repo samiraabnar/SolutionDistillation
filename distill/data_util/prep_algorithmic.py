@@ -11,6 +11,7 @@ class Algorithmic(object):
     self.data_path = data_path
     self.task_name = 'algorithmic'
     self.eos = '<eos>'
+    self.pad = '<pad>'
 
 
   def get_tf_example(self, example):
@@ -134,7 +135,7 @@ class AlgorithmicIdentityBinary40(Algorithmic):
     return self.word2id[self.eos]
 
   def load_vocab(self):
-    self.id2word = [i for i in np.arange(self.num_symbols)] + [self.eos]
+    self.id2word = [self.pad, self.eos] + [i for i in np.arange(self.num_symbols)]
 
     self.word2id = {}
     for i,word in enumerate(self.id2word):

@@ -217,6 +217,8 @@ if __name__ == '__main__':
                                               'batch_size'+str(model_params[hparams.model].batch_size),
                                               hparams.exp_name]))
 
-  model = Models[hparams.model](model_params[hparams.model], scope=hparams.model)
+  model = Models[hparams.model](model_params[hparams.model],
+                                eos_id= tasks[hparams.task_name].eos_id,
+                                scope=hparams.model)
   trainer = AlgorithmicTrainer(hparams, model, tasks[hparams.task_name])
   trainer.train()

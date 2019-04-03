@@ -129,6 +129,10 @@ class AlgorithmicIdentityBinary40(Algorithmic):
   def vocab_length(self):
     return len(self.id2word)
 
+  @property
+  def eos_id(self):
+    return self.word2id[self.eos]
+
   def load_vocab(self):
     self.id2word = [i for i in np.arange(self.num_symbols)] + [self.eos]
 

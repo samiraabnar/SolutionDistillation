@@ -225,7 +225,7 @@ class Transformer(object):
   probabilities for the output sequence.
   """
 
-  def __init__(self, hparams, scope="Transformer"):
+  def __init__(self, hparams, eos_id, scope="Transformer"):
     self.hparams = hparams
     self.vocab_size = hparams.vocab_size
     self.hidden_dim = hparams.hidden_dim
@@ -235,6 +235,7 @@ class Transformer(object):
     self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
     self.initializer_gain = hparams.initializer_gain
     self.scope = scope
+    self.eos_id = eos_id
 
   def create_vars(self, reuse=False):
     self.initializer = tf.variance_scaling_initializer(
@@ -436,7 +437,7 @@ class Transformer(object):
       beam_size=self.hparams.beam_size,
       alpha=self.hparams.alpha,
       max_decode_length=max_decode_length,
-      eos_id=EOS_ID)
+      eos_id=self.eos_id)
 
     # Get the top sequence for each batch element
     top_decoded_ids = decoded_ids[:, 0, 1:]

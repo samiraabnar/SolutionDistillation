@@ -10,6 +10,7 @@ class Algorithmic(object):
   def __init__(self, data_path):
     self.data_path = data_path
     self.task_name = 'algorithmic'
+    self.eos = '<eos>'
 
 
   def get_tf_example(self, example):
@@ -102,6 +103,66 @@ class AlgorithmicIdentityDecimal40(Algorithmic):
       inputs = [np.random.randint(self.num_symbols) for _ in range(l)]
 
       yield {"inputs": inputs, "targets": inputs, 'inputs_length':l, "targets_length": len(inputs)}
+
+class AlgorithmicIdentityBinary40(Algorithmic):
+  """Problem spec for algorithmic decimal identity task."""
+
+  def __init__(self, data_path):
+    super(AlgorithmicIdentityBinary40, self).__init__(data_path=data_path)
+    self.task_name = 'identity_binary_40'
+    self.load_vocab()
+
+  @property
+  def num_symbols(self):
+    return 2
+
+  @property
+  def train_length(self):
+    return 40
+
+  @property
+  def dev_length(self):
+    return 400
+
+
+  @property
+  def vocab_length(self):
+    return len(self.id2word)
+
+  def load_vocab(self):
+    self.id2word = [i for i in np.arange(self.num_symbols)] + [self.eos]
+
+    self.word2id = {}
+    for i,word in enumerate(self.id2word):
+      self.word2id[word] = i
+
+  def encode(self, tokens):
+    return [self.word2id[t] for t in tokens]
+
+
+  def decode(self, ids):
+    return [self.id2word[i] for i in ids]
+
+  def generator(self, number_of_examples, mode="train"):
+    """Generator for the identity (copy) task on sequences of symbols.
+    The length of the sequence is drawn uniformly at random from [1, max_length]
+    and then symbols are drawn uniformly at random from [0, nbr_symbols) until
+    nbr_cases sequences have been produced.
+    Args:
+      nbr_symbols: number of symbols to use in each sequence.
+      max_length: integer, maximum length of sequences to generate.
+      nbr_cases: the number of cases to generate.
+    Yields:
+      A dictionary {"inputs": input-list, "targets": target-list} where
+      input-list and target-list are the same.
+    """
+
+    max_length = self.train_length if mode=="train" else self.dev_length
+    for _ in range(number_of_examples):
+      l = np.random.randint(max_length) + 1
+      inputs = self.encode([np.random.randint(self.num_symbols) for _ in range(l)] + [self.eos])
+
+      yield {"inputs": inputs, "targets": inputs, 'inputs_length':len(inputs), "targets_length": len(inputs)}
 
 
 class AlgorithmicAdditionDecimal40(Algorithmic):
@@ -336,6 +397,7 @@ class AlgorithmicSortProblem(Algorithmic):
       yield {"inputs": inputs, "targets": targets, "inputs_length": len(inputs), 'targets_length': len(targets)}
 
 if __name__ == '__main__':
+    """
     bin_iden = AlgorithmicSortProblem('data/alg')
     bin_iden.build_tfrecords(100000, 'train')
     bin_iden.build_tfrecords(10000, 'dev')
@@ -357,6 +419,12 @@ if __name__ == '__main__':
     bin_iden.build_tfrecords(10000, 'test')
 
     bin_iden = AlgorithmicIdentityDecimal40('data/alg')
+    bin_iden.build_tfrecords(100000, 'train')
+    bin_iden.build_tfrecords(10000, 'dev')
+    bin_iden.build_tfrecords(10000, 'test')
+    """
+
+    bin_iden = AlgorithmicIdentityBinary40('data/alg')
     bin_iden.build_tfrecords(100000, 'train')
     bin_iden.build_tfrecords(10000, 'dev')
     bin_iden.build_tfrecords(10000, 'test')

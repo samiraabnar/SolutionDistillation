@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from distill.algorithmic_piplines import AlgorithmicTrainer
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicAdditionDecimal40, \
-  AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
+  AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem, AlgorithmicIdentityBinary40
 from distill.layers.tree_lstm import TreeLSTM
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
@@ -19,7 +19,7 @@ from distill.pipelines import SSTRepDistiller
 tf.logging.set_verbosity(tf.logging.INFO)
 
 tf.app.flags.DEFINE_string("exp_name", "trial", "")
-tf.app.flags.DEFINE_string("task_name", "identity", "identity | addition| multiplication | sort | reverse")
+tf.app.flags.DEFINE_string("task_name", "identity_binary", "identity_binary| identity | addition| multiplication | sort | reverse")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer | lstm | bilstm")
@@ -161,6 +161,7 @@ if __name__ == '__main__':
 
 
   tasks = {'identity': AlgorithmicIdentityDecimal40('data/alg'),
+           'identity_binary': AlgorithmicIdentityBinary40('data/alg'),
            'addition': AlgorithmicAdditionDecimal40('data/alg'),
            'multiplication': AlgorithmicMultiplicationDecimal40('data/alg'),
            'sort': AlgorithmicSortProblem('data/alg'),

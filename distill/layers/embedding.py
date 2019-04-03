@@ -109,7 +109,6 @@ class EmbeddingSharedWeights(object):
 
       return embeddings
 
-
   def linear(self, x):
     """Computes logits by running x through a linear layer.
     Args:

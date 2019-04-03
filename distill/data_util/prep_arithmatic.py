@@ -1,5 +1,9 @@
 import numpy as np
+import tensorflow as tf
 from random import choices, uniform, randint, sample
+import os
+from tqdm import tqdm
+
 from distill.data_util.trees import Tree
 
 def minus(x, y):
@@ -20,8 +24,8 @@ def binary_math_tree_generator(length, numbers, ops):
 
     op = np.random.choice(ops)
 
-    exp = '('+left_child + op + right_child + ')'
-    print(exp, '= ', eval(exp))
+    exp = ' '.join(['(',left_child,op,right_child,')'])
+    #print(exp, '= ', eval(exp))
     return exp
 
 
@@ -86,7 +90,114 @@ def first_draft():
         print(examples[-1], labels[-1], trees[-1].get_words())
 
 
+class Arithmatic:
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic'
+    self.vocab_path = os.path.join(self.data_path,'vocab')
+    self.load_vocab()
+    self.eos = "<eos>"
+
+
+  def load_vocab(self):
+    self.id2word = list(map(str,np.arange(self.num_of_symbols))) + ['(',')','*','+','-']
+    self.id2word += ['<eos>']
+
+    print(self.id2word)
+    self.word2id = {}
+    for i in np.arange(len(self.id2word)):
+      print(i, self.id2word[i])
+      self.word2id[self.id2word[i]] = i
+
+  def decode(self, ids):
+    return [self.id2word[i] for i in ids]
+
+  def encode(self, tokens):
+    return [self.word2id[t] for t in tokens] + [self.word2id[self.eos]]
+
+
+  @property
+  def num_of_symbols(self):
+      return 100
+
+  @property
+  def train_length(self):
+    return 40
+
+  @property
+  def dev_length(self):
+    return 400
+
+  def get_tf_example(self, example):
+    """Convert our own representation of an example's features to Features class for TensorFlow dataset.
+    """
+    features = tf.train.Features(feature={
+      "inputs": tf.train.Feature(int64_list=tf.train.Int64List(value=example['inputs'])),
+      "targets": tf.train.Feature(int64_list=tf.train.Int64List(value=example['targets'])),
+      "inputs_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example['inputs_length']])),
+      "targets_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example['targets_length']]))
+
+    })
+    return features
+
+  def generator(self, number_of_examples, mode="train"):
+    max_length = self.train_length if mode == "train" else self.dev_length
+    for i in np.arange(number_of_examples):
+      length = np.random.randint(max_length) + 1
+      exp = -1
+      exp_str = '-1'
+      while exp < 0 or exp >= self.num_of_symbols:
+        exp_str = binary_math_tree_generator(length, np.arange(self.num_of_symbols), ['-', '+', '*'])
+        exp = eval(exp_str)
+
+      exp_tokens = exp_str.split()
+      output = [str(exp)]
+      example = {'inputs': self.encode(exp_tokens),
+                 'targets':self.encode(output),
+                 'inputs_length': len(exp_tokens),
+                 'targets_length': len(output)}
+
+      yield example
+
+
+  def build_tfrecords(self, number_of_examples, mode):
+    tf_examples = []
+    for example in self.generator(number_of_examples, mode):
+       tf_examples.append(self.get_tf_example(example))
+
+    with tf.python_io.TFRecordWriter(os.path.join(self.data_path, self.task_name + "_" + mode + ".tfr")) as tf_record_writer:
+      for example in tqdm(tf_examples):
+        tf_record = tf.train.Example(features=example)
+        tf_record_writer.write(tf_record.SerializeToString())
+
+  @staticmethod
+  def parse_examples(example):
+    """Load an example from TF record format."""
+    features = {"inputs_length": tf.FixedLenFeature([], tf.int64),
+                "targets_length": tf.FixedLenFeature([], tf.int64),
+                "targets": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                "inputs": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                }
+    parsed_example = tf.parse_single_example(example, features=features)
+
+    inputs_lengths = parsed_example["inputs_length"]
+    targets_length = parsed_example["targets_length"]
+    inputs = parsed_example["inputs"]
+    labels = parsed_example["targets"]
+
+    return inputs, labels, inputs_lengths, targets_length
+
+  @staticmethod
+  def get_padded_shapes():
+    return [None], [None], [], []
+
+  def get_tfrecord_path(self, mode):
+    return os.path.join(self.data_path, self.task_name +"_"+mode + ".tfr")
+
 
 if __name__ == '__main__':
-  binary_math_tree_generator(5, [0,1,2,3,4,5,6,7,8,9], ['-','+'])
+  bin_iden = Arithmatic('../../data/arithmatic')
 
+  bin_iden.build_tfrecords(100000, 'train')
+  bin_iden.build_tfrecords(10000, 'dev')
+  bin_iden.build_tfrecords(10000, 'test')

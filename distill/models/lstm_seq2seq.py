@@ -7,9 +7,10 @@ from distill.layers.bilstm import BiLSTM
 
 
 class LSTMSeq2Seq(object):
-  def __init__(self, hparams, model=LSTM, scope="Seq2SeqLSTM"):
+  def __init__(self, hparams, eos_id, model=LSTM, scope="Seq2SeqLSTM"):
     self.hparams = hparams
     self.scope=scope
+    self.eos_id = eos_id
     self.lstm_encoder = model(hidden_dim=hparams.hidden_dim,
                       output_dim=hparams.hidden_dim,
                       hidden_keep_prob=hparams.hidden_dropout_keep_prob,
@@ -72,7 +73,7 @@ class LSTMSeq2Seq(object):
         else:
           lstm_decoder_output_dic = self.lstm_decoder.predict(inputs=encoder_output, inputs_length=target_length,
                                                                   output_embedding_fn=output_embedding,
-                                                                  embedding_layer=self.embedding_layer,is_train=is_train)
+                                                                  embedding_layer=self.embedding_layer,eos_id=self.eos_id, is_train=is_train)
 
       outputs = lstm_decoder_output_dic['seq_outputs']
 
@@ -124,8 +125,8 @@ class LSTMSeq2Seq(object):
 
 
 class BidiLSTMSeq2Seq(LSTMSeq2Seq):
-  def __init__(self, hparams, scope="Seq2SeqLSTM"):
-    super(BidiLSTMSeq2Seq, self,).__init__(hparams, model=BiLSTM, scope=scope)
+  def __init__(self, hparams, eos_id, scope="Seq2SeqLSTM"):
+    super(BidiLSTMSeq2Seq, self,).__init__(hparams,eos_id=eos_id, model=BiLSTM, scope=scope)
 
 
 if __name__ == '__main__':

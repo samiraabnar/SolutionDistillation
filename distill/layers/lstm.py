@@ -111,7 +111,7 @@ class LSTM(object):
             'final_state': final_state
     }
 
-  def predict(self, inputs, inputs_length, output_embedding_fn, embedding_layer, init_state=None, is_train=True):
+  def predict(self, inputs, inputs_length, output_embedding_fn, embedding_layer, eos_id, init_state=None, is_train=True):
     self.batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       tf.logging.info("embedded_input")
@@ -132,7 +132,7 @@ class LSTM(object):
                                      infer_shape=True)
 
         # This loop gets called once for every "timestep" and obtains one column of the input data
-        def lstm_loop(all_outputs, last_lstm_prediction, last_state, step):
+        def lstm_loop(all_outputs, last_lstm_prediction, prediction,last_state, step):
           tf.logging.info("last state")
           tf.logging.info(last_state)
 
@@ -145,6 +145,8 @@ class LSTM(object):
 
           logits = embedding_layer.linear(last_lstm_prediction)
           prediction = tf.argmax(logits, axis=-1)
+          tf.logging.info('prediction')
+          tf.logging.info(prediction)
           embedded_prediction = embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]
           tf.logging.info('embedded_prediction')
@@ -154,18 +156,19 @@ class LSTM(object):
           tf.logging.info(cell_input)
           lstm_prediction, state = the_cell(cell_input, last_state)
           all_outputs = all_outputs.write(step, lstm_prediction)
-          return all_outputs, lstm_prediction, state, tf.add(step, 1)
+          return all_outputs, lstm_prediction, prediction, state, tf.add(step, 1)
 
         initial_prediction = tf.zeros([self.batch_size, self.hidden_dim])
 
         timesteps = tf.reduce_max(inputs_length)
+        prediction = tf.zeros(self.batch_size)
+        for_each_time_step = lambda c, a, b, p, step: tf.logical_or(tf.less(tf.cast(step, dtype=tf.int32),
+                                                        tf.cast(timesteps, dtype=tf.int32)),
+                                                            tf.logical_not(tf.reduce_all(tf.equal(p, eos_id))))
 
-        for_each_time_step = lambda c, a, b, step: tf.less(tf.cast(step, dtype=tf.int32),
-                                                        tf.cast(timesteps, dtype=tf.int32))
-
-        all_outputs, final_output, lstm_state, _ = tf.while_loop(for_each_time_step, lstm_loop,
+        all_outputs, final_output, prediction, lstm_state, _ = tf.while_loop(for_each_time_step, lstm_loop,
                                                        (all_outputs_tensor_array,
-                                                        initial_prediction, init_state, 0),
+                                                        initial_prediction, prediction, init_state, 0),
                                                        parallel_iterations=32)
 
         lstm_outputs = tf.transpose(all_outputs.stack(),[1,0,2])

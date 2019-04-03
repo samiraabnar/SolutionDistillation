@@ -167,19 +167,19 @@ if __name__ == '__main__':
            'sort': AlgorithmicSortProblem('data/alg'),
            'reverse': AlgorithmicReverseProblem('data/alg')}
 
-  hparams.vocab_size = tasks[hparams.task_name].num_symbols + 1
+  hparams.vocab_size = tasks[hparams.task_name].vocab_length
 
   transformer_params = TransformerHparam(input_dim=hparams.input_dim,
                           hidden_dim=hparams.hidden_dim,
                           output_dim=None,
                           depth=hparams.depth,
-                          number_of_heads=4,
+                          number_of_heads=2,
                           ff_filter_size=512,
                           initializer_gain=hparams.initializer_gain,
                           batch_size=hparams.batch_size,
                           pretrained_embedding_path=hparams.pretrained_embedding_path,
                           input_dropout_keep_prob=hparams.input_dropout_keep_prob,
-                          hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
+                          hidden_dropout_keep_prob=0.5,
                           vocab_size=hparams.vocab_size,
                           label_smoothing=hparams.label_smoothing
                           )

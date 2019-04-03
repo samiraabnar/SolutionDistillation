@@ -70,7 +70,7 @@ class LSTMSeq2Seq(object):
           lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=target_length,
                                                             is_train=is_train)
         else:
-          lstm_decoder_output_dic = self.lstm_decoder.infer_apply(inputs=encoder_output, inputs_length=target_length,
+          lstm_decoder_output_dic = self.lstm_decoder.predict(inputs=encoder_output, inputs_length=target_length,
                                                                   output_embedding_fn=output_embedding,
                                                                   embedding_layer=self.embedding_layer,is_train=is_train)
 

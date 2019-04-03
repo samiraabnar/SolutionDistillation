@@ -12,7 +12,28 @@ class Algorithmic(object):
     self.task_name = 'algorithmic'
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.load_vocab()
 
+  @property
+  def vocab_length(self):
+    return len(self.id2word)
+
+  @property
+  def eos_id(self):
+    return self.word2id[self.eos]
+
+  def load_vocab(self):
+    self.id2word = [self.pad, self.eos] + [i for i in np.arange(self.num_symbols)]
+
+    self.word2id = {}
+    for i,word in enumerate(self.id2word):
+      self.word2id[word] = i
+
+  def encode(self, tokens):
+    return [self.word2id[t] for t in tokens]
+
+  def decode(self, ids):
+    return [self.id2word[i] for i in ids]
 
   def get_tf_example(self, example):
     """Convert our own representation of an example's features to Features class for TensorFlow dataset.
@@ -101,7 +122,7 @@ class AlgorithmicIdentityDecimal40(Algorithmic):
     max_length = self.train_length if mode=="train" else self.dev_length
     for _ in range(number_of_examples):
       l = np.random.randint(max_length) + 1
-      inputs = [np.random.randint(self.num_symbols) for _ in range(l)]
+      inputs = self.encode([np.random.randint(self.num_symbols) for _ in range(l)])
 
       yield {"inputs": inputs, "targets": inputs, 'inputs_length':l, "targets_length": len(inputs)}
 
@@ -111,7 +132,6 @@ class AlgorithmicIdentityBinary40(Algorithmic):
   def __init__(self, data_path):
     super(AlgorithmicIdentityBinary40, self).__init__(data_path=data_path)
     self.task_name = 'identity_binary_40'
-    self.load_vocab()
 
   @property
   def num_symbols(self):
@@ -125,28 +145,6 @@ class AlgorithmicIdentityBinary40(Algorithmic):
   def dev_length(self):
     return 400
 
-
-  @property
-  def vocab_length(self):
-    return len(self.id2word)
-
-  @property
-  def eos_id(self):
-    return self.word2id[self.eos]
-
-  def load_vocab(self):
-    self.id2word = [self.pad, self.eos] + [i for i in np.arange(self.num_symbols)]
-
-    self.word2id = {}
-    for i,word in enumerate(self.id2word):
-      self.word2id[word] = i
-
-  def encode(self, tokens):
-    return [self.word2id[t] for t in tokens]
-
-
-  def decode(self, ids):
-    return [self.id2word[i] for i in ids]
 
   def generator(self, number_of_examples, mode="train"):
     """Generator for the identity (copy) task on sequences of symbols.
@@ -176,6 +174,14 @@ class AlgorithmicAdditionDecimal40(Algorithmic):
   def __init__(self, data_path):
     super(AlgorithmicAdditionDecimal40, self).__init__(data_path=data_path)
     self.task_name = 'addition_decimal_40'
+
+  def load_vocab(self):
+    self.id2word = [self.pad, self.eos, self.base] + [i for i in np.arange(self.num_symbols)]
+
+    self.word2id = {}
+    for i, word in enumerate(self.id2word):
+      self.word2id[word] = i
+
 
   @property
   def num_symbols(self):
@@ -219,8 +225,8 @@ class AlgorithmicAdditionDecimal40(Algorithmic):
       n2 = random_number_lower_endian(l2, self.base)
       result = lower_endian_to_number(n1, self.base) + lower_endian_to_number(
           n2, self.base)
-      inputs = n1 + [self.base] + n2
-      targets = number_to_lower_endian(result, self.base)
+      inputs = self.encode(n1 + [self.base] + n2)
+      targets = self.encode(number_to_lower_endian(result, self.base))
       yield {"inputs": inputs, "targets": targets, "inputs_length": l1+l2+1, "targets_length": len(targets)}
 
 
@@ -229,6 +235,13 @@ class AlgorithmicMultiplicationDecimal40(Algorithmic):
   def __init__(self, data_path):
     super(AlgorithmicMultiplicationDecimal40, self).__init__(data_path=data_path)
     self.task_name = 'multiplication_decimal_40'
+
+  def load_vocab(self):
+    self.id2word = [self.pad, self.eos, self.base] + [i for i in np.arange(self.num_symbols)]
+
+    self.word2id = {}
+    for i, word in enumerate(self.id2word):
+      self.word2id[word] = i
 
   @property
   def num_symbols(self):
@@ -273,8 +286,8 @@ class AlgorithmicMultiplicationDecimal40(Algorithmic):
       n2 = random_number_lower_endian(l2, self.base)
       result = lower_endian_to_number(n1, self.base) * lower_endian_to_number(
           n2, self.base)
-      inputs = n1 + [self.base] + n2
-      targets = number_to_lower_endian(result, self.base)
+      inputs = self.encode(n1 + [self.base] + n2)
+      targets = self.encode(number_to_lower_endian(result, self.base))
       yield {"inputs": inputs, "targets": targets, 'inputs_length': len(inputs), "targets_length": len(targets)}
 
 
@@ -334,8 +347,10 @@ class AlgorithmicReverseProblem(Algorithmic):
       else:
         inputs = list(np.random.randint(self.num_symbols, size=length))
 
+
       # Targets are simply the sorted inputs.
-      targets = list(reversed(inputs))
+      targets = self.encode(list(reversed(inputs)))
+      inputs = self.encode(inputs)
 
       yield {"inputs": inputs, "targets": targets, "inputs_length": len(inputs), "targets_length": len(targets)}
 
@@ -397,12 +412,13 @@ class AlgorithmicSortProblem(Algorithmic):
         inputs = list(np.random.randint(self.num_symbols, size=length))
 
       # Targets are simply the sorted inputs.
-      targets = list(sorted(inputs))
+      targets = self.encode(list(sorted(inputs)))
+      inputs = self.encode(inputs)
 
       yield {"inputs": inputs, "targets": targets, "inputs_length": len(inputs), 'targets_length': len(targets)}
 
 if __name__ == '__main__':
-    """
+
     bin_iden = AlgorithmicSortProblem('data/alg')
     bin_iden.build_tfrecords(100000, 'train')
     bin_iden.build_tfrecords(10000, 'dev')
@@ -427,7 +443,7 @@ if __name__ == '__main__':
     bin_iden.build_tfrecords(100000, 'train')
     bin_iden.build_tfrecords(10000, 'dev')
     bin_iden.build_tfrecords(10000, 'test')
-    """
+    
 
     bin_iden = AlgorithmicIdentityBinary40('data/alg')
     bin_iden.build_tfrecords(100000, 'train')

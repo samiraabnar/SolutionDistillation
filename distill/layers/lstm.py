@@ -111,7 +111,7 @@ class LSTM(object):
             'final_state': final_state
     }
 
-  def infer_apply(self, inputs, inputs_length, output_embedding_fn, embedding_layer, init_state=None, is_train=True):
+  def predict(self, inputs, inputs_length, output_embedding_fn, embedding_layer, init_state=None, is_train=True):
     self.batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       tf.logging.info("embedded_input")

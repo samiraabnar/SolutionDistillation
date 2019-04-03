@@ -89,7 +89,7 @@ class TransformerHparam(object):
     self.learning_rate = 0.005
     self.learning_rate_warmup_steps = 4000
     self.initializer_gain = 1.0
-    self.num_hidden_layers = 2
+    self.num_hidden_layers = depth
     self.initializer = "uniform_unit_scaling"
     self.weight_decay = 0.0
     self.optimizer_adam_beta1 = 0.9
@@ -99,7 +99,7 @@ class TransformerHparam(object):
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.alpha = 1
-    self.beam_size = 1
+    self.beam_size = 3
     self.extra_decode_length = 5
 
 class LSTMHparam(object):
@@ -173,7 +173,7 @@ if __name__ == '__main__':
                           hidden_dim=hparams.hidden_dim,
                           output_dim=None,
                           depth=hparams.depth,
-                          number_of_heads=2,
+                          number_of_heads=4,
                           ff_filter_size=512,
                           initializer_gain=hparams.initializer_gain,
                           batch_size=hparams.batch_size,

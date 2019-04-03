@@ -443,7 +443,7 @@ if __name__ == '__main__':
     bin_iden.build_tfrecords(100000, 'train')
     bin_iden.build_tfrecords(10000, 'dev')
     bin_iden.build_tfrecords(10000, 'test')
-    
+
 
     bin_iden = AlgorithmicIdentityBinary40('data/alg')
     bin_iden.build_tfrecords(100000, 'train')

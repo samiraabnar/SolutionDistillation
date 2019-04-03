@@ -89,6 +89,39 @@ class LSTMSeq2Seq(object):
             'trainable_vars': tf.trainable_variables(scope=self.scope),
             }
 
+  def _get_symbols_to_logits_fn(self):
+    """Returns a decoding function that calculates logits of the next tokens."""
+
+    def symbols_to_logits_fn(ids, cache):
+      """Generate logits for next potential IDs.
+      Args:
+        ids: Current decoded sequences.
+          int tensor with shape [batch_size * beam_size, i + 1]
+        i: Loop index
+        cache: dictionary of values storing the encoder output, encoder-decoder
+          attention bias, and previous decoder attention values.
+      Returns:
+        Tuple of
+          (logits with shape [batch_size * beam_size, vocab_size],
+           updated cache values)
+      """
+      # Set decoder input to the last generated IDs
+      decoder_input = ids[:, -1:]
+
+      # Preprocess decoder input by getting embeddings and adding timing signal.
+      decoder_input = self.embedding_layer.apply(decoder_input)
+
+      decoder_outputs = self.lstm_decoder.apply(
+        decoder_input, cache.get("encoder_outputs"), cache)
+
+      logits = self.embedding_layer.linear(decoder_outputs)
+      logits = tf.squeeze(logits, axis=[1])
+
+      return logits, cache
+
+    return symbols_to_logits_fn
+
+
 
 class BidiLSTMSeq2Seq(LSTMSeq2Seq):
   def __init__(self, hparams, scope="Seq2SeqLSTM"):

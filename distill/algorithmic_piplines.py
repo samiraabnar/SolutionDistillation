@@ -50,7 +50,6 @@ class AlgorithmicTrainer(Trainer):
       tf.logging.info(eval_metrics[metric])
       tf.summary.scalar(metric, tf.reduce_mean(eval_metrics[metric]), family=family)
 
-
   def get_metric_summaries_as_dic(self, logits, labels):
     metric_summaries = {}
     eval_metrics = get_eval_metrics(logits, labels, self.model.hparams)
@@ -58,7 +57,6 @@ class AlgorithmicTrainer(Trainer):
       metric_summaries[metric] = tf.reduce_mean(eval_metrics[metric])
 
     return metric_summaries
-
 
   def build_train_graph(self):
     train_iterator, dev_iterator, test_iterator = self.get_train_data_itaratoes()
@@ -105,7 +103,6 @@ class AlgorithmicTrainer(Trainer):
                                  init_feed_dict={})
 
     return update_op, scaffold, train_output_dic, dev_output_dic, test_output_dic
-
 
 class AlgorithmicEvaluator(Evaluator):
   def __init__(self, config, model_obj, task):

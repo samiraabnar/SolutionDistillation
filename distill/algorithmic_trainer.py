@@ -99,7 +99,7 @@ class TransformerHparam(object):
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.alpha = 1
-    self.beam_size = 3
+    self.beam_size = 5
     self.extra_decode_length = 5
 
 class LSTMHparam(object):
@@ -179,7 +179,7 @@ if __name__ == '__main__':
                           batch_size=hparams.batch_size,
                           pretrained_embedding_path=hparams.pretrained_embedding_path,
                           input_dropout_keep_prob=hparams.input_dropout_keep_prob,
-                          hidden_dropout_keep_prob=0.5,
+                          hidden_dropout_keep_prob=0.75,
                           vocab_size=hparams.vocab_size,
                           label_smoothing=hparams.label_smoothing
                           )

@@ -179,7 +179,7 @@ if __name__ == '__main__':
                           batch_size=hparams.batch_size,
                           pretrained_embedding_path=hparams.pretrained_embedding_path,
                           input_dropout_keep_prob=hparams.input_dropout_keep_prob,
-                          hidden_dropout_keep_prob=0.75,
+                          hidden_dropout_keep_prob=0.5,
                           vocab_size=hparams.vocab_size,
                           label_smoothing=hparams.label_smoothing
                           )

@@ -128,3 +128,8 @@ def random_number_lower_endian(length, base):
     return [np.random.randint(base)]
   prefix = [np.random.randint(base) for _ in range(length - 1)]
   return prefix + [np.random.randint(base - 1) + 1]  # Last digit is not 0.
+
+
+def find_first_of(t, g):
+  _, b = tf.nn.top_k(tf.cast(tf.equal(a,0), dtype=tf.int32), k=1)
+  return b[:,0]

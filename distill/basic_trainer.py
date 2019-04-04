@@ -21,7 +21,7 @@ class Trainer(object):
                                     tf.float32) + start_learning_rate
 
       decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
-                                                       100, 0.96, staircase=False)
+                                                       100, 0.98, staircase=False)
       learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
                                decay_learning_rate)
 

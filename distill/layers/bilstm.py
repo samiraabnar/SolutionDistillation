@@ -100,12 +100,11 @@ class BiLSTM(object):
             'seq_outputs': lstm_outputs,
     }
 
-  def predict(self, inputs, inputs_length, output_embedding_fn, embedding_layer, eos_id, init_state=None, is_train=True):
-    self.batch_size = tf.shape(inputs)[0]
+  def predict(self, inputs_length,
+              compute_decoding_step_input_fn,
+              output_embedding_fn, embedding_layer, eos_id, init_state=None, is_train=True):
+    self.batch_size = tf.shape(inputs_length)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-      tf.logging.info("embedded_input")
-      tf.logging.info(inputs)
-
       # Run the data through the RNN layers
       with tf.variable_scope("LSTM_Cell", reuse=tf.AUTO_REUSE):
         fw_cell = self.fw_multi_lstm_cell
@@ -127,10 +126,14 @@ class BiLSTM(object):
           last_lstm_prediction = output_embedding_fn(last_lstm_prediction)
           last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
           logits = embedding_layer.linear(last_lstm_prediction)
-          prediction = tf.argmax(logits, axis=-1)
-          embedded_prediction = embedding_layer.apply(prediction)
-          embedded_prediction = embedded_prediction[:, -1, :]
-          cell_input = tf.expand_dims(tf.concat([embedded_prediction, inputs[:, step, :]], axis=-1), axis=-1)
+          tf.logging.info('logits in the loop')
+          tf.logging.info(logits) #(batch_size, 1, 11)
+          prediction = tf.argmax(logits, axis=-1) #(batch_size,1)
+          tf.logging.info(prediction)
+          embedded_prediction = embedding_layer.apply(prediction) #(batch_size,1, embedding_dim)
+          embedded_prediction = embedded_prediction[:, -1, :] #(batch_size, embedding_dim)
+          step_input = compute_decoding_step_input_fn(embedded_prediction)
+          cell_input = tf.expand_dims(tf.concat([embedded_prediction, step_input], axis=-1), axis=1)
 
           tf.logging.info(cell_input)
           lstm_outs, state = tf.nn.bidirectional_dynamic_rnn(cell_fw=fw_cell,

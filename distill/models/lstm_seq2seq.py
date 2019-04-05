@@ -53,27 +53,36 @@ class LSTMSeq2Seq(object):
         tf.matmul(current_output, tf.transpose(self.output_embedding_mat)),
         self.output_embedding_bias)
 
+
     inputs, targets, input_lengths, target_length = examples
     with tf.variable_scope(self.scope, reuse=reuse):
       embedded_inputs = self.embedding_layer.apply(inputs)
       embedded_targets = self.embedding_layer.apply(targets)
       with tf.variable_scope("encoder"):
         lstm_encoder_output_dic = self.lstm_encoder.apply(inputs=embedded_inputs, inputs_length=input_lengths, is_train=is_train)
-        encoder_output = tf.expand_dims(lstm_encoder_output_dic['sents_reps'],1)
-        encoder_output = tf.tile(encoder_output,[1,tf.shape(targets)[1],1])
-        tf.logging.info("encoder_output")
-        tf.logging.info(encoder_output)
+        #encoder_output = tf.expand_dims(lstm_encoder_output_dic['sents_reps'],1)
+        #encoder_output = tf.tile(encoder_output,[1,tf.shape(targets)[1],1])
+
+        encoder_outputs = lstm_encoder_output_dic['raw_outputs']
+
+        def compute_decoding_step_input(current_decoder_input):
+          aggregiated_encoder_output = tf.reduce_mean(encoder_outputs, axis=1)
+          return aggregiated_encoder_output
+
+
       with tf.variable_scope("decoder"):
         if is_train:
-          decoder_inputs = tf.concat([encoder_output, embedded_targets], axis=-1)
+          decoder_inputs = tf.map_fn(compute_decoding_step_input, embedded_targets)
+          decoder_inputs = tf.concat([decoder_inputs, embedded_targets], axis=-1)
           tf.logging.info('decoder_inputs')
           tf.logging.info(decoder_inputs)
           lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=target_length,
                                                             is_train=is_train)
         else:
-          lstm_decoder_output_dic = self.lstm_decoder.predict(inputs=encoder_output, inputs_length=target_length,
-                                                                  output_embedding_fn=output_embedding,
-                                                                  embedding_layer=self.embedding_layer,eos_id=self.eos_id, is_train=is_train)
+          lstm_decoder_output_dic = self.lstm_decoder.predict(inputs_length=input_lengths,
+                                                              compute_decoding_step_input_fn=compute_decoding_step_input,
+                                                              output_embedding_fn=output_embedding,
+                                                              embedding_layer=self.embedding_layer,eos_id=self.eos_id, is_train=is_train)
 
       outputs = lstm_decoder_output_dic['seq_outputs']
 
@@ -130,11 +139,11 @@ class BidiLSTMSeq2Seq(LSTMSeq2Seq):
 
 
 if __name__ == '__main__':
-  from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40
+  from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40
 
   tf.logging.set_verbosity(tf.logging.INFO)
 
-  bin_iden = AlgorithmicIdentityDecimal40('data/alg')
+  bin_iden = AlgorithmicIdentityBinary40('data/alg')
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
@@ -158,7 +167,7 @@ if __name__ == '__main__':
       self.scope = "lstm_seq2seq"
 
 
-  model = BidiLSTMSeq2Seq(Config(), eos_id=1, scope="Seq2SeqLSTM")
+  model = LSTMSeq2Seq(Config(), eos_id=bin_iden.eos_id, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 
   _ = model.apply(example, is_train=True)

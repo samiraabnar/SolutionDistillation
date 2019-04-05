@@ -111,11 +111,9 @@ class LSTM(object):
             'final_state': final_state
     }
 
-  def predict(self, inputs, inputs_length, output_embedding_fn, embedding_layer, eos_id, init_state=None, is_train=True):
-    self.batch_size = tf.shape(inputs)[0]
+  def predict(self, compute_decoding_step_input_fn, inputs_length, output_embedding_fn, embedding_layer, eos_id, init_state=None, is_train=True):
+    self.batch_size = tf.shape(inputs_length)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-      tf.logging.info("embedded_input")
-      tf.logging.info(inputs)
 
       # Run the data through the RNN layers
       with tf.variable_scope("LSTM_Cells", reuse=tf.AUTO_REUSE):
@@ -141,7 +139,8 @@ class LSTM(object):
           prediction = tf.argmax(logits, axis=-1)
           embedded_prediction = embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]
-          cell_input = tf.concat([embedded_prediction, inputs[:, step, :]], axis=-1)
+          current_step_input = compute_decoding_step_input_fn(embedded_prediction)
+          cell_input = tf.concat([embedded_prediction, current_step_input], axis=-1)
 
           lstm_prediction, state = the_cell(cell_input, last_state)
 

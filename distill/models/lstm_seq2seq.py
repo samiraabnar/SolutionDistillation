@@ -158,8 +158,7 @@ if __name__ == '__main__':
       self.scope = "lstm_seq2seq"
 
 
-
-  model = LSTMSeq2Seq(Config(), model=LSTM, scope="Seq2SeqLSTM")
+  model = BidiLSTMSeq2Seq(Config(), eos_id=1, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 
   _ = model.apply(example, is_train=True)

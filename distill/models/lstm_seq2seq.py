@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
   class Config(object):
     def __init__(self):
-      self.vocab_size = bin_iden.num_symbols + 1
+      self.vocab_size = bin_iden.vocab_length
       self.hidden_dim = 32
       self.output_dim = self.vocab_size
       self.embedding_dim = 10
@@ -173,6 +173,7 @@ if __name__ == '__main__':
       self.scope = "lstm_seq2seq"
 
 
+  print("eos id: ", bin_iden.eos_id)
   model = BidiLSTMSeq2Seq(Config(), eos_id=bin_iden.eos_id, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 

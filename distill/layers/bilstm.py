@@ -98,6 +98,7 @@ class BiLSTM(object):
             'raw_outputs': lstm_outputs,
             'sents_reps': sentence_reps,
             'seq_outputs': lstm_outputs,
+            'outputs_lengths': inputs_length,
     }
 
   def predict(self, inputs_length,
@@ -157,7 +158,7 @@ class BiLSTM(object):
 
         timesteps = tf.reduce_max(inputs_length)
 
-        for_each_time_step = lambda l, c, a, b, f, step: tf.logical_or(tf.less(tf.cast(step, dtype=tf.int32),
+        for_each_time_step = lambda l, c, a, b, f, step: tf.logical_and(tf.less(tf.cast(step, dtype=tf.int32),
                                                         tf.cast(timesteps, dtype=tf.int32)),
                                                             tf.logical_not(tf.reduce_all(f)))
 
@@ -205,7 +206,9 @@ class BiLSTM(object):
             'raw_outputs': lstm_outputs,
             'sents_reps': sentence_reps,
             'seq_outputs': lstm_outputs,
-            'final_state': lstm_state
+            'final_state': lstm_state,
+            'outputs_lengths': output_lengths
+
     }
 
 

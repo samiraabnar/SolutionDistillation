@@ -108,7 +108,8 @@ class LSTM(object):
             'raw_outputs': lstm_outputs,
             'sents_reps': sentence_reps,
             'seq_outputs': lstm_outputs,
-            'final_state': final_state
+            'final_state': final_state,
+            'outputs_lengths': inputs_length
     }
 
   def predict(self, compute_decoding_step_input_fn, inputs_length, output_embedding_fn, embedding_layer, eos_id, init_state=None, is_train=True):
@@ -135,10 +136,14 @@ class LSTM(object):
 
           last_lstm_prediction = output_embedding_fn(last_lstm_prediction)
           last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
+          tf.logging.info('last lstm prediction')
+          tf.logging.info(last_lstm_prediction)
           logits = embedding_layer.linear(last_lstm_prediction)
+
           prediction = tf.argmax(logits, axis=-1)
           embedded_prediction = embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]
+
           current_step_input = compute_decoding_step_input_fn(embedded_prediction)
           cell_input = tf.concat([embedded_prediction, current_step_input], axis=-1)
 
@@ -153,9 +158,9 @@ class LSTM(object):
 
         timesteps = tf.reduce_max(inputs_length)
 
-        for_each_time_step = lambda l, c, a, b, f, step: tf.logical_or(tf.less(tf.cast(step, dtype=tf.int32),
-                                                        tf.cast(timesteps, dtype=tf.int32)),
-                                                            tf.logical_not(tf.reduce_all(f)))
+        for_each_time_step = lambda l, c, a, b, f, step: tf.logical_and(
+          tf.less(tf.cast(step, dtype=tf.int32), tf.cast(timesteps, dtype=tf.int32)),
+          tf.logical_not(tf.reduce_all(f)))
 
         initial_prediction = tf.zeros([self.batch_size, self.hidden_dim])
         init_finish = tf.cast(tf.zeros(self.batch_size, dtype=tf.int64), dtype=tf.bool)
@@ -200,7 +205,8 @@ class LSTM(object):
             'raw_outputs': lstm_outputs,
             'sents_reps': sentence_reps,
             'seq_outputs': lstm_outputs,
-            'final_state': lstm_state
+            'final_state': lstm_state,
+            'outputs_lengths': output_lengths
     }
 
 

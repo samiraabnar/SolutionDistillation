@@ -72,7 +72,8 @@ class LSTMSeq2Seq(object):
 
       with tf.variable_scope("decoder"):
         if is_train:
-          decoder_inputs = tf.map_fn(compute_decoding_step_input, embedded_targets) #(Length, batch_size, hidden_dim)
+          transpose_embedded_targets = tf.transpose(embedded_targets, [1,0,2])
+          decoder_inputs = tf.map_fn(compute_decoding_step_input, transpose_embedded_targets) #(Length, batch_size, hidden_dim)
           decoder_inputs = tf.transpose(decoder_inputs,[1,0,2])
           tf.logging.info('decoder_inputs')
           tf.logging.info(decoder_inputs)
@@ -89,12 +90,12 @@ class LSTMSeq2Seq(object):
                                                               embedding_layer=self.embedding_layer,eos_id=self.eos_id, is_train=is_train)
 
       outputs = lstm_decoder_output_dic['seq_outputs']
-
+      output_mask = tf.cast(tf.sequence_mask(lstm_decoder_output_dic['outputs_lengths'], tf.shape(outputs)[1]), dtype=tf.int64)
 
       outputs = tf.map_fn(output_embedding, outputs)
 
       logits = self.embedding_layer.linear(outputs)
-      predictions = tf.argmax(logits, axis=-1)
+      predictions = tf.argmax(logits, axis=-1) * output_mask
 
     return {'logits': logits,
             'outputs': outputs,
@@ -144,6 +145,7 @@ class BidiLSTMSeq2Seq(LSTMSeq2Seq):
 
 if __name__ == '__main__':
   from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40
+  import numpy as np
 
   tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -162,7 +164,7 @@ if __name__ == '__main__':
       self.vocab_size = bin_iden.num_symbols + 1
       self.hidden_dim = 32
       self.output_dim = self.vocab_size
-      self.embedding_dim = 100
+      self.embedding_dim = 10
       self.input_dropout_keep_prob = 0.5
       self.hidden_dropout_keep_prob = 0.5
       self.attention_mechanism = None
@@ -171,9 +173,10 @@ if __name__ == '__main__':
       self.scope = "lstm_seq2seq"
 
 
-  model = LSTMSeq2Seq(Config(), eos_id=bin_iden.eos_id, scope="Seq2SeqLSTM")
+  model = BidiLSTMSeq2Seq(Config(), eos_id=bin_iden.eos_id, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 
+  input, _,_,_= example
   _ = model.apply(example, is_train=True)
   outputs = model.apply(example, is_train=False)
 
@@ -183,4 +186,5 @@ if __name__ == '__main__':
   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                       iterator.initializer))
   with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
-    print(sess.run([predictions]))
+    for _ in np.arange(10):
+      print(sess.run([input, predictions]))

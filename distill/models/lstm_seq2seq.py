@@ -72,7 +72,11 @@ class LSTMSeq2Seq(object):
 
       with tf.variable_scope("decoder"):
         if is_train:
-          decoder_inputs = tf.map_fn(compute_decoding_step_input, embedded_targets)
+          decoder_inputs = tf.map_fn(compute_decoding_step_input, embedded_targets) #(Length, batch_size, hidden_dim)
+          decoder_inputs = tf.transpose(decoder_inputs,[1,0,2])
+          tf.logging.info('decoder_inputs')
+          tf.logging.info(decoder_inputs)
+
           decoder_inputs = tf.concat([decoder_inputs, embedded_targets], axis=-1)
           tf.logging.info('decoder_inputs')
           tf.logging.info(decoder_inputs)

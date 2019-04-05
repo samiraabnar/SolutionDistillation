@@ -142,14 +142,13 @@ class Arithmatic:
 
   def generator(self, number_of_examples, mode="train"):
     max_length = self.train_length if mode == "train" else self.dev_length
-    for i in np.arange(number_of_examples):
+    for i in tqdm(np.arange(number_of_examples)):
       length = np.random.randint(max_length) + 1
       exp = -1
       exp_str = '-1'
       while exp < 0 or exp >= self.num_of_symbols:
         exp_str = binary_math_tree_generator(length, np.arange(self.num_of_symbols), ['-', '+', '*'])
         exp = eval(exp_str)
-
       exp_tokens = exp_str.split()
       output = [str(exp)]
       example = {'inputs': self.encode(exp_tokens),
@@ -196,8 +195,8 @@ class Arithmatic:
 
 
 if __name__ == '__main__':
-  bin_iden = Arithmatic('../../data/arithmatic')
+  bin_iden = Arithmatic('data/arithmatic')
 
-  bin_iden.build_tfrecords(100000, 'train')
-  bin_iden.build_tfrecords(10000, 'dev')
-  bin_iden.build_tfrecords(10000, 'test')
+  bin_iden.build_tfrecords(1000, 'train')
+  bin_iden.build_tfrecords(200, 'dev')
+  bin_iden.build_tfrecords(200, 'test')

@@ -57,6 +57,7 @@ class Distiller(object):
         sess.run(update_op)
         sess.run(distill_op)
 
+
 class SSTDistiller(Distiller):
   def __init__(self, config, student_model, teacher_model):
     super(SSTDistiller, self).__init__(config, student_model, teacher_model)
@@ -293,7 +294,6 @@ class SSTRepDistiller(SSTDistiller):
           sess.run(student_update_op)
         if self.config.distill_logit:
           sess.run(distill_logit_op)
-
 
 
 class Seq2SeqDistiller(Distiller):

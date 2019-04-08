@@ -47,6 +47,8 @@ class SST(object):
     self.data_path = data_path
     self.add_subtrees = add_subtrees
     self.vocab_path = os.path.join(data_path, "pretrained_" if pretrained else '' +"vocab")
+    self.eos = '<eos>'
+    self.pad = '<pad>'
 
     if pretrained:
       self.vocab = PretrainedVocab(self.vocab_path, pretrained_path, embedding_size)
@@ -161,6 +163,10 @@ class SST(object):
         tf_record = tf.train.Example(features=example)
         tf_record_writer.write(tf_record.SerializeToString())
 
+  @property
+  def target_length(self):
+    return 1
+
   @staticmethod
   def parse_sst_tree_examples(example):
     """Load an example from TF record format."""
@@ -234,6 +240,22 @@ class SST(object):
 
     subtree_name_token = '_allsubs' if add_subtrees else ''
     return os.path.join(datapath, feature_type + "_" + mode + subtree_name_token + ".tfr")
+
+  @staticmethod
+  def parse_examples(example):
+    """Load an example from TF record format."""
+    features = {"word_length": tf.FixedLenFeature([], tf.int64),
+                "root_label": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                "word_ids": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                }
+    parsed_example = tf.parse_single_example(example, features=features)
+
+    inputs_lengths = parsed_example["word_length"]
+    targets_length = 1
+    inputs = parsed_example["word_ids"]
+    labels = parsed_example["root_label"]
+
+    return inputs, labels, inputs_lengths, targets_length
 
 def build_sst():
 

@@ -90,18 +90,24 @@ def first_draft():
         print(examples[-1], labels[-1], trees[-1].get_words())
 
 
-class Arithmatic:
+class Arithmatic(object):
   def __init__(self, data_path):
     self.data_path = data_path
     self.task_name = 'arithmatic'
     self.vocab_path = os.path.join(self.data_path,'vocab')
-    self.load_vocab()
-    self.eos = "<eos>"
 
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+
+    self.load_vocab()
+
+
+  @property
+  def vocab_length(self):
+    return len(self.id2word)
 
   def load_vocab(self):
-    self.id2word = list(map(str,np.arange(self.num_of_symbols))) + ['(',')','*','+','-']
-    self.id2word += ['<eos>']
+    self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','*','+','-']
 
     print(self.id2word)
     self.word2id = {}
@@ -109,16 +115,25 @@ class Arithmatic:
       print(i, self.id2word[i])
       self.word2id[self.id2word[i]] = i
 
+  @property
+  def eos_id(self):
+    return self.word2id[self.eos]
+
+
   def decode(self, ids):
     return [self.id2word[i] for i in ids]
 
   def encode(self, tokens):
-    return [self.word2id[t] for t in tokens] + [self.word2id[self.eos]]
+    return [self.word2id[t] for t in tokens]
 
 
   @property
+  def target_length(self):
+    return 1
+
+  @property
   def num_of_symbols(self):
-      return 100
+      return 101 #0-100
 
   @property
   def train_length(self):
@@ -126,7 +141,7 @@ class Arithmatic:
 
   @property
   def dev_length(self):
-    return 400
+    return 120
 
   def get_tf_example(self, example):
     """Convert our own representation of an example's features to Features class for TensorFlow dataset.
@@ -147,11 +162,11 @@ class Arithmatic:
       exp = -1
       exp_str = '-1'
       while exp < 0 or exp >= self.num_of_symbols:
-        exp_str = binary_math_tree_generator(length, np.arange(self.num_of_symbols), ['-', '+', '*'])
+        exp_str = binary_math_tree_generator(length, np.arange(1,self.num_of_symbols), ['-', '+', '*'])
         exp = eval(exp_str)
       exp_tokens = exp_str.split()
       output = [str(exp)]
-      example = {'inputs': self.encode(exp_tokens),
+      example = {'inputs': self.encode(exp_tokens + [self.eos]),
                  'targets':self.encode(output),
                  'inputs_length': len(exp_tokens),
                  'targets_length': len(output)}

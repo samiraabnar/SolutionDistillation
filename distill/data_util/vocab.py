@@ -44,10 +44,10 @@ def get_word_embs(word_emb_path, word_emb_size, predefineds, vocabulary_size=100
 
 
 class Vocab(object):
-  def __init__(self, path):
+  def __init__(self, path, unknown='<unk>'):
     self.word_to_index = {}
     self.index_to_word = {}
-    self.unknown = '<unk>'
+    self.unknown = unknown
     self.add_word(self.unknown, count=0)
     self.path = path
 

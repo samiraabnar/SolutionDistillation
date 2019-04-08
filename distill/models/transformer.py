@@ -4,6 +4,7 @@ from tensor2tensor.utils.beam_search import EOS_ID
 
 from distill.common.beam_search import sequence_beam_search
 from distill.common.layer_utils import get_decoder_self_attention_bias, get_position_encoding, get_padding_bias, get_padding
+from distill.data_util.prep_arithmatic import Arithmatic
 from distill.layers.attention import MultiHeadScaledDotProductAttention
 from distill.layers.embedding import EmbeddingSharedWeights
 from distill.layers.ffn_layer import FeedFowardNetwork
@@ -256,7 +257,7 @@ class Transformer(object):
       self.encoder_stack.create_vars(reuse=False)
       self.decoder_stack.create_vars(reuse=False)
 
-  def apply(self, examples, reuse=tf.AUTO_REUSE, is_train=True):
+  def apply(self, examples, target_length=None, reuse=tf.AUTO_REUSE, is_train=True):
     """Calculate target logits or inferred target sequences.
     Args:
       inputs: int tensor with shape [batch_size, input_length].
@@ -283,14 +284,18 @@ class Transformer(object):
       tf.logging.info(encoder_outputs)
 
       if targets is None or not is_train:
-        output_dic = self.predict(encoder_outputs, attention_bias)
+        output_dic = self.predict(encoder_outputs=encoder_outputs,
+                                  encoder_decoder_attention_bias=attention_bias,
+                                  target_length=target_length)
         predictions = output_dic['outputs']
         logits = tf.one_hot(indices=predictions, depth=self.hparams.vocab_size)
         tf.logging.info('predict logits')
         tf.logging.info(logits)
         outputs = None
       else:
-        outputs = self.decode(targets, encoder_outputs, attention_bias, is_train)
+        outputs = self.decode(targets, encoder_outputs=encoder_outputs,
+                              attention_bias=attention_bias,
+                              is_train=is_train)
         logits = self.embedding_softmax_layer.linear(outputs)
 
       predictions = tf.argmax(logits, axis=-1)
@@ -404,11 +409,14 @@ class Transformer(object):
 
     return symbols_to_logits_fn
 
-  def predict(self, encoder_outputs, encoder_decoder_attention_bias):
+  def predict(self, encoder_outputs, encoder_decoder_attention_bias,target_length=None):
     """Return predicted sequence."""
     batch_size = tf.shape(encoder_outputs)[0]
     input_length = tf.shape(encoder_outputs)[1]
-    max_decode_length = input_length + self.hparams.extra_decode_length
+    if target_length is None:
+      max_decode_length = input_length + self.hparams.extra_decode_length
+    else:
+      max_decode_length = target_length
 
     symbols_to_logits_fn = self._get_symbols_to_logits_fn(max_decode_length)
 
@@ -448,8 +456,8 @@ class Transformer(object):
 
 class UniversalTransformer(Transformer):
 
-  def __init__(self, hparams, scope="Transformer"):
-    super(UniversalTransformer, self).__init__(hparams, scope)
+  def __init__(self, hparams, eos_id, scope="Transformer"):
+    super(UniversalTransformer, self).__init__(hparams, eos_id, scope)
 
   def create_vars(self, reuse=False):
     self.initializer = tf.variance_scaling_initializer(
@@ -476,7 +484,9 @@ if __name__ == '__main__':
 
   tf.logging.set_verbosity(tf.logging.INFO)
 
-  bin_iden = AlgorithmicIdentityBinary40('data/alg')
+  #bin_iden = AlgorithmicIdentityBinary40('data/alg')
+  bin_iden = Arithmatic('data/arithmatic')
+
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
@@ -484,24 +494,64 @@ if __name__ == '__main__':
   iterator = dataset.make_initializable_iterator()
 
   example = iterator.get_next()
-  inputs, targets, lengths = example
+  inputs, targets, inputs_lengths, targets_length = example
+
+  class Config(object):
+    def __init__(self):
+      self.vocab_size = bin_iden.vocab_length
+      self.hidden_dim = 32
+      self.output_dim = self.vocab_size
+      self.embedding_dim = 10
+      self.input_dropout_keep_prob = 0.5
+      self.hidden_dropout_keep_prob = 0.5
+      self.attention_mechanism = None
+      self.depth = 1
+      self.sent_rep_mode = "all"
+      self.scope = "transformer"
+      self.batch_size = 64
+      self.input_dropout_keep_prob = 1.0
+      self.hidden_dropout_keep_prob = 1.0
+      self.number_of_heads = 2
+      self.ff_filter_size = 512
+      self.initializer_gain = 1.0
+      self.label_smoothing = 0.1
+      self.clip_grad_norm = 0.  # i.e. no gradient clipping
+      self.optimizer_adam_epsilon = 1e-9
+      self.learning_rate = 0.001
+      self.learning_rate_warmup_steps = 1000
+      self.initializer_gain = 1.0
+      self.initializer = "uniform_unit_scaling"
+      self.weight_decay = 0.0
+      self.optimizer_adam_beta1 = 0.9
+      self.optimizer_adam_beta2 = 0.98
+      self.num_sampled_classes = 0
+      self.label_smoothing = 0.1
+      self.clip_grad_norm = 0.  # i.e. no gradient clipping
+      self.optimizer_adam_epsilon = 1e-9
+      self.alpha = 1
+      self.beam_size = 5
+      self.extra_decode_length = 5
 
 
-  transformer = Transformer(hidden_dim=32,
-                            number_of_heads=1,
-                            depth=1,
-                            ff_filter_size=10,
-                            dropout_keep_prob=1.0,
-                            initializer_gain=0.5,
+  transformer = Transformer(Config(),
+                            bin_iden.eos_id,
                             scope="Transformer")
   transformer.create_vars(reuse=False)
 
-  logits = transformer.apply(inputs=inputs,
-                              targets=targets)
+  outputs = transformer.apply(example, target_length=1)
+  logits = outputs['logits']
   predictions = tf.argmax(logits, axis=-1)
 
   global_step = tf.train.get_or_create_global_step()
   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                       iterator.initializer))
-  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
-    print(sess.run([inputs, predictions]))
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_transformer', scaffold=scaffold) as sess:
+    for _ in np.arange(10):
+      inp, targ, pred = sess.run([inputs, targets, predictions])
+
+      print(inp)
+      print(' '.join(bin_iden.decode(inp[0])))
+      print(' '.join(bin_iden.decode(pred[0])))
+      print(' '.join(bin_iden.decode(targ[0])))
+
+

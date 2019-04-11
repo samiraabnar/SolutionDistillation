@@ -57,7 +57,7 @@ class Embedding(object):
 class EmbeddingSharedWeights(object):
   """Calculates input embeddings and pre-softmax linear with shared weights."""
 
-  def __init__(self, vocab_size, embedding_dim, method="gather"):
+  def __init__(self, vocab_size, embedding_dim, method="gather", scope='SharedEmbedding'):
     """Specify characteristic parameters of embedding layer.
     Args:
       vocab_size: Number of tokens in the embedding. (Typically ~32,000)
@@ -75,17 +75,19 @@ class EmbeddingSharedWeights(object):
     if method not in ("gather", "matmul"):
       raise ValueError("method {} must be 'gather' or 'matmul'".format(method))
     self.method = method
+    self.scope = scope
 
   def create_vars(self):
-    with tf.variable_scope("embedding_and_softmax", reuse=tf.AUTO_REUSE):
-      # Create and initialize weights. The random normal initializer was chosen
-      # randomly, and works well.
-      self.shared_weights = tf.get_variable(
-          "weights", [self.vocab_size, self.hidden_size],
-          initializer=tf.random_normal_initializer(
-              0., self.hidden_size ** -0.5))
+    with tf.variable_scope(self.scope):
+      with tf.variable_scope("embedding_and_softmax", reuse=tf.AUTO_REUSE):
+        # Create and initialize weights. The random normal initializer was chosen
+        # randomly, and works well.
+        self.shared_weights = tf.get_variable(
+            "weights", [self.vocab_size, self.hidden_size],
+            initializer=tf.random_normal_initializer(
+                0., self.hidden_size ** -0.5))
 
-    self.built = True
+      self.built = True
 
   def apply(self, x):
     """Get token embeddings of x.
@@ -96,12 +98,13 @@ class EmbeddingSharedWeights(object):
       padding: float32 tensor with shape [batch_size, length] indicating the
         locations of the padding tokens in x.
     """
-    with tf.name_scope("embedding"):
-      # Create binary mask of size [batch_size, length]
-      mask = tf.to_float(tf.not_equal(x, 0))
+    with tf.variable_scope(self.scope, reuse=True):
+      with tf.name_scope("embedding"):
+        # Create binary mask of size [batch_size, length]
+        mask = tf.to_float(tf.not_equal(x, 0))
 
-      embeddings = tf.gather(self.shared_weights, x)
-      embeddings *= tf.expand_dims(mask, -1)
+        embeddings = tf.gather(self.shared_weights, x)
+        embeddings *= tf.expand_dims(mask, -1)
 
 
       # Scale embedding by the sqrt of the hidden size
@@ -116,11 +119,12 @@ class EmbeddingSharedWeights(object):
     Returns:
       float32 tensor with shape [batch_size, length, vocab_size].
     """
-    with tf.name_scope("presoftmax_linear"):
-      batch_size = tf.shape(x)[0]
-      length = tf.shape(x)[1]
+    with tf.variable_scope(self.scope, reuse=True):
+      with tf.name_scope("presoftmax_linear"):
+        batch_size = tf.shape(x)[0]
+        length = tf.shape(x)[1]
 
-      x = tf.reshape(x, [-1, self.hidden_size])
-      logits = tf.matmul(x, self.shared_weights, transpose_b=True)
+        x = tf.reshape(x, [-1, self.hidden_size])
+        logits = tf.matmul(x, self.shared_weights, transpose_b=True)
 
       return tf.reshape(logits, [batch_size, length, self.vocab_size])

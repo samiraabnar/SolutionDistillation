@@ -226,7 +226,7 @@ class Transformer(object):
   probabilities for the output sequence.
   """
 
-  def __init__(self, hparams, eos_id, scope="Transformer"):
+  def __init__(self, hparams, task, scope="Transformer"):
     self.hparams = hparams
     self.vocab_size = hparams.vocab_size
     self.hidden_dim = hparams.hidden_dim
@@ -236,7 +236,8 @@ class Transformer(object):
     self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
     self.initializer_gain = hparams.initializer_gain
     self.scope = scope
-    self.eos_id = eos_id
+    self.task = task
+    self.eos_id = self.task.eos_id
 
   def create_vars(self, reuse=False):
     self.initializer = tf.variance_scaling_initializer(
@@ -291,7 +292,7 @@ class Transformer(object):
         logits = tf.one_hot(indices=predictions, depth=self.hparams.vocab_size)
         tf.logging.info('predict logits')
         tf.logging.info(logits)
-        outputs = None
+        outputs = self.embedding_softmax_layer.apply(tf.cast(logits, dtype=tf.int32))
       else:
         outputs = self.decode(targets, encoder_outputs=encoder_outputs,
                               attention_bias=attention_bias,

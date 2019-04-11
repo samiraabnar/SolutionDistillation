@@ -1,36 +1,30 @@
 import tensorflow as tf
-from distill.basic_trainer import Trainer
-from distill.data_util.prep_sst import SST
-from distill.data_util.vocab import PretrainedVocab
+from distill.pipelines.basic_trainer import Trainer
+from distill.common.metrics import padded_cross_entropy_loss, get_eval_metrics
 
 
-class SentimentTrainer(Trainer):
+class Seq2SeqTrainer(Trainer):
   def __init__(self, config, model_obj, task):
-    super(SentimentTrainer, self).__init__(config, model_obj)
-    self.task = SST("data/sst", pretrained_path=self.config.pretrained_embedding_path, embedding_size=self.config.embedding_dim)
-    self.vocab = PretrainedVocab(self.config.data_path, self.config.pretrained_embedding_path,
-                                 self.config.embedding_dim)
-    self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
-    self.config.input_dim = len(self.word2id)
-
+    super(Seq2SeqTrainer, self).__init__(config, model_obj)
+    self.task = task
 
   def get_train_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="train"))
-    dataset = dataset.map(self.task.parse_seq2seq_examples)
+    dataset = dataset.map(self.task.parse_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     train_iterator = dataset.make_initializable_iterator()
 
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="dev"))
-    dataset = dataset.map(self.task.parse_seq2seq_examples)
+    dataset = dataset.map(self.task.parse_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     dev_iterator = dataset.make_initializable_iterator()
 
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="test"))
-    dataset = dataset.map(self.task.parse_seq2seq_examples)
+    dataset = dataset.map(self.task.parse_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
@@ -40,7 +34,7 @@ class SentimentTrainer(Trainer):
 
   def compute_loss(self,logits, targets):
     xentropy, weights = padded_cross_entropy_loss(
-      logits, targets, self.config.label_smoothing, self.config.vocab_size)
+      logits, targets, self.config.label_smoothing, self.config.output_dim)
     loss = tf.reduce_sum(xentropy) / tf.reduce_sum(weights)
 
     return loss
@@ -52,7 +46,6 @@ class SentimentTrainer(Trainer):
       tf.logging.info(eval_metrics[metric])
       tf.summary.scalar(metric, tf.reduce_mean(eval_metrics[metric]), family=family)
 
-
   def get_metric_summaries_as_dic(self, logits, labels):
     metric_summaries = {}
     eval_metrics = get_eval_metrics(logits, labels, self.model.hparams)
@@ -61,7 +54,6 @@ class SentimentTrainer(Trainer):
 
     return metric_summaries
 
-
   def build_train_graph(self):
     train_iterator, dev_iterator, test_iterator = self.get_train_data_itaratoes()
 
@@ -69,13 +61,11 @@ class SentimentTrainer(Trainer):
     dev_examples = dev_iterator.get_next()
     test_examples = test_iterator.get_next()
 
-
-
     self.model.create_vars(reuse=False)
 
-    train_output_dic = self.model.apply(train_examples, is_train=True)
-    dev_output_dic = self.model.apply(dev_examples, is_train=False)
-    test_output_dic = self.model.apply(test_examples, is_train=False)
+    train_output_dic = self.model.apply(train_examples, target_length=self.task.target_length, is_train=True)
+    dev_output_dic = self.model.apply(dev_examples, target_length=self.task.target_length, is_train=False)
+    test_output_dic = self.model.apply(test_examples, target_length=self.task.target_length, is_train=False)
 
     train_loss = self.compute_loss(train_output_dic['logits'], train_output_dic['targets'])
     dev_loss = self.compute_loss(dev_output_dic['logits'], dev_output_dic['targets'])

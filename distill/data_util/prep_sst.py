@@ -54,7 +54,15 @@ class SST(object):
       self.vocab = PretrainedVocab(self.vocab_path, pretrained_path, embedding_size)
     else:
       self.vocab = Vocab(path=self.vocab_path)
+
     self.load_vocab()
+
+
+  def decode(self, ids):
+    return [self.id2word[i] for i in ids]
+
+  def encode(self, tokens):
+    return [self.word2id[t] for t in tokens]
 
   def load_vocab(self):
     if self.vocab.exists():
@@ -69,8 +77,7 @@ class SST(object):
       self.vocab.build_vocab(all_words)
       self.vocab.save()
 
-  def get_examples(self, mode):
-    example_features = []
+  def generator(self, mode):
     for example_id, tree in enumerate(self.data[mode]):
       words = tree.get_words()
       node = tree.root
@@ -79,7 +86,7 @@ class SST(object):
       node_to_index = OrderedDict()
       for i in range(len(nodes_list)):
         node_to_index[nodes_list[i]] = i
-      example_features.append({
+      example = {
         'example_id': example_id,
         'is_leaf': [int(node.isLeaf) for node in nodes_list],
         'left_children': [0] + [node_to_index[node.left]+1 if
@@ -95,12 +102,12 @@ class SST(object):
         'binary_labels': [0 if node.label <= 2 else 1 for node in nodes_list],
         'length': len(nodes_list),
         'word_length': len(words),
-        'word_ids': [self.vocab.encode(word)[0] for word in words],
+        'word_ids': self.vocab.encode(words + [self.eos]),
         'root_label': [tree.root.label],
         'root_binary_label': [0 if tree.root.label <= 2 else 1]
-      })
+      }
 
-    return example_features
+      yield example
 
   def get_all_tf_features(self, example_feaures):
     """Convert our own representation of an example's features to Features class for TensorFlow dataset.
@@ -145,7 +152,7 @@ class SST(object):
         self.data[tag] = []
         for line in fid.readlines():
           tree = Tree(line)
-          if self.add_subtrees:
+          if self.add_subtrees and tag == 'train':
             sub_trees = get_subtrees(tree.root)
             self.data[tag].extend(sub_trees)
           else:
@@ -153,19 +160,42 @@ class SST(object):
 
   def build_tfrecords(self,tf_feature_fn, mode, feature_type="tree"):
     tf_example_features = []
-    for example in self.get_examples(mode):
+    for example in self.generator(mode):
       if example['root_label'] != 2:
        tf_example_features.append(tf_feature_fn(example))
 
-    subtree_name_token = '_allsubs' if self.add_subtrees else ''
+    if mode == 'train':
+      subtree_name_token = '_allsubs' if self.add_subtrees else ''
+    else:
+      subtree_name_token = ''
+
     with tf.python_io.TFRecordWriter(os.path.join(self.data_path,feature_type+"_" + mode + subtree_name_token + ".tfr")) as tf_record_writer:
       for example in tqdm(tf_example_features):
         tf_record = tf.train.Example(features=example)
         tf_record_writer.write(tf_record.SerializeToString())
 
   @property
+  def eos_id(self):
+    return self.vocab.word_to_index[self.eos]
+
+  @property
+  def vocab_length(self):
+    return len(self.vocab.index_to_word)
+
+  @property
+  def share_input_output_embeddings(self):
+    return False
+
+  @property
   def target_length(self):
     return 1
+
+  @property
+  def target_vocab(self, fine_grained=True):
+    if fine_grained:
+      return [0,1,2,3,4]
+    else:
+      return [0, 1]
 
   @staticmethod
   def parse_sst_tree_examples(example):
@@ -232,14 +262,20 @@ class SST(object):
            root_label, root_binary_label, word_length, word_ids
 
   @staticmethod
-  def get_padded_shapes():
-    return [], [], [None], [None], [None], [None], [None], [None], [], [], [], [None]
+  def get_full_padded_shapes():
+    return [None], [None], [], []
 
   @staticmethod
-  def get_tfrecord_path(datapath, mode, feature_type="full", add_subtrees=True):
+  def get_padded_shapes():
+    return [None], [None], [], []
 
-    subtree_name_token = '_allsubs' if add_subtrees else ''
-    return os.path.join(datapath, feature_type + "_" + mode + subtree_name_token + ".tfr")
+  def get_tfrecord_path(self, mode, feature_type="full", add_subtrees=True):
+
+    if mode == "train":
+      subtree_name_token = '_allsubs' if add_subtrees else ''
+    else:
+      subtree_name_token = ''
+    return os.path.join(self.data_path, feature_type + "_" + mode + subtree_name_token + ".tfr")
 
   @staticmethod
   def parse_examples(example):
@@ -293,11 +329,33 @@ def build_sst_main():
   with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
     print(sess.run(labels))
 
+def test_seq2seq():
+  batch_size = 10
+  dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train", feature_type="full"))
+  dataset = dataset.map(SST.parse_examples)
+  dataset = dataset.padded_batch(batch_size, padded_shapes=SST.get_padded_shapes())
+  iterator = dataset.make_initializable_iterator()
+
+  example = iterator.get_next()
+  inputs, targets, inputs_length, targets_length = example
+
+  global_step = tf.train.get_or_create_global_step()
+  scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
+                                                      iterator.initializer))
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
+    inp, targ, tag_len = \
+      sess.run([inputs, targets, targets_length])
+    print(inp)
+    print(targ)
+    print(tag_len)
+
+
+
 def test():
   batch_size = 10
   dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train", feature_type="full"))
   dataset = dataset.map(SST.parse_full_sst_tree_examples)
-  dataset = dataset.padded_batch(batch_size, padded_shapes=SST.get_padded_shapes())
+  dataset = dataset.padded_batch(batch_size, padded_shapes=SST.get_full_padded_shapes())
   iterator = dataset.make_initializable_iterator()
 
   example = iterator.get_next()
@@ -327,7 +385,7 @@ def test():
 
 if __name__ == '__main__':
   build_full_sst()
-  test()
+  test_seq2seq()
 
   print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="train", feature_type="full", add_subtrees=True))))
   print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="test", feature_type="full", add_subtrees=True))))

@@ -1,20 +1,13 @@
 
 import tensorflow as tf
 
-from distill.algorithmic_piplines import AlgorithmicTrainer
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicAdditionDecimal40, \
   AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
-from distill.layers.tree_lstm import TreeLSTM
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
-from distill.models.sentiment_tree_lstm import SentimentTreeLSTM
-from distill.models.sentiment_lstm import SentimentLSTM
-from distill.layers.lstm import LSTM
-from distill.layers.bilstm import BiLSTM
 
 import os
 
 from distill.models.transformer import Transformer, UniversalTransformer
-from distill.pipelines import SSTRepDistiller
 
 tf.logging.set_verbosity(tf.logging.INFO)
 

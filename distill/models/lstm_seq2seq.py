@@ -7,10 +7,11 @@ from distill.layers.bilstm import BiLSTM
 
 
 class LSTMSeq2Seq(object):
-  def __init__(self, hparams, eos_id, model=LSTM, scope="Seq2SeqLSTM"):
+  def __init__(self, hparams, task, model=LSTM, scope="Seq2SeqLSTM"):
     self.hparams = hparams
     self.scope=scope
-    self.eos_id = eos_id
+    self.task = task
+    self.eos_id = self.task.eos_id
     self.lstm_encoder = model(hidden_dim=hparams.hidden_dim,
                       output_dim=hparams.hidden_dim,
                       hidden_keep_prob=hparams.hidden_dropout_keep_prob,
@@ -29,9 +30,16 @@ class LSTMSeq2Seq(object):
 
   def create_vars(self, reuse=False):
     with tf.variable_scope(self.scope, reuse=reuse):
-      self.embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
-                                       embedding_dim=self.hparams.embedding_dim)
-      self.embedding_layer.create_vars()
+      self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
+                                       embedding_dim=self.hparams.embedding_dim, scope="InputEmbed")
+      self.input_embedding_layer.create_vars()
+      if not self.task.share_input_output_embeddings:
+        self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
+                                       embedding_dim=self.hparams.embedding_dim, scope="OutputEmbed")
+        self.output_embedding_layer.create_vars()
+      else:
+        self.output_embedding_layer = self.input_embedding_layer
+
       with tf.variable_scope("encoder"):
         self.lstm_encoder.create_vars()
       with tf.variable_scope("decoder"):
@@ -39,14 +47,14 @@ class LSTMSeq2Seq(object):
 
       # Output embedding
       self.output_embedding_mat = tf.get_variable("output_embedding_mat",
-                                                  [self.hparams.embedding_dim, self.lstm_decoder.sent_rep_dim],
+                                                   [self.hparams.embedding_dim, self.lstm_decoder.sent_rep_dim],
                                                   dtype=tf.float32)
       self.output_embedding_bias = tf.get_variable("output_embedding_bias",
                                                    [self.hparams.embedding_dim],
                                                    dtype=tf.float32)
 
 
-  def apply(self, examples, is_train=True, reuse=tf.AUTO_REUSE):
+  def apply(self, examples, target_length=None, is_train=True, reuse=tf.AUTO_REUSE):
 
     def output_embedding(current_output):
       return tf.add(
@@ -54,12 +62,12 @@ class LSTMSeq2Seq(object):
         self.output_embedding_bias)
 
 
-    inputs, targets, input_lengths, target_length = examples
+    inputs, targets, inputs_lengths, targets_length = examples
     with tf.variable_scope(self.scope, reuse=reuse):
-      embedded_inputs = self.embedding_layer.apply(inputs)
-      embedded_targets = self.embedding_layer.apply(targets)
+      embedded_inputs = self.input_embedding_layer.apply(inputs)
+      embedded_targets = self.output_embedding_layer.apply(targets)
       with tf.variable_scope("encoder"):
-        lstm_encoder_output_dic = self.lstm_encoder.apply(inputs=embedded_inputs, inputs_length=input_lengths, is_train=is_train)
+        lstm_encoder_output_dic = self.lstm_encoder.apply(inputs=embedded_inputs, inputs_length=inputs_lengths, is_train=is_train)
         #encoder_output = tf.expand_dims(lstm_encoder_output_dic['sents_reps'],1)
         #encoder_output = tf.tile(encoder_output,[1,tf.shape(targets)[1],1])
 
@@ -81,20 +89,21 @@ class LSTMSeq2Seq(object):
           decoder_inputs = tf.concat([decoder_inputs, embedded_targets], axis=-1)
           tf.logging.info('decoder_inputs')
           tf.logging.info(decoder_inputs)
-          lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=target_length,
+          lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=targets_length,
                                                             is_train=is_train)
         else:
-          lstm_decoder_output_dic = self.lstm_decoder.predict(inputs_length=input_lengths,
+          lstm_decoder_output_dic = self.lstm_decoder.predict(inputs_length=inputs_lengths,
+                                                              target_length=target_length,
                                                               compute_decoding_step_input_fn=compute_decoding_step_input,
                                                               output_embedding_fn=output_embedding,
-                                                              embedding_layer=self.embedding_layer,eos_id=self.eos_id, is_train=is_train)
+                                                              embedding_layer=self.output_embedding_layer,eos_id=self.eos_id, is_train=is_train)
 
       outputs = lstm_decoder_output_dic['seq_outputs']
       output_mask = tf.cast(tf.sequence_mask(lstm_decoder_output_dic['outputs_lengths'], tf.shape(outputs)[1]), dtype=tf.int64)
 
       outputs = tf.map_fn(output_embedding, outputs)
 
-      logits = self.embedding_layer.linear(outputs)
+      logits = self.output_embedding_layer.linear(outputs)
       predictions = tf.argmax(logits, axis=-1) * output_mask
 
     return {'logits': logits,

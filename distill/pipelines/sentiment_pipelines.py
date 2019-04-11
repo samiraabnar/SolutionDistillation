@@ -1,34 +1,36 @@
 import tensorflow as tf
-import numpy as np
-
-from distill.basic_evaluator import Evaluator
-from distill.basic_trainer import Trainer
-from distill.common.metrics import padded_cross_entropy_loss, get_eval_metrics
+from distill.pipelines.basic_trainer import Trainer
+from distill.data_util.prep_sst import SST
+from distill.data_util.vocab import PretrainedVocab
 
 
-class AlgorithmicTrainer(Trainer):
+class SentimentTrainer(Trainer):
   def __init__(self, config, model_obj, task):
-    super(AlgorithmicTrainer, self).__init__(config, model_obj)
-    self.task = task
+    super(SentimentTrainer, self).__init__(config, model_obj)
+    self.task = SST("data/sst", pretrained_path=self.config.pretrained_embedding_path, embedding_size=self.config.embedding_dim)
+    self.vocab = PretrainedVocab(self.config.data_path, self.config.pretrained_embedding_path,
+                                 self.config.embedding_dim)
+    self.pretrained_word_embeddings, self.word2id = self.vocab.get_word_embeddings()
+    self.config.input_dim = len(self.word2id)
 
 
   def get_train_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="train"))
-    dataset = dataset.map(self.task.parse_examples)
+    dataset = dataset.map(self.task.parse_seq2seq_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     train_iterator = dataset.make_initializable_iterator()
 
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="dev"))
-    dataset = dataset.map(self.task.parse_examples)
+    dataset = dataset.map(self.task.parse_seq2seq_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     dev_iterator = dataset.make_initializable_iterator()
 
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="test"))
-    dataset = dataset.map(self.task.parse_examples)
+    dataset = dataset.map(self.task.parse_seq2seq_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
@@ -50,6 +52,7 @@ class AlgorithmicTrainer(Trainer):
       tf.logging.info(eval_metrics[metric])
       tf.summary.scalar(metric, tf.reduce_mean(eval_metrics[metric]), family=family)
 
+
   def get_metric_summaries_as_dic(self, logits, labels):
     metric_summaries = {}
     eval_metrics = get_eval_metrics(logits, labels, self.model.hparams)
@@ -57,6 +60,7 @@ class AlgorithmicTrainer(Trainer):
       metric_summaries[metric] = tf.reduce_mean(eval_metrics[metric])
 
     return metric_summaries
+
 
   def build_train_graph(self):
     train_iterator, dev_iterator, test_iterator = self.get_train_data_itaratoes()
@@ -103,11 +107,3 @@ class AlgorithmicTrainer(Trainer):
                                  init_feed_dict={})
 
     return update_op, scaffold, train_output_dic, dev_output_dic, test_output_dic
-
-class AlgorithmicEvaluator(Evaluator):
-  def __init__(self, config, model_obj, task):
-    super(AlgorithmicEvaluator, self).__init__(config, model_obj)
-    self.task = task
-
-
-

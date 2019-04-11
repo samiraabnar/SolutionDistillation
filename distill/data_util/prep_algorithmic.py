@@ -15,8 +15,20 @@ class Algorithmic(object):
     self.load_vocab()
 
   @property
+  def share_input_output_embeddings(self):
+      return True
+
+  @property
   def vocab_length(self):
     return len(self.id2word)
+
+  @property
+  def target_vocab(self):
+    return self.id2word
+
+  @property
+  def target_length(self):
+    return self.vocab_length
 
   @property
   def eos_id(self):
@@ -145,6 +157,9 @@ class AlgorithmicIdentityBinary40(Algorithmic):
   def dev_length(self):
     return 400
 
+  @property
+  def target_length(self):
+    return self.vocab_length
 
   def generator(self, number_of_examples, mode="train"):
     """Generator for the identity (copy) task on sequences of symbols.

@@ -112,7 +112,8 @@ class LSTM(object):
             'outputs_lengths': inputs_length
     }
 
-  def predict(self, compute_decoding_step_input_fn, inputs_length, output_embedding_fn, embedding_layer, eos_id, init_state=None, is_train=True):
+  def predict(self, compute_decoding_step_input_fn, inputs_length, output_embedding_fn, embedding_layer, eos_id,
+              target_length=None, init_state=None, is_train=True):
     self.batch_size = tf.shape(inputs_length)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
 
@@ -156,7 +157,10 @@ class LSTM(object):
           return output_lengths, all_outputs, lstm_prediction, state, finish_flags, tf.add(step, 1)
 
 
-        timesteps = tf.reduce_max(inputs_length)
+        if target_length is None:
+          timesteps = tf.reduce_max(inputs_length)
+        else:
+          timesteps = target_length
 
         for_each_time_step = lambda l, c, a, b, f, step: tf.logical_and(
           tf.less(tf.cast(step, dtype=tf.int32), tf.cast(timesteps, dtype=tf.int32)),

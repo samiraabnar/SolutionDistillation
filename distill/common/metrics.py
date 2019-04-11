@@ -99,7 +99,7 @@ def get_eval_metrics(logits, labels, params):
       "accuracy_per_sequence": _convert_to_eval_metric(
           padded_sequence_accuracy)(logits, labels),
       "neg_log_perplexity": _convert_to_eval_metric(padded_neg_log_perplexity)(
-          logits, labels, params.vocab_size),
+          logits, labels, params.output_dim),
   }
 
   metrics.update({

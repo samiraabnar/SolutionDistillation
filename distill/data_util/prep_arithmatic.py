@@ -101,6 +101,9 @@ class Arithmatic(object):
 
     self.load_vocab()
 
+  @property
+  def share_input_output_embeddings(self):
+    return True
 
   @property
   def vocab_length(self):

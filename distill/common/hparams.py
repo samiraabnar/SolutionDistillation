@@ -70,14 +70,14 @@ class LSTMHparam(object):
     self.depth = depth
     self.batch_size = batch_size
     self.pretrained_embedding_path = pretrained_embedding_path
-    self.input_dropout_keep_prob = 0.85
-    self.hidden_dropout_keep_prob = 0.5
+    self.input_dropout_keep_prob = input_dropout_keep_prob
+    self.hidden_dropout_keep_prob = hidden_dropout_keep_prob
     self.number_of_heads = number_of_heads
     self.ff_filter_size = ff_filter_size
     self.initializer_gain = initializer_gain
     self.label_smoothing = label_smoothing
     self.attention_mechanism = attention_mechanism
-    self.sent_rep_mode = "all"
+    self.sent_rep_mode = sent_rep_mode
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.learning_rate = 0.001

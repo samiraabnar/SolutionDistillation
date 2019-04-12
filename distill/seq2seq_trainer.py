@@ -98,13 +98,13 @@ if __name__ == '__main__':
                            initializer_gain=hparams.initializer_gain,
                            batch_size=hparams.batch_size,
                            pretrained_embedding_path=hparams.pretrained_embedding_path,
-                           input_dropout_keep_prob=hparams.input_dropout_keep_prob,
-                           hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
+                           input_dropout_keep_prob=0.8,
+                           hidden_dropout_keep_prob=0.5,
                            vocab_size=hparams.vocab_size,
                            label_smoothing=hparams.label_smoothing,
                            attention_mechanism=None,
                            sent_rep_mode="final",
-                           embedding_dim=32
+                           embedding_dim=hparams.vocab_size / 2 if hparams.vocab_size < 100 else 100
                            )
 
 

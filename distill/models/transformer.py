@@ -457,8 +457,8 @@ class Transformer(object):
 
 class UniversalTransformer(Transformer):
 
-  def __init__(self, hparams, eos_id, scope="Transformer"):
-    super(UniversalTransformer, self).__init__(hparams, eos_id, scope)
+  def __init__(self, hparams, task, scope="Transformer"):
+    super(UniversalTransformer, self).__init__(hparams, task, scope)
 
   def create_vars(self, reuse=False):
     self.initializer = tf.variance_scaling_initializer(

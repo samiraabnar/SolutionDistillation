@@ -5,20 +5,22 @@ from tensor2tensor.utils.beam_search import EOS_ID
 from distill.common.beam_search import sequence_beam_search
 from distill.common.layer_utils import get_decoder_self_attention_bias, get_position_encoding, get_padding_bias, get_padding
 from distill.data_util.prep_arithmatic import Arithmatic
-from distill.layers.attention import MultiHeadScaledDotProductAttention
+from distill.layers.attention import MultiHeadScaledDotProductAttention, ReversedMultiHeadScaledDotProductAttention
 from distill.layers.embedding import EmbeddingSharedWeights
 from distill.layers.ffn_layer import FeedFowardNetwork
 from distill.layers.pre_post_wrapper import PrePostProcessingWrapper, LayerNormalization
 
 tpu = False
 
+
 class TransformerEncoder(object):
-  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, scope="TransformerEncoder"):
+  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, self_attention_dir="top_down", scope="TransformerEncoder"):
     self.hidden_dim = hidden_dim
     self.number_of_heads = number_of_heads
     self.depth = depth
     self.dropout_keep_prob = dropout_keep_prob
     self.ff_filter_size = ff_filter_size
+    self.self_attention_dir = self_attention_dir
 
     self.scope = scope
 
@@ -28,10 +30,18 @@ class TransformerEncoder(object):
       self.layers = []
       for i in np.arange(self.depth):
         # Create sublayers for each layer.
-        self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
-                                                                  num_heads=self.number_of_heads,
-                                                                  attention_dropout_keepprob=self.dropout_keep_prob,
-                                                                  scope="Attention"+str(i))
+
+        if self.self_attention_dir == "buttom_up":
+          self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
+                                                                            num_heads=self.number_of_heads,
+                                                                            attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                            scope="Attention" + str(i))
+        else:
+          self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
+                                                                            num_heads=self.number_of_heads,
+                                                                            attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                            scope="Attention" + str(i))
+
         feed_forward_network = FeedFowardNetwork(hidden_size=self.hidden_dim,
                                                  filter_size=self.ff_filter_size,
                                                  relu_dropout_keepprob=self.dropout_keep_prob,
@@ -71,13 +81,14 @@ class TransformerEncoder(object):
 
 
 class TransformerDecoder(object):
-  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, scope="TransformerDecoder"):
+  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, self_attention_dir="top_down", cross_attention_dir="top_down", scope="TransformerDecoder"):
     self.hidden_dim = hidden_dim
     self.number_of_heads = number_of_heads
     self.depth = depth
     self.dropout_keep_prob = dropout_keep_prob
     self.ff_filter_size = ff_filter_size
-
+    self.self_attention_dir = self_attention_dir
+    self.cross_attention_dir = cross_attention_dir
     self.scope = scope
 
   def create_vars(self, reuse=False):
@@ -86,14 +97,27 @@ class TransformerDecoder(object):
       self.layers = []
       for i in np.arange(self.depth):
         # Create sublayers for each layer.
-        self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
+        if self.self_attention_dir == "buttom_up":
+          self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
                                                                   attention_dropout_keepprob=self.dropout_keep_prob,
                                                                   scope="SelfAttention"+str(i))
-        enc_dec_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
+        else:
+          self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
+                                                                    num_heads=self.number_of_heads,
+                                                                    attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                    scope="SelfAttention" + str(i))
+
+        if self.cross_attention_dir == "buttom_up":
+          enc_dec_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
                                                                   attention_dropout_keepprob=self.dropout_keep_prob,
                                                                   scope="EncDecAttention" + str(i))
+        else:
+          enc_dec_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
+                                                                       num_heads=self.number_of_heads,
+                                                                       attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                       scope="EncDecAttention" + str(i))
         feed_forward_network = FeedFowardNetwork(self.hidden_dim,
                                                  self.ff_filter_size,
                                                  self.dropout_keep_prob,
@@ -215,8 +239,6 @@ class UniversalTransformerDecoder(TransformerDecoder):
       self.output_normalization.create_vars()
 
 
-
-
 class Transformer(object):
   """Transformer model for sequence to sequence data.
   Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
@@ -249,9 +271,12 @@ class Transformer(object):
 
       self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
+                                              self_attention_dir=self.hparams.encoder_self_attention_dir,
                                               scope="TransformerEncoder")
       self.decoder_stack = TransformerDecoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
+                                              self_attention_dir=self.hparams.decoder_self_attention_dir,
+                                              cross_attention_dir=self.hparams.decoder_cross_attention_dir,
                                               scope="TransformerDecoder")
 
       self.embedding_softmax_layer.create_vars()
@@ -532,10 +557,13 @@ if __name__ == '__main__':
       self.alpha = 1
       self.beam_size = 5
       self.extra_decode_length = 5
+      self.encoder_self_attention_dir = "button_up"
+      self.decoder_self_attention_dir = "button_up"
+      self.decoder_cross_attention_dir = "button_up"
 
 
   transformer = Transformer(Config(),
-                            bin_iden.eos_id,
+                            task=bin_iden,
                             scope="Transformer")
   transformer.create_vars(reuse=False)
 

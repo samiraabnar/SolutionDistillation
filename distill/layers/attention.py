@@ -154,3 +154,96 @@ class MultiHeadScaledDotProductAttention(object):
     attention_output = self.output_dense_layer(attention_output)
     return attention_output
 
+
+class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttention):
+
+  def __init__(self, hidden_dim, num_heads, attention_dropout_keepprob, scope="ReversedAttention"):
+    if hidden_dim % num_heads != 0:
+      raise ValueError("Hidden size must be evenly divisible by the number of "
+                       "heads.")
+
+    super(ReversedMultiHeadScaledDotProductAttention, self).__init__(hidden_dim, num_heads,
+                                                                     attention_dropout_keepprob, scope)
+
+  def combine_heads(self, x):
+    """Combine tensor that has been split.
+    Args:
+      x: A tensor [batch_size, num_heads, length, hidden_size/num_heads]
+    Returns:
+      A tensor with shape [batch_size, length, hidden_size]
+    """
+    with tf.name_scope("combine_heads"):
+      batch_size = tf.shape(x)[0]
+      length = tf.shape(x)[2]
+      x = tf.transpose(x, [0, 2, 1, 3])  # --> [batch, length, num_heads, depth]
+      return tf.reshape(x, [batch_size, length, self.hidden_dim])
+
+  def apply(self, x, y, bias, is_train=True, cache=None):
+    """Apply attention mechanism to x and y.
+    Args:
+      x: a tensor with shape [batch_size, length_x, hidden_size]
+      y: a tensor with shape [batch_size, length_y, hidden_size]
+      bias: attention bias that will be added to the result of the dot product.
+      cache: (Used during prediction) dictionary with tensors containing results
+        of previous attentions. The dictionary must have the items:
+            {"k": tensor with shape [batch_size, i, key_channels],
+             "v": tensor with shape [batch_size, i, value_channels]}
+        where i is the current decoded length.
+    Returns:
+      Attention layer output with shape [batch_size, length_x, hidden_size]
+    """
+    # Linearly project the query (q), key (k) and value (v) using different
+    # learned projections. This is in preparation of splitting them into
+    # multiple heads. Multi-head attention uses multiple queries, keys, and
+    # values rather than regular attention (which uses a single q, k, v).
+    tf.logging.info("attention x:")
+    tf.logging.info(x)
+    tf.logging.info("attention y:")
+    tf.logging.info(y)
+    tf.logging.info("attention bias:")
+    tf.logging.info(bias)
+
+    q = self.q_dense_layer(x)
+    k = self.k_dense_layer(y)
+    v = self.v_dense_layer(y)
+
+    if cache is not None:
+      # Combine cached keys and values with new keys and values.
+      k = tf.concat([cache["k"], k], axis=1)
+      v = tf.concat([cache["v"], v], axis=1)
+
+      # Update cache
+      cache["k"] = k
+      cache["v"] = v
+
+    # Split q, k, v into heads.
+    q = self.split_heads(q)
+    k = self.split_heads(k)
+    v = self.split_heads(v)
+
+    # Scale q to prevent the dot product between q and k from growing too large.
+    depth = (self.hidden_dim // self.num_heads)
+    q *= depth ** -0.5
+
+    # Calculate dot product attention
+    logits = tf.matmul(q, k, transpose_b=True)
+    logits += bias
+    key_axis = tf.shape(logits)[-2]
+    weights = tf.nn.softmax(logits, axis=key_axis, name="attention_weights")
+
+    sum_of_attention_per_q = tf.reduce_sum(weights,axis=-1) #This can be anything in [0,number_of_positions]
+    sum_of_attentions_per_k = tf.reduce_sum(weights, axis=-2) #This should be one
+
+
+
+    if is_train:
+      weights = tf.nn.dropout(weights, self.attention_dropout_keepprob)
+    attention_output = tf.matmul(weights, v)
+
+    # Recombine heads --> [batch_size, length, hidden_size]
+    attention_output = self.combine_heads(attention_output)
+
+    # Run the combined outputs through another linear projection layer.
+    attention_output = self.output_dense_layer(attention_output)
+    return attention_output
+

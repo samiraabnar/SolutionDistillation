@@ -86,7 +86,10 @@ if __name__ == '__main__':
                                          input_dropout_keep_prob=hparams.input_dropout_keep_prob,
                                          hidden_dropout_keep_prob=0.75,
                                          vocab_size=hparams.vocab_size,
-                                         label_smoothing=hparams.label_smoothing
+                                         label_smoothing=hparams.label_smoothing,
+                                         encoder_self_attention_dir = "buttom_up",
+                                         decoder_self_attention_dir = "top_down",
+                                         decoder_cross_attention_dir = "top_down"
                                          )
 
   lstm_params = LSTMHparam(input_dim=hparams.input_dim,

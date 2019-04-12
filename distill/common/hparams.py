@@ -12,6 +12,9 @@ class TransformerHparam(object):
                initializer_gain,
                vocab_size,
                label_smoothing,
+               encoder_self_attention_dir="top_down",
+               decoder_self_attention_dir="top_down",
+               decoder_cross_attention_dir="top_down"
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -43,6 +46,9 @@ class TransformerHparam(object):
     self.alpha = 1
     self.beam_size = 5
     self.extra_decode_length = 5
+    self.encoder_self_attention_dir = encoder_self_attention_dir
+    self.decoder_self_attention_dir = decoder_self_attention_dir
+    self.decoder_cross_attention_dir = decoder_cross_attention_dir
 
 class LSTMHparam(object):
   def __init__(self, input_dim,

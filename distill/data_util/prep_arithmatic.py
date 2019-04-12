@@ -119,6 +119,9 @@ class Arithmatic(object):
   def eos_id(self):
     return self.word2id[self.eos]
 
+  @property
+  def target_vocab(self):
+    return self.id2word
 
   def decode(self, ids):
     return [self.id2word[i] for i in ids]

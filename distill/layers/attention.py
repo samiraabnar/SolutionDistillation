@@ -247,11 +247,18 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
     aggregated_assignment_weights = tf.reduce_sum(assignment_weights, axis=1)
     # [batch_size, length y, length x] -> [batch_size, length x]
     new_x_presence = tf.nn.softmax(tf.reduce_sum(aggregated_assignment_weights, axis=-2) ,axis=-1)
+    tf.logging.info('aggregated_assignment_weights')
+    tf.logging.info(aggregated_assignment_weights)
 
     if is_train:
       assignment_weights = tf.nn.dropout(assignment_weights, self.attention_dropout_keepprob)
 
+    tf.logging.info('assignment_weights')
+    tf.logging.info(assignment_weights)
+    tf.logging.info(v)
     attention_output = tf.matmul(assignment_weights, v)
+    tf.logging.info('attention_output')
+    tf.logging.info(attention_output)
 
 
     # Recombine heads --> [batch_size, length, hidden_size]
@@ -259,5 +266,5 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
 
     # Run the combined outputs through another linear projection layer.
     attention_output = self.output_dense_layer(attention_output)
-    return attention_output, new_x_presence
+    return attention_output, tf.expand_dims(new_x_presence, -1)
 

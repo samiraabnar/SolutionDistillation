@@ -61,7 +61,7 @@ class TransformerEncoder(object):
       self.output_normalization = LayerNormalization(self.hidden_dim)
       self.output_normalization.create_vars()
 
-  def apply(self, inputs, attention_bias, inputs_padding, is_train=True,  reuse=tf.AUTO_REUSE):
+  def apply(self, inputs, attention_bias, inputs_padding, is_train=True, encoder_inputs_presence=None, reuse=tf.AUTO_REUSE):
 
     encoder_inputs = inputs
     with tf.variable_scope(self.scope, reuse=reuse):
@@ -73,11 +73,14 @@ class TransformerEncoder(object):
         tf.logging.info("encoder inputs:")
         tf.logging.info(encoder_inputs)
 
-        encoder_inputs, _ = self_attention_layer.apply(x=encoder_inputs, y=encoder_inputs, is_train=is_train, bias=attention_bias)
+        encoder_inputs, encoder_inputs_presence = self_attention_layer.apply(x=encoder_inputs, y=encoder_inputs,
+                                                                             x_presence=encoder_inputs_presence,
+                                                                             y_presence=encoder_inputs_presence,
+                                                                             is_train=is_train, bias=attention_bias)
         encoder_inputs, _ = feed_forward_network.apply(x=encoder_inputs, is_train=is_train,
                                                     padding=inputs_padding)
 
-    return self.output_normalization.apply(encoder_inputs, is_train)
+    return self.output_normalization.apply(encoder_inputs, is_train), encoder_inputs_presence
 
 
 class TransformerDecoder(object):
@@ -141,7 +144,8 @@ class TransformerDecoder(object):
       self.output_normalization = LayerNormalization(self.hidden_dim)
       self.output_normalization.create_vars()
 
-  def apply(self, inputs, encoder_outputs, decoder_self_attention_bias, attention_bias, cache=None, is_train=True,  reuse=tf.AUTO_REUSE):
+  def apply(self, inputs, encoder_outputs, decoder_self_attention_bias, attention_bias, encoder_outputs_presence=None,
+            cache=None, is_train=True,  reuse=tf.AUTO_REUSE):
     decoder_inputs = inputs
     with tf.variable_scope(self.scope, reuse=reuse):
       for n, layer in enumerate(self.layers):
@@ -153,10 +157,11 @@ class TransformerDecoder(object):
         enc_dec_attention = layer[1]
         feed_forward_network = layer[2]
 
-        decoder_inputs,_ = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
+        decoder_inputs, _ = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
                                                     bias=decoder_self_attention_bias, cache=layer_cache)
-        decoder_inputs,_ = self_attention_layer.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
-                                                    bias=attention_bias)
+        decoder_inputs, _ = self_attention_layer.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
+                                                       y_presence=encoder_outputs_presence,
+                                                       bias=attention_bias)
         decoder_inputs,_ = feed_forward_network.apply(x=decoder_inputs, is_train=is_train)
 
     return self.output_normalization.apply(decoder_inputs, is_train)
@@ -305,12 +310,13 @@ class Transformer(object):
 
       # Run the inputs through the encoder layer to map the symbol
       # representations to continuous representations.
-      encoder_outputs = self.encode(inputs, attention_bias, is_train)
+      encoder_outputs, encoder_outputs_presence = self.encode(inputs, attention_bias, is_train)
       tf.logging.info('encoder outputs')
       tf.logging.info(encoder_outputs)
 
       if targets is None or not is_train:
         output_dic = self.predict(encoder_outputs=encoder_outputs,
+                                  encoder_outputs_presence=encoder_outputs_presence,
                                   encoder_decoder_attention_bias=attention_bias,
                                   target_length=target_length)
         predictions = output_dic['outputs']
@@ -320,6 +326,7 @@ class Transformer(object):
         outputs = self.embedding_softmax_layer.apply(tf.cast(logits, dtype=tf.int32))
       else:
         outputs = self.decode(targets, encoder_outputs=encoder_outputs,
+                              encoder_outputs_presence=encoder_outputs_presence,
                               attention_bias=attention_bias,
                               is_train=is_train)
         logits = self.embedding_softmax_layer.linear(outputs)
@@ -357,7 +364,7 @@ class Transformer(object):
 
       return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train)
 
-  def decode(self, targets, encoder_outputs, attention_bias, is_train=True):
+  def decode(self, targets, encoder_outputs, attention_bias, encoder_outputs_presence=None, is_train=True):
     """Generate logits for each value in the target sequence.
     Args:
       targets: target values for the output sequence.
@@ -427,15 +434,17 @@ class Transformer(object):
       self_attention_bias = decoder_self_attention_bias[:, :, i:i + 1, :i + 1]
 
       decoder_outputs = self.decoder_stack.apply(
-        decoder_input, cache.get("encoder_outputs"), self_attention_bias,
-        cache.get("encoder_decoder_attention_bias"), cache)
+        inputs=decoder_input, encoder_outputs=cache.get("encoder_outputs"),
+        decoder_self_attention_bias=self_attention_bias,
+        attention_bias=cache.get("encoder_decoder_attention_bias"), cache=cache, is_train=False)
       logits = self.embedding_softmax_layer.linear(decoder_outputs)
+
       logits = tf.squeeze(logits, axis=[1])
       return logits, cache
 
     return symbols_to_logits_fn
 
-  def predict(self, encoder_outputs, encoder_decoder_attention_bias,target_length=None):
+  def predict(self, encoder_outputs, encoder_decoder_attention_bias, encoder_outputs_presence=None, target_length=None):
     """Return predicted sequence."""
     batch_size = tf.shape(encoder_outputs)[0]
     input_length = tf.shape(encoder_outputs)[1]
@@ -510,8 +519,8 @@ if __name__ == '__main__':
 
   tf.logging.set_verbosity(tf.logging.INFO)
 
-  #bin_iden = AlgorithmicIdentityBinary40('data/alg')
-  bin_iden = Arithmatic('data/arithmatic')
+  bin_iden = AlgorithmicIdentityBinary40('data/alg')
+  #bin_iden = Arithmatic('data/arithmatic')
 
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
@@ -567,8 +576,8 @@ if __name__ == '__main__':
                             scope="Transformer")
   transformer.create_vars(reuse=False)
 
-  outputs = transformer.apply(example, target_length=1, is_train=True)
-  outputs = transformer.apply(example, target_length=1, is_train=False)
+  outputs = transformer.apply(example, target_length=None, is_train=True)
+  outputs = transformer.apply(example, target_length=None, is_train=False)
 
   logits = outputs['logits']
   predictions = tf.argmax(logits, axis=-1)
@@ -581,6 +590,6 @@ if __name__ == '__main__':
       inp, targ, pred = sess.run([inputs, targets, predictions])
 
       print(inp)
-      print(' '.join(bin_iden.decode(inp[0])))
-      print(' '.join(bin_iden.decode(pred[0])))
-      print(' '.join(bin_iden.decode(targ[0])))
+      print(bin_iden.decode(inp[0]))
+      print(bin_iden.decode(pred[0]))
+      print(bin_iden.decode(targ[0]))

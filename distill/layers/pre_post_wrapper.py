@@ -52,4 +52,4 @@ class PrePostProcessingWrapper(object):
     if is_train:
       y = tf.nn.dropout(y, self.postprocess_dropout_keepprob)
 
-    return x + y , extra
+    return x + y, extra

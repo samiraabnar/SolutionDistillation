@@ -92,7 +92,7 @@ class MultiHeadScaledDotProductAttention(object):
       x = tf.transpose(x, [0, 2, 1, 3])  # --> [batch, length, num_heads, depth]
       return tf.reshape(x, [batch_size, length, self.hidden_dim])
 
-  def apply(self, x, y, bias, is_train=True, cache=None):
+  def apply(self, x, y, bias, is_train=True, cache=None, x_presence=None, y_presence=None):
     """Apply attention mechanism to x and y.
     Args:
       x: a tensor with shape [batch_size, length_x, hidden_size]
@@ -178,7 +178,7 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
       x = tf.transpose(x, [0, 2, 1, 3])  # --> [batch, length, num_heads, depth]
       return tf.reshape(x, [batch_size, length, self.hidden_dim])
 
-  def apply(self, x, y, bias, is_train=True, cache=None):
+  def apply(self, x, y, bias, x_presence=None, y_presence=None, presence_temp=1, is_train=True, cache=None):
     """Apply attention mechanism to x and y.
     Args:
       x: a tensor with shape [batch_size, length_x, hidden_size]
@@ -207,6 +207,12 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
     k = self.k_dense_layer(y)
     v = self.v_dense_layer(y)
 
+    if x_presence is None:
+      x_presence = tf.ones((tf.shape(x)[0],tf.shape(x)[1],1))
+
+    if y_presence is None:
+      y_presence = tf.ones((tf.shape(y)[0],tf.shape(y)[1],1))
+
     if cache is not None:
       # Combine cached keys and values with new keys and values.
       k = tf.concat([cache["k"], k], axis=1)
@@ -226,24 +232,32 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
     q *= depth ** -0.5
 
     # Calculate dot product attention
-    logits = tf.matmul(q, k, transpose_b=True)
+    # L_yD DL_x -> LyLx
+    logits = tf.matmul(k, q, transpose_b=True)
     logits += bias
-    key_axis = tf.shape(logits)[-2]
-    weights = tf.nn.softmax(logits, axis=key_axis, name="attention_weights")
+    # Pay less attention to the less present nodes.
+    logits *= tf.tile(tf.expand_dims(x_presence,1), [1,tf.shape(logits)[1],1,1])
 
-    sum_of_attention_per_q = tf.reduce_sum(weights,axis=-1) #This can be anything in [0,number_of_positions]
-    sum_of_attentions_per_k = tf.reduce_sum(weights, axis=-2) #This should be one
+    # Normalize attention for keys(y nodes) for each head.
+    assignment_probs = tf.nn.softmax(logits, axis=-1, name="attention_weights")
+    assignment_weights = assignment_probs * tf.tile(tf.expand_dims(y_presence, axis=1), [1,tf.shape(logits)[1],1,1])
 
-
+    # Aggregated attention of all heads:
+    # [batch_size, num_heads, length y, length x] -> [batch_size, length y, length x]
+    aggregated_assignment_weights = tf.reduce_sum(assignment_weights, axis=1)
+    # [batch_size, length y, length x] -> [batch_size, length x]
+    new_x_presence = tf.nn.softmax(tf.reduce_sum(aggregated_assignment_weights, axis=-2) ,axis=-1)
 
     if is_train:
-      weights = tf.nn.dropout(weights, self.attention_dropout_keepprob)
-    attention_output = tf.matmul(weights, v)
+      assignment_weights = tf.nn.dropout(assignment_weights, self.attention_dropout_keepprob)
+
+    attention_output = tf.matmul(assignment_weights, v)
+
 
     # Recombine heads --> [batch_size, length, hidden_size]
     attention_output = self.combine_heads(attention_output)
 
     # Run the combined outputs through another linear projection layer.
     attention_output = self.output_dense_layer(attention_output)
-    return attention_output
+    return attention_output, new_x_presence
 

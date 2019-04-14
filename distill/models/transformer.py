@@ -73,8 +73,8 @@ class TransformerEncoder(object):
         tf.logging.info("encoder inputs:")
         tf.logging.info(encoder_inputs)
 
-        encoder_inputs = self_attention_layer.apply(x=encoder_inputs, y=encoder_inputs, is_train=is_train, bias=attention_bias)
-        encoder_inputs = feed_forward_network.apply(x=encoder_inputs, is_train=is_train,
+        encoder_inputs, _ = self_attention_layer.apply(x=encoder_inputs, y=encoder_inputs, is_train=is_train, bias=attention_bias)
+        encoder_inputs, _ = feed_forward_network.apply(x=encoder_inputs, is_train=is_train,
                                                     padding=inputs_padding)
 
     return self.output_normalization.apply(encoder_inputs, is_train)
@@ -153,11 +153,11 @@ class TransformerDecoder(object):
         enc_dec_attention = layer[1]
         feed_forward_network = layer[2]
 
-        decoder_inputs = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
+        decoder_inputs,_ = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
                                                     bias=decoder_self_attention_bias, cache=layer_cache)
-        decoder_inputs = self_attention_layer.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
+        decoder_inputs,_ = self_attention_layer.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
                                                     bias=attention_bias)
-        decoder_inputs = feed_forward_network.apply(x=decoder_inputs, is_train=is_train)
+        decoder_inputs,_ = feed_forward_network.apply(x=decoder_inputs, is_train=is_train)
 
     return self.output_normalization.apply(decoder_inputs, is_train)
 
@@ -557,9 +557,9 @@ if __name__ == '__main__':
       self.alpha = 1
       self.beam_size = 5
       self.extra_decode_length = 5
-      self.encoder_self_attention_dir = "button_up"
-      self.decoder_self_attention_dir = "button_up"
-      self.decoder_cross_attention_dir = "button_up"
+      self.encoder_self_attention_dir = "buttom_up"
+      self.decoder_self_attention_dir = "top_down"
+      self.decoder_cross_attention_dir = "top_down"
 
 
   transformer = Transformer(Config(),
@@ -567,7 +567,9 @@ if __name__ == '__main__':
                             scope="Transformer")
   transformer.create_vars(reuse=False)
 
-  outputs = transformer.apply(example, target_length=1)
+  outputs = transformer.apply(example, target_length=1, is_train=True)
+  outputs = transformer.apply(example, target_length=1, is_train=False)
+
   logits = outputs['logits']
   predictions = tf.argmax(logits, axis=-1)
 
@@ -582,5 +584,3 @@ if __name__ == '__main__':
       print(' '.join(bin_iden.decode(inp[0])))
       print(' '.join(bin_iden.decode(pred[0])))
       print(' '.join(bin_iden.decode(targ[0])))
-
-

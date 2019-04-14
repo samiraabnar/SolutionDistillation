@@ -44,7 +44,12 @@ class PrePostProcessingWrapper(object):
     # Get layer output
     y = self.layer.apply(y, is_train=is_train, **kwargs)
 
+    extra = None
+    if isinstance(y, tuple):
+      y, extra = y
+
     # Postprocessing: apply dropout and residual connection
     if is_train:
       y = tf.nn.dropout(y, self.postprocess_dropout_keepprob)
-    return x + y
+
+    return x + y , extra

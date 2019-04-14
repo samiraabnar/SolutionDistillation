@@ -159,7 +159,7 @@ class AlgorithmicIdentityBinary40(Algorithmic):
 
   @property
   def target_length(self):
-    return self.vocab_length
+    return None
 
   def generator(self, number_of_examples, mode="train"):
     """Generator for the identity (copy) task on sequences of symbols.

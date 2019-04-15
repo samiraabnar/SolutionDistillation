@@ -543,7 +543,7 @@ if __name__ == '__main__':
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
-  dataset = dataset.padded_batch(1, padded_shapes=bin_iden.get_padded_shapes())
+  dataset = dataset.padded_batch(32, padded_shapes=bin_iden.get_padded_shapes())
   iterator = dataset.make_initializable_iterator()
 
   example = iterator.get_next()
@@ -584,7 +584,7 @@ if __name__ == '__main__':
       self.alpha = 1
       self.beam_size = 5
       self.extra_decode_length = 5
-      self.encoder_self_attention_dir = "top_down"
+      self.encoder_self_attention_dir = "buttom_up"
       self.decoder_self_attention_dir = "top_down"
       self.decoder_cross_attention_dir = "top_down"
 

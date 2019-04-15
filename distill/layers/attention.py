@@ -150,7 +150,7 @@ class MultiHeadScaledDotProductAttention(object):
     logits += bias
     # Pay less attention to the less present nodes.
     logits *= tf.tile(tf.expand_dims(
-      tf.transpose(y_presence, [0,2,1]), axis=1), [1,tf.shape(logits)[1],1,1])
+      tf.transpose(y_presence, [0,2,1]), axis=1), [tf.shape(logits)[0]/tf.shape(y_presence)[0],tf.shape(logits)[1],1,1])
 
     attention_weights = tf.nn.softmax(logits, name="attention_weights")
 

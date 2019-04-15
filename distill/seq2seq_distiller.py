@@ -34,7 +34,7 @@ tf.app.flags.DEFINE_string("rep_loss_mode", 'dot_product', "representation loss 
 tf.app.flags.DEFINE_string("model_type", "", "")
 tf.app.flags.DEFINE_integer("student_hidden_dim", 128, "")
 tf.app.flags.DEFINE_integer("student_depth", 2, "")
-tf.app.flags.DEFINE_integer("teacher_hidden_dim", 168, "")
+tf.app.flags.DEFINE_integer("teacher_hidden_dim", 128, "")
 tf.app.flags.DEFINE_integer("teacher_depth", 2, "")
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")

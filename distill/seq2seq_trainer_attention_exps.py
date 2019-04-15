@@ -17,7 +17,7 @@ tf.app.flags.DEFINE_string("task_name", "arithmatic", "sst | arithmatic | identi
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer | lstm | bilstm")
-
+tf.app.flags.DEFINE_string("encoder_attention_dir", 'top_down', 'top_down | buttom_up')
 
 tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
 tf.app.flags.DEFINE_integer("depth", 2, "")
@@ -66,7 +66,8 @@ class transformer_small_hparams(TransformerHparam):
                                                     label_smoothing=hparams.label_smoothing,
                                                     encoder_self_attention_dir = encoder_attention_dir,
                                                     decoder_self_attention_dir = "top_down",
-                                                    decoder_cross_attention_dir = "top_down"
+                                                    decoder_cross_attention_dir = "top_down",
+                                                    pretrained_embedding_path=hparams.pretrained_embedding_path
                                                     )
 
 class lstm_small_hparams(LSTMHparam):
@@ -135,6 +136,7 @@ if __name__ == '__main__':
                                               'depth'+str(model_params[hparams.model].depth),
                                               'hidden_dim'+str(model_params[hparams.model].hidden_dim),
                                               'batch_size'+str(model_params[hparams.model].batch_size),
+                                              hparams.encoder_attention_dir,
                                               hparams.exp_name]))
 
   model = Models[hparams.model](model_params[hparams.model],

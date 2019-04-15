@@ -24,4 +24,4 @@ LOGS_DIR=$HEAD_DIR/logs
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 python $CODE_DIR/seq2seq_trainer_attention_exps.py --model=transformer --encoder_attention_dir="top_down" \
---task_name=sst --exp_name=sst_run_0
+--task_name=sst --exp_name=sst_medium_run_0

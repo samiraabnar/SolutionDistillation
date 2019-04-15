@@ -37,7 +37,7 @@ tf.app.flags.DEFINE_float("l2_rate", 0.00005, "")
 
 
 tf.app.flags.DEFINE_integer("batch_size", 128, "")
-tf.app.flags.DEFINE_integer("training_iterations", 30000, "")
+tf.app.flags.DEFINE_integer("training_iterations", 60000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 3, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")

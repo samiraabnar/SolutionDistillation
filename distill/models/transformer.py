@@ -5,6 +5,7 @@ from tensor2tensor.utils.beam_search import EOS_ID
 from distill.common.beam_search import sequence_beam_search
 from distill.common.layer_utils import get_decoder_self_attention_bias, get_position_encoding, get_padding_bias, get_padding
 from distill.data_util.prep_arithmatic import Arithmatic
+from distill.data_util.prep_sst import SST
 from distill.layers.attention import MultiHeadScaledDotProductAttention, ReversedMultiHeadScaledDotProductAttention
 from distill.layers.embedding import EmbeddingSharedWeights
 from distill.layers.ffn_layer import FeedFowardNetwork
@@ -271,8 +272,16 @@ class Transformer(object):
       self.initializer_gain, mode="fan_avg", distribution="uniform")
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
-      self.embedding_softmax_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
-                                                       method="matmul" if tpu else "gather")
+
+      self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
+                                                       method="matmul" if tpu else "gather", scope="InputEmbed")
+      self.input_embedding_layer.create_vars()
+      if not self.task.share_input_output_embeddings:
+        self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
+                                       embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")
+        self.output_embedding_layer.create_vars()
+      else:
+        self.output_embedding_layer = self.input_embedding_layer
 
       self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
@@ -284,7 +293,7 @@ class Transformer(object):
                                               cross_attention_dir=self.hparams.decoder_cross_attention_dir,
                                               scope="TransformerDecoder")
 
-      self.embedding_softmax_layer.create_vars()
+
       self.encoder_stack.create_vars(reuse=False)
       self.decoder_stack.create_vars(reuse=False)
 
@@ -320,16 +329,16 @@ class Transformer(object):
                                   encoder_decoder_attention_bias=attention_bias,
                                   target_length=target_length)
         predictions = output_dic['outputs']
-        logits = tf.one_hot(indices=predictions, depth=self.hparams.vocab_size)
+        logits = tf.one_hot(indices=predictions, depth=len(self.task.target_vocab))
         tf.logging.info('predict logits')
         tf.logging.info(logits)
-        outputs = self.embedding_softmax_layer.apply(tf.cast(logits, dtype=tf.int32))
+        outputs = self.output_embedding_layer.apply(tf.cast(logits, dtype=tf.int32))
       else:
         outputs = self.decode(targets, encoder_outputs=encoder_outputs,
                               encoder_outputs_presence=encoder_outputs_presence,
                               attention_bias=attention_bias,
                               is_train=is_train)
-        logits = self.embedding_softmax_layer.linear(outputs)
+        logits = self.output_embedding_layer.linear(outputs)
 
       predictions = tf.argmax(logits, axis=-1)
 
@@ -349,7 +358,7 @@ class Transformer(object):
       float tensor with shape [batch_size, input_length, hidden_size]
     """
     with tf.variable_scope("encode", reuse=tf.AUTO_REUSE):
-      embedded_inputs = self.embedding_softmax_layer.apply(inputs)
+      embedded_inputs = self.input_embedding_layer.apply(inputs)
       inputs_padding = get_padding(inputs)
 
       with tf.name_scope("add_pos_encoding"):
@@ -378,7 +387,7 @@ class Transformer(object):
     with tf.name_scope("decode"):
       # Prepare inputs to decoder layers by shifting targets, adding positional
       # encoding and applying dropout.
-      decoder_inputs = self.embedding_softmax_layer.apply(targets)
+      decoder_inputs = self.output_embedding_layer.apply(targets)
       with tf.name_scope("shift_targets"):
         # Shift targets to the right, and remove the last element
         decoder_inputs = tf.pad(
@@ -397,13 +406,16 @@ class Transformer(object):
 
 
       outputs = self.decoder_stack.apply(
-            decoder_inputs, encoder_outputs, decoder_self_attention_bias,
-            attention_bias)
+            inputs=decoder_inputs,
+            encoder_outputs=encoder_outputs,
+            decoder_self_attention_bias=decoder_self_attention_bias,
+            attention_bias=attention_bias,
+            encoder_outputs_presence=encoder_outputs_presence)
 
 
       return outputs
 
-  def _get_symbols_to_logits_fn(self, max_decode_length):
+  def _get_symbols_to_logits_fn(self, max_decode_length, encoder_outputs_presence=None):
     """Returns a decoding function that calculates logits of the next tokens."""
 
     timing_signal = get_position_encoding(
@@ -428,7 +440,7 @@ class Transformer(object):
       decoder_input = ids[:, -1:]
 
       # Preprocess decoder input by getting embeddings and adding timing signal.
-      decoder_input = self.embedding_softmax_layer.apply(decoder_input)
+      decoder_input = self.output_embedding_layer.apply(decoder_input)
       decoder_input += timing_signal[i:i + 1]
 
       self_attention_bias = decoder_self_attention_bias[:, :, i:i + 1, :i + 1]
@@ -436,8 +448,10 @@ class Transformer(object):
       decoder_outputs = self.decoder_stack.apply(
         inputs=decoder_input, encoder_outputs=cache.get("encoder_outputs"),
         decoder_self_attention_bias=self_attention_bias,
-        attention_bias=cache.get("encoder_decoder_attention_bias"), cache=cache, is_train=False)
-      logits = self.embedding_softmax_layer.linear(decoder_outputs)
+        attention_bias=cache.get("encoder_decoder_attention_bias"),
+        encoder_outputs_presence=encoder_outputs_presence,
+        cache=cache, is_train=False)
+      logits = self.output_embedding_layer.linear(decoder_outputs)
 
       logits = tf.squeeze(logits, axis=[1])
       return logits, cache
@@ -453,7 +467,7 @@ class Transformer(object):
     else:
       max_decode_length = target_length
 
-    symbols_to_logits_fn = self._get_symbols_to_logits_fn(max_decode_length)
+    symbols_to_logits_fn = self._get_symbols_to_logits_fn(max_decode_length, encoder_outputs_presence)
 
     # Create initial set of IDs that will be passed into symbols_to_logits_fn.
     initial_ids = tf.zeros([batch_size], dtype=tf.int32)
@@ -476,7 +490,7 @@ class Transformer(object):
       symbols_to_logits_fn=symbols_to_logits_fn,
       initial_ids=initial_ids,
       initial_cache=cache,
-      vocab_size=self.hparams.vocab_size,
+      vocab_size=len(self.task.target_vocab),
       beam_size=self.hparams.beam_size,
       alpha=self.hparams.alpha,
       max_decode_length=max_decode_length,
@@ -519,9 +533,13 @@ if __name__ == '__main__':
 
   tf.logging.set_verbosity(tf.logging.INFO)
 
-  bin_iden = AlgorithmicIdentityBinary40('data/alg')
+  #bin_iden = AlgorithmicIdentityBinary40('data/alg')
   #bin_iden = Arithmatic('data/arithmatic')
-
+  bin_iden = SST(data_path="data/sst/",
+      add_subtrees=True,
+      pretrained=True,
+      pretrained_path="data/sst/filtered_glove.txt",
+      embedding_size=300)
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
@@ -566,7 +584,7 @@ if __name__ == '__main__':
       self.alpha = 1
       self.beam_size = 5
       self.extra_decode_length = 5
-      self.encoder_self_attention_dir = "buttom_up"
+      self.encoder_self_attention_dir = "top_down"
       self.decoder_self_attention_dir = "top_down"
       self.decoder_cross_attention_dir = "top_down"
 
@@ -576,8 +594,8 @@ if __name__ == '__main__':
                             scope="Transformer")
   transformer.create_vars(reuse=False)
 
-  outputs = transformer.apply(example, target_length=None, is_train=True)
-  outputs = transformer.apply(example, target_length=None, is_train=False)
+  outputs = transformer.apply(example, target_length=bin_iden.target_length, is_train=True)
+  outputs = transformer.apply(example, target_length=bin_iden.target_length, is_train=False)
 
   logits = outputs['logits']
   predictions = tf.argmax(logits, axis=-1)

@@ -59,10 +59,10 @@ class SST(object):
 
 
   def decode(self, ids):
-    return [self.id2word[i] for i in ids]
+    return [self.vocab.index_to_word[i] for i in ids]
 
   def encode(self, tokens):
-    return [self.word2id[t] for t in tokens]
+    return [self.vocab.word_to_index[t] for t in tokens]
 
   def load_vocab(self):
     if self.vocab.exists():
@@ -287,7 +287,7 @@ class SST(object):
     parsed_example = tf.parse_single_example(example, features=features)
 
     inputs_lengths = parsed_example["word_length"]
-    targets_length = 1
+    targets_length = tf.ones(inputs_lengths.shape)
     inputs = parsed_example["word_ids"]
     labels = parsed_example["root_label"]
 
@@ -330,10 +330,16 @@ def build_sst_main():
     print(sess.run(labels))
 
 def test_seq2seq():
+  sst_prep = SST(data_path="data/sst/",
+                 add_subtrees=True,
+                 pretrained=True,
+                 pretrained_path="data/sst/filtered_glove.txt",
+                 embedding_size=300)
+
   batch_size = 10
-  dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train", feature_type="full"))
-  dataset = dataset.map(SST.parse_examples)
-  dataset = dataset.padded_batch(batch_size, padded_shapes=SST.get_padded_shapes())
+  dataset = tf.data.TFRecordDataset(sst_prep.get_tfrecord_path(mode="train", feature_type="full"))
+  dataset = dataset.map(sst_prep.parse_examples)
+  dataset = dataset.padded_batch(batch_size, padded_shapes=sst_prep.get_padded_shapes())
   iterator = dataset.make_initializable_iterator()
 
   example = iterator.get_next()
@@ -385,9 +391,15 @@ def test():
 
 if __name__ == '__main__':
   build_full_sst()
-  test_seq2seq()
+  #test_seq2seq()
 
-  print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="train", feature_type="full", add_subtrees=True))))
-  print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="test", feature_type="full", add_subtrees=True))))
-  print(sum(1 for _ in tf.python_io.tf_record_iterator(SST.get_tfrecord_path("data/sst", mode="dev", feature_type="full", add_subtrees=True))))
+  sst_prep = SST(data_path="data/sst/",
+                 add_subtrees=True,
+                 pretrained=True,
+                 pretrained_path="data/sst/filtered_glove.txt",
+                 embedding_size=300)
+
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="train", feature_type="full", add_subtrees=True))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="test", feature_type="full", add_subtrees=True))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="dev", feature_type="full", add_subtrees=True))))
 

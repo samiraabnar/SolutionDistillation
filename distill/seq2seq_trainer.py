@@ -87,7 +87,7 @@ if __name__ == '__main__':
                                          hidden_dropout_keep_prob=0.75,
                                          vocab_size=hparams.vocab_size,
                                          label_smoothing=hparams.label_smoothing,
-                                         encoder_self_attention_dir = "buttom_up",
+                                         encoder_self_attention_dir = "top_down",
                                          decoder_self_attention_dir = "top_down",
                                          decoder_cross_attention_dir = "top_down"
                                          )

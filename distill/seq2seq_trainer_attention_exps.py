@@ -70,6 +70,26 @@ class transformer_small_hparams(TransformerHparam):
                                                     pretrained_embedding_path=hparams.pretrained_embedding_path
                                                     )
 
+class transformer_medium_hparams(TransformerHparam):
+  def __init__(self, vocab_size, output_dim, input_dim, encoder_attention_dir):
+    super(transformer_medium_hparams, self).__init__(input_dim=input_dim,
+                                                    hidden_dim=128,
+                                                    output_dim=output_dim,
+                                                    depth=4,
+                                                    number_of_heads=4,
+                                                    ff_filter_size=512,
+                                                    initializer_gain=hparams.initializer_gain,
+                                                    batch_size=hparams.batch_size,
+                                                    input_dropout_keep_prob=0.8,
+                                                    hidden_dropout_keep_prob=0.75,
+                                                    vocab_size=vocab_size,
+                                                    label_smoothing=hparams.label_smoothing,
+                                                    encoder_self_attention_dir = encoder_attention_dir,
+                                                    decoder_self_attention_dir = "top_down",
+                                                    decoder_cross_attention_dir = "top_down",
+                                                    pretrained_embedding_path=hparams.pretrained_embedding_path
+                                                    )
+
 class lstm_small_hparams(LSTMHparam):
   def __init__(self, vocab_size, output_dim, input_dim):
     super(lstm_small_hparams, self).__init__(input_dim=input_dim,
@@ -113,7 +133,7 @@ if __name__ == '__main__':
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)
-  transformer_params = transformer_small_hparams(vocab_size=hparams.vocab_size,
+  transformer_params = transformer_medium_hparams(vocab_size=hparams.vocab_size,
                                                  output_dim=hparams.output_dim,
                                                  input_dim=hparams.input_dim,
                                                  encoder_attention_dir=hparams.encoder_attention_dir)

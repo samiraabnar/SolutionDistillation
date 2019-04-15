@@ -66,6 +66,11 @@ class LSTMSeq2Seq(object):
     with tf.variable_scope(self.scope, reuse=reuse):
       embedded_inputs = self.input_embedding_layer.apply(inputs)
       embedded_targets = self.output_embedding_layer.apply(targets)
+
+      if is_train:
+        embedded_inputs = tf.nn.dropout(
+          embedded_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
       with tf.variable_scope("encoder"):
         lstm_encoder_output_dic = self.lstm_encoder.apply(inputs=embedded_inputs, inputs_length=inputs_lengths, is_train=is_train)
         #encoder_output = tf.expand_dims(lstm_encoder_output_dic['sents_reps'],1)

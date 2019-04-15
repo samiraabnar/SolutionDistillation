@@ -49,6 +49,45 @@ tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 
 hparams = tf.app.flags.FLAGS
 
+
+class transformer_small_hparams(TransformerHparam):
+  def __init__(self, vocab_size, output_dim, input_dim):
+    super(transformer_small_hparams, self).__init__(input_dim=input_dim,
+                                                    hidden_dim=128,
+                                                    output_dim=output_dim,
+                                                    depth=2,
+                                                    number_of_heads=2,
+                                                    ff_filter_size=512,
+                                                    initializer_gain=hparams.initializer_gain,
+                                                    batch_size=hparams.batch_size,
+                                                    input_dropout_keep_prob=0.8,
+                                                    hidden_dropout_keep_prob=0.75,
+                                                    vocab_size=vocab_size,
+                                                    label_smoothing=hparams.label_smoothing,
+                                                    encoder_self_attention_dir = "top_down",
+                                                    decoder_self_attention_dir = "top_down",
+                                                    decoder_cross_attention_dir = "top_down"
+                                                    )
+
+class lstm_small_hparams(LSTMHparam):
+  def __init__(self, vocab_size, output_dim, input_dim):
+    super(lstm_small_hparams, self).__init__(input_dim=input_dim,
+                                             hidden_dim=64,
+                                             output_dim=output_dim,
+                                             depth=2,
+                                             number_of_heads=1,
+                                             ff_filter_size=hparams.ff_filter_size,
+                                             initializer_gain=hparams.initializer_gain,
+                                             batch_size=hparams.batch_size,
+                                             pretrained_embedding_path=hparams.pretrained_embedding_path,
+                                             input_dropout_keep_prob=0.8,
+                                             hidden_dropout_keep_prob=0.5,
+                                             vocab_size=vocab_size,
+                                             label_smoothing=hparams.label_smoothing,
+                                             attention_mechanism=None,
+                                             sent_rep_mode="all",
+                                             embedding_dim=hparams.vocab_size / 2 if hparams.vocab_size < 100 else 100)
+
 if __name__ == '__main__':
 
 
@@ -73,42 +112,13 @@ if __name__ == '__main__':
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)
+  transformer_params = transformer_small_hparams(vocab_size=hparams.vocab_size,
+                                                 output_dim=hparams.output_dim,
+                                                 input_dim=hparams.input_dim)
+  lstm_params = lstm_small_hparams(vocab_size=hparams.vocab_size,
+                                          output_dim=hparams.output_dim,
+                                          input_dim=hparams.input_dim)
 
-  transformer_params = TransformerHparam(input_dim=hparams.input_dim,
-                                         hidden_dim=hparams.hidden_dim,
-                                         output_dim=hparams.output_dim,
-                                         depth=hparams.depth,
-                                         number_of_heads=4,
-                                         ff_filter_size=512,
-                                         initializer_gain=hparams.initializer_gain,
-                                         batch_size=hparams.batch_size,
-                                         pretrained_embedding_path=hparams.pretrained_embedding_path,
-                                         input_dropout_keep_prob=hparams.input_dropout_keep_prob,
-                                         hidden_dropout_keep_prob=0.5,
-                                         vocab_size=hparams.vocab_size,
-                                         label_smoothing=hparams.label_smoothing,
-                                         encoder_self_attention_dir = "top_down",
-                                         decoder_self_attention_dir = "top_down",
-                                         decoder_cross_attention_dir = "top_down"
-                                         )
-
-  lstm_params = LSTMHparam(input_dim=hparams.input_dim,
-                           hidden_dim=64,
-                           output_dim=hparams.output_dim,
-                           depth=hparams.depth,
-                           number_of_heads=hparams.number_of_heads,
-                           ff_filter_size=hparams.ff_filter_size,
-                           initializer_gain=hparams.initializer_gain,
-                           batch_size=hparams.batch_size,
-                           pretrained_embedding_path=hparams.pretrained_embedding_path,
-                           input_dropout_keep_prob=0.8,
-                           hidden_dropout_keep_prob=0.5,
-                           vocab_size=hparams.vocab_size,
-                           label_smoothing=hparams.label_smoothing,
-                           attention_mechanism=None,
-                           sent_rep_mode="final",
-                           embedding_dim=hparams.vocab_size / 2 if hparams.vocab_size < 100 else 100
-                           )
 
 
   model_params = {"transformer": transformer_params,

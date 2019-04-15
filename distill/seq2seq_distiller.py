@@ -48,7 +48,7 @@ tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
 
 tf.app.flags.DEFINE_string("loss_type", "root_loss", "")
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
-tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
+tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.25, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.00001, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
@@ -121,8 +121,8 @@ if __name__ == '__main__':
                            vocab_size=hparams.vocab_size,
                            label_smoothing=hparams.label_smoothing,
                            attention_mechanism=None,
-                           sent_rep_mode="final",
-                           embedding_dim=32
+                           sent_rep_mode=hparams.sent_rep_mode,
+                           embedding_dim=hparams.vocab_size / 2 if hparams.vocab_size < 100 else 100
                            )
 
 

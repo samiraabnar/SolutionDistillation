@@ -88,7 +88,7 @@ class LSTMSeq2Seq(object):
             return aggregiated_encoder_output
 
       with tf.variable_scope("decoder"):
-        if is_train:
+        if is_train and target_length is None:
           transpose_embedded_targets = tf.transpose(embedded_targets, [1,0,2])
           decoder_inputs = tf.map_fn(compute_decoding_step_input, transpose_embedded_targets) #(Length, batch_size, hidden_dim)
           decoder_inputs = tf.transpose(decoder_inputs,[1,0,2])
@@ -96,6 +96,15 @@ class LSTMSeq2Seq(object):
           tf.logging.info(decoder_inputs)
 
           decoder_inputs = tf.concat([decoder_inputs, embedded_targets], axis=-1)
+          tf.logging.info('decoder_inputs')
+          tf.logging.info(decoder_inputs)
+          lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=targets_length,
+                                                            is_train=is_train)
+        elif targets_length == 1:
+          transpose_embedded_targets = tf.transpose(embedded_targets, [1, 0, 2])
+          decoder_inputs = tf.map_fn(compute_decoding_step_input,
+                                     transpose_embedded_targets)  # (Length, batch_size, hidden_dim)
+          decoder_inputs = tf.transpose(decoder_inputs, [1, 0, 2])
           tf.logging.info('decoder_inputs')
           tf.logging.info(decoder_inputs)
           lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=targets_length,

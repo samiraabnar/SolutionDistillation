@@ -335,7 +335,7 @@ class Transformer(object):
     """
     inputs, targets, inputs_lengths, targets_lengths = examples
 
-    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
+    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
       # Calculate attention bias for encoder self-attention and decoder
       # multi-headed attention layers.
       attention_bias = get_padding_bias(inputs)

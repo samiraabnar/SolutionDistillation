@@ -31,8 +31,8 @@ tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
 tf.app.flags.DEFINE_boolean('train_embeddings', True, " False | True")
 
 
-tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.9, "")
-tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.8, "")
+tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
+tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.25, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.01, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
@@ -87,7 +87,7 @@ if __name__ == '__main__':
                                          batch_size=hparams.batch_size,
                                          pretrained_embedding_path=hparams.pretrained_embedding_path,
                                          input_dropout_keep_prob=hparams.input_dropout_keep_prob,
-                                         hidden_dropout_keep_prob=0.5,
+                                         hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
                                          vocab_size=hparams.vocab_size,
                                          label_smoothing=hparams.label_smoothing,
                                          encoder_self_attention_dir = "top_down",
@@ -105,8 +105,8 @@ if __name__ == '__main__':
                            initializer_gain=hparams.initializer_gain,
                            batch_size=hparams.batch_size,
                            pretrained_embedding_path=hparams.pretrained_embedding_path,
-                           input_dropout_keep_prob=0.8,
-                           hidden_dropout_keep_prob=0.25,
+                           input_dropout_keep_prob=hparams.input_dropout_keep_prob,
+                           hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
                            vocab_size=hparams.vocab_size,
                            label_smoothing=hparams.label_smoothing,
                            attention_mechanism=None,

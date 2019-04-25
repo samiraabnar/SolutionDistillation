@@ -132,7 +132,7 @@ class SST(object):
         'labels': [node.label for node in nodes_list],
         'binary_labels': [0 if node.label <= 2 else 1 for node in nodes_list],
         'length': len(nodes_list),
-        'word_length': len(words),
+        'word_length': len(words) + 1,
         'word_ids': self.vocab.encode(words + [self.eos]),
         'root_label': [tree.root.label],
         'root_binary_label': [0 if tree.root.label <= 2 else 1]
@@ -192,8 +192,7 @@ class SST(object):
   def build_tfrecords(self,tf_feature_fn, mode, feature_type="tree"):
     tf_example_features = []
     for example in self.generator(mode):
-      if example['root_label'] != 2:
-       tf_example_features.append(tf_feature_fn(example))
+      tf_example_features.append(tf_feature_fn(example))
 
     if mode == 'train':
       subtree_name_token = '_allsubs' if self.add_subtrees else ''

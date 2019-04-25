@@ -110,7 +110,7 @@ if __name__ == '__main__':
                            vocab_size=hparams.vocab_size,
                            label_smoothing=hparams.label_smoothing,
                            attention_mechanism=None,
-                           sent_rep_mode="final",
+                           sent_rep_mode="all",
                            embedding_dim=300,
                            train_embeddings = hparams.train_embeddings)
 

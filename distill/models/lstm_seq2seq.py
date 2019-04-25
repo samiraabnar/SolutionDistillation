@@ -38,7 +38,7 @@ class LSTMSeq2Seq(object):
       self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
       if not self.task.share_input_output_embeddings:
         self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
-                                       embedding_dim=self.hparams.embedding_dim, scope="OutputEmbed")
+                                       embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")
         self.output_embedding_layer.create_vars()
       else:
         self.output_embedding_layer = self.input_embedding_layer
@@ -48,22 +48,9 @@ class LSTMSeq2Seq(object):
       with tf.variable_scope("decoder"):
         self.lstm_decoder.create_vars()
 
-      # Output embedding
-      self.output_embedding_mat = tf.get_variable("output_embedding_mat",
-                                                   [self.hparams.embedding_dim, self.lstm_decoder.sent_rep_dim],
-                                                  dtype=tf.float32)
-      self.output_embedding_bias = tf.get_variable("output_embedding_bias",
-                                                   [self.hparams.embedding_dim],
-                                                   dtype=tf.float32)
 
 
   def apply(self, examples, target_length=None, is_train=True, reuse=tf.AUTO_REUSE):
-
-    def output_embedding(current_output):
-      return tf.add(
-        tf.matmul(current_output, tf.transpose(self.output_embedding_mat)),
-        self.output_embedding_bias)
-
 
     inputs, targets, inputs_lengths, targets_length = examples
     with tf.variable_scope(self.scope, reuse=reuse):
@@ -116,17 +103,16 @@ class LSTMSeq2Seq(object):
           lstm_decoder_output_dic = self.lstm_decoder.predict(inputs_length=inputs_lengths,
                                                               target_length=target_length,
                                                               compute_decoding_step_input_fn=compute_decoding_step_input,
-                                                              output_embedding_fn=output_embedding,
                                                               embedding_layer=self.output_embedding_layer,eos_id=self.eos_id, is_train=is_train)
 
       outputs = lstm_decoder_output_dic['seq_outputs']
+      tf.logging.info("outputs")
+      tf.logging.info(outputs)
       if is_train:
         tf.nn.dropout(
           outputs, self.hparams.hidden_dropout_keep_prob)
 
       output_mask = tf.cast(tf.sequence_mask(lstm_decoder_output_dic['outputs_lengths'], tf.shape(outputs)[1]), dtype=tf.int64)
-
-      outputs = tf.map_fn(output_embedding, outputs)
 
       logits = self.output_embedding_layer.linear(outputs)
       predictions = tf.argmax(logits, axis=-1) * output_mask

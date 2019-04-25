@@ -72,7 +72,7 @@ class LSTM(object):
           dtype=tf.float32,
           sequence_length=inputs_length,
           initial_state=init_state)
-        #lstm_outputs = tf_layers.layer_norm(lstm_outputs)
+        lstm_outputs = tf_layers.layer_norm(lstm_outputs)
 
         tf.logging.info("seq_outputs"),
         tf.logging.info(lstm_outputs)
@@ -112,7 +112,7 @@ class LSTM(object):
             'outputs_lengths': inputs_length
     }
 
-  def predict(self, compute_decoding_step_input_fn, inputs_length, output_embedding_fn, embedding_layer, eos_id,
+  def predict(self, compute_decoding_step_input_fn, inputs_length, embedding_layer, eos_id,
               target_length=None, init_state=None, is_train=True):
     self.batch_size = tf.shape(inputs_length)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
@@ -135,13 +135,12 @@ class LSTM(object):
         def lstm_loop(output_lengths, all_outputs, last_lstm_prediction,last_state, finish_flags, step):
 
 
-          last_lstm_prediction = output_embedding_fn(last_lstm_prediction)
-          last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
+          last_lstm_prediction_logits = tf.expand_dims(last_lstm_prediction, 1)
+          last_lstm_prediction_logits = embedding_layer.linear(last_lstm_prediction_logits)
           tf.logging.info('last lstm prediction')
           tf.logging.info(last_lstm_prediction)
-          logits = embedding_layer.linear(last_lstm_prediction)
 
-          prediction = tf.argmax(logits, axis=-1)
+          prediction = tf.argmax(last_lstm_prediction_logits, axis=-1)
           embedded_prediction = embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]
 
@@ -166,12 +165,12 @@ class LSTM(object):
           tf.less(tf.cast(step, dtype=tf.int32), tf.cast(timesteps, dtype=tf.int32)),
           tf.logical_not(tf.reduce_all(f)))
 
-        initial_prediction = tf.zeros([self.batch_size, self.hidden_dim])
+        initial_outputs = tf.zeros([self.batch_size, self.hidden_dim])
         init_finish = tf.cast(tf.zeros(self.batch_size, dtype=tf.int64), dtype=tf.bool)
         init_output_lengths = tf.zeros(self.batch_size, dtype=tf.int32)
         output_lengths, all_outputs, final_prediction, lstm_state, _, _ = tf.while_loop(for_each_time_step, lstm_loop,
                                                        (init_output_lengths, all_outputs_tensor_array,
-                                                        initial_prediction, init_state,init_finish, 0),
+                                                        initial_outputs, init_state,init_finish, 0),
                                                        parallel_iterations=32)
 
 

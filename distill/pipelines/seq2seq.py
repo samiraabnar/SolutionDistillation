@@ -42,8 +42,6 @@ class Seq2SeqTrainer(Trainer):
   def add_metric_summaries(self, logits, labels, family):
     eval_metrics = get_eval_metrics(logits, labels, self.model.hparams)
     for metric in eval_metrics:
-      tf.logging.info(metric)
-      tf.logging.info(eval_metrics[metric])
       tf.summary.scalar(metric, tf.reduce_mean(eval_metrics[metric]), family=family)
 
   def get_metric_summaries_as_dic(self, logits, labels):
@@ -78,6 +76,10 @@ class Seq2SeqTrainer(Trainer):
     tf.summary.scalar("loss", train_loss, family="train")
     tf.summary.scalar("loss", dev_loss, family="dev")
     tf.summary.scalar("loss", test_loss, family="test")
+
+    tf.summary.scalar("length", tf.shape(train_output_dic['logits'])[1], family="train")
+    tf.summary.scalar("length", tf.shape(train_output_dic['logits'])[1], family="dev")
+    tf.summary.scalar("length", tf.shape(train_output_dic['logits'])[1], family="test")
 
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")
     self.add_metric_summaries(dev_output_dic['logits'], dev_output_dic['targets'], "dev")

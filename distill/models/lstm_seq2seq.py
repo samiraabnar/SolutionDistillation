@@ -159,8 +159,8 @@ class LSTMSeq2Seq(object):
 
 
 class BidiLSTMSeq2Seq(LSTMSeq2Seq):
-  def __init__(self, hparams, eos_id, scope="Seq2SeqLSTM"):
-    super(BidiLSTMSeq2Seq, self,).__init__(hparams,eos_id=eos_id, model=BiLSTM, scope=scope)
+  def __init__(self, hparams, task, scope="Seq2SeqBiLSTM"):
+    super(BidiLSTMSeq2Seq, self,).__init__(hparams, task, model=BiLSTM, scope=scope)
 
 
 if __name__ == '__main__':

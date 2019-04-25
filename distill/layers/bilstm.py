@@ -126,7 +126,7 @@ class BiLSTM(object):
         def lstm_loop(output_lengths, all_outputs, last_lstm_prediction, last_state,finish_flags, step):
           if output_embedding_fn is not None:
             last_lstm_prediction = output_embedding_fn(last_lstm_prediction)
-            
+
           last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
           logits = embedding_layer.linear(last_lstm_prediction)
           tf.logging.info('logits in the loop')

@@ -28,6 +28,7 @@ class LSTMSeq2Seq(object):
                               scope=scope+"_decoder")
 
 
+
   def create_vars(self, reuse=False, pretrained_embeddings=None):
     with tf.variable_scope(self.scope, reuse=reuse):
       self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
@@ -38,7 +39,7 @@ class LSTMSeq2Seq(object):
       self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
       if not self.task.share_input_output_embeddings:
         self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
-                                       embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")
+                                       embedding_dim=self.lstm_decoder.sent_rep_dim, scope="OutputEmbed")
         self.output_embedding_layer.create_vars()
       else:
         self.output_embedding_layer = self.input_embedding_layer

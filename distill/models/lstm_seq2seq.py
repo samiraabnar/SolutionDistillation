@@ -100,7 +100,7 @@ class LSTMSeq2Seq(object):
           tf.logging.info(decoder_inputs)
           lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=targets_length,
                                                             is_train=is_train)
-        elif targets_length == 1:
+        elif target_length == 1:
           transpose_embedded_targets = tf.transpose(embedded_targets, [1, 0, 2])
           decoder_inputs = tf.map_fn(compute_decoding_step_input,
                                      transpose_embedded_targets)  # (Length, batch_size, hidden_dim)

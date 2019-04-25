@@ -391,7 +391,7 @@ class Transformer(object):
 
       if is_train:
         encoder_inputs = tf.nn.dropout(
-            encoder_inputs, self.dropout_keep_prob)
+            encoder_inputs, self.hparams.input_dropout_keep_prob)
 
       return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train)
 

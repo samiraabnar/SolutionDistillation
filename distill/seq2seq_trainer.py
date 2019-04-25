@@ -5,6 +5,7 @@ from distill.common.hparams import TransformerHparam, LSTMHparam
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicAdditionDecimal40, \
   AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem, AlgorithmicIdentityBinary40
 from distill.data_util.prep_arithmatic import Arithmatic
+from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer
@@ -27,13 +28,14 @@ tf.app.flags.DEFINE_integer("number_of_heads", 4, "")
 tf.app.flags.DEFINE_integer("ff_filter_size", 512, "")
 tf.app.flags.DEFINE_float("initializer_gain", 1.0, "")
 tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
+tf.app.flags.DEFINE_boolean('train_embeddings', True, " False | True")
 
 
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.9, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.8, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.01, "")
-tf.app.flags.DEFINE_float("l2_rate", 0.00005, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
 
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
@@ -69,7 +71,8 @@ if __name__ == '__main__':
                  add_subtrees=True,
                  pretrained=True,
                  pretrained_path="data/sst/filtered_glove.txt",
-                 embedding_size=300)}
+                 embedding_size=300),
+           'ptb_lm': PTB('data/ptb')}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)
@@ -89,7 +92,8 @@ if __name__ == '__main__':
                                          label_smoothing=hparams.label_smoothing,
                                          encoder_self_attention_dir = "top_down",
                                          decoder_self_attention_dir = "top_down",
-                                         decoder_cross_attention_dir = "top_down"
+                                         decoder_cross_attention_dir = "top_down",
+                                         train_embeddings=hparams.train_embeddings
                                          )
 
   lstm_params = LSTMHparam(input_dim=hparams.input_dim,
@@ -107,8 +111,8 @@ if __name__ == '__main__':
                            label_smoothing=hparams.label_smoothing,
                            attention_mechanism=None,
                            sent_rep_mode="final",
-                           embedding_dim=hparams.vocab_size / 2 if hparams.vocab_size < 100 else 50
-                           )
+                           embedding_dim=300,
+                           train_embeddings = hparams.train_embeddings)
 
 
   model_params = {"transformer": transformer_params,

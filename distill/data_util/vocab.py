@@ -90,7 +90,8 @@ class Vocab(object):
     np.save(self.path, save_dic)
 
   def load(self):
-    loaded_dic = np.load(self.path + ".npy").item()
+    print("loading vocab from: ",self.path)
+    loaded_dic = np.load(self.path + ".npy", allow_pickle=True).item()
     self.word_to_index = loaded_dic['word_to_index']
     self.index_to_word = loaded_dic['index_to_word']
 
@@ -143,7 +144,7 @@ class PretrainedVocab(Vocab):
     np.save(self.path, save_dic)
 
   def load(self):
-    loaded_dic = np.load(self.path + ".npy").item()
+    loaded_dic = np.load(self.path + ".npy", allow_pickle=True).item()
     self.word_to_index = loaded_dic['word_to_index']
     self.index_to_word = loaded_dic['index_to_word']
     self.predefineds = loaded_dic['predefineds']

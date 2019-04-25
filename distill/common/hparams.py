@@ -12,6 +12,7 @@ class TransformerHparam(object):
                initializer_gain,
                vocab_size,
                label_smoothing,
+               train_embeddings,
                encoder_self_attention_dir="top_down",
                decoder_self_attention_dir="top_down",
                decoder_cross_attention_dir="top_down"
@@ -49,6 +50,8 @@ class TransformerHparam(object):
     self.encoder_self_attention_dir = encoder_self_attention_dir
     self.decoder_self_attention_dir = decoder_self_attention_dir
     self.decoder_cross_attention_dir = decoder_cross_attention_dir
+    self.train_embeddings = train_embeddings
+
 
 class LSTMHparam(object):
   def __init__(self, input_dim,
@@ -67,6 +70,7 @@ class LSTMHparam(object):
                attention_mechanism,
                sent_rep_mode,
                embedding_dim,
+               train_embeddings
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -97,4 +101,5 @@ class LSTMHparam(object):
     self.label_smoothing = 0.1
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
+    self.train_embeddings = train_embeddings
 

@@ -28,7 +28,7 @@ class Algorithmic(object):
 
   @property
   def target_length(self):
-    return self.vocab_length
+    return None
 
   @property
   def eos_id(self):

@@ -28,11 +28,14 @@ class LSTMSeq2Seq(object):
                               scope=scope+"_decoder")
 
 
-  def create_vars(self, reuse=False):
+  def create_vars(self, reuse=False, pretrained_embeddings=None):
     with tf.variable_scope(self.scope, reuse=reuse):
       self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
-                                       embedding_dim=self.hparams.embedding_dim, scope="InputEmbed")
-      self.input_embedding_layer.create_vars()
+                                       embedding_dim=self.hparams.embedding_dim,
+                                       pretrained_embeddings=pretrained_embeddings,
+                                       scope="InputEmbed")
+
+      self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
       if not self.task.share_input_output_embeddings:
         self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
                                        embedding_dim=self.hparams.embedding_dim, scope="OutputEmbed")
@@ -76,12 +79,25 @@ class LSTMSeq2Seq(object):
         #encoder_output = tf.expand_dims(lstm_encoder_output_dic['sents_reps'],1)
         #encoder_output = tf.tile(encoder_output,[1,tf.shape(targets)[1],1])
 
-        encoder_outputs = lstm_encoder_output_dic['raw_outputs']
+        if is_train:
+          encoder_outputs = lstm_encoder_output_dic['raw_outputs']
+          encoder_outputs = tf.nn.dropout(encoder_outputs, self.hparams.hidden_dropout_keep_prob)
 
-        def compute_decoding_step_input(current_decoder_input):
-          aggregiated_encoder_output = tf.reduce_mean(encoder_outputs, axis=1)
-          return aggregiated_encoder_output
+        if self.hparams.sent_rep_mode == "none":
+          def compute_decoding_step_input(current_decoder_input):
+            aggregiated_encoder_output = tf.reduce_mean(encoder_outputs, axis=1)
+            if is_train:
+              aggregiated_encoder_output = tf.nn.dropout(aggregiated_encoder_output,
+                                                         self.hparams.hidden_dropout_keep_prob)
+            return aggregiated_encoder_output
+        else:
+          def compute_decoding_step_input(current_decoder_input):
+            aggregiated_encoder_output = lstm_encoder_output_dic['sents_reps']
+            if is_train:
+              aggregiated_encoder_output = tf.nn.dropout(aggregiated_encoder_output,
+                                                         self.hparams.hidden_dropout_keep_prob)
 
+            return aggregiated_encoder_output
 
       with tf.variable_scope("decoder"):
         if is_train:
@@ -104,6 +120,10 @@ class LSTMSeq2Seq(object):
                                                               embedding_layer=self.output_embedding_layer,eos_id=self.eos_id, is_train=is_train)
 
       outputs = lstm_decoder_output_dic['seq_outputs']
+      if is_train:
+        tf.nn.dropout(
+          outputs, self.hparams.hidden_dropout_keep_prob)
+
       output_mask = tf.cast(tf.sequence_mask(lstm_decoder_output_dic['outputs_lengths'], tf.shape(outputs)[1]), dtype=tf.int64)
 
       outputs = tf.map_fn(output_embedding, outputs)

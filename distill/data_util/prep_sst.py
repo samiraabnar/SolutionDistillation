@@ -49,14 +49,45 @@ class SST(object):
     self.vocab_path = os.path.join(data_path, "pretrained_" if pretrained else '' +"vocab")
     self.eos = '<eos>'
     self.pad = '<pad>'
-
-    if pretrained:
-      self.vocab = PretrainedVocab(self.vocab_path, pretrained_path, embedding_size)
-    else:
-      self.vocab = Vocab(path=self.vocab_path)
-
+    self.unk = '<unk>'
+    self.pretrained = True
+    #if pretrained:
+    #  self.vocab = PretrainedVocab(self.vocab_path, pretrained_path, embedding_size)
+    #else:
+    self.vocab = Vocab(path=self.vocab_path)
     self.load_vocab()
 
+
+  def get_pretrained_path(self,pretrained_model):
+    return os.path.join(self.data_path, "filtered_pretrained_"+pretrained_model)
+
+  def get_pretrained_mat(self, pretrained_model):
+    return np.load(self.get_pretrained_path(pretrained_model)+".npy")
+
+
+  def prepare_pretrained(self, full_pretrained_path, pretrained_model, embedding_dim):
+    filtered_path = self.get_pretrained_path(pretrained_model)
+    full_embeddings = {}
+    with open(full_pretrained_path, encoding='utf-8') as f:
+      for line in f:
+        line = line.strip()
+        if not line: continue
+        vocab, embed = line.split(u' ', 1)
+        if vocab in self.vocab.index_to_word:
+          full_embeddings[vocab] = embed
+
+    ordered_embeddings = []
+
+    random_for_unknown= np.random.uniform(
+      -0.05, 0.05, embedding_dim).astype(np.float32)
+
+    for token in self.vocab.index_to_word:
+      if token in full_embeddings:
+        ordered_embeddings.append(full_embeddings[token])
+      else:
+        ordered_embeddings.append(random_for_unknown)
+
+    np.save(filtered_path, ordered_embeddings)
 
   def decode(self, ids):
     return [self.vocab.index_to_word[i] for i in ids]
@@ -403,3 +434,4 @@ if __name__ == '__main__':
   print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="test", feature_type="full", add_subtrees=True))))
   print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="dev", feature_type="full", add_subtrees=True))))
 
+  sst_prep.prepare_pretrained('data/glove.840B.300d.txt','glove_300', 300)

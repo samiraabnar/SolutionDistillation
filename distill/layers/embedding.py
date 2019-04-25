@@ -57,7 +57,7 @@ class Embedding(object):
 class EmbeddingSharedWeights(object):
   """Calculates input embeddings and pre-softmax linear with shared weights."""
 
-  def __init__(self, vocab_size, embedding_dim, method="gather", scope='SharedEmbedding'):
+  def __init__(self, vocab_size, embedding_dim, pretrained_embeddings=None, method="gather", scope='SharedEmbedding'):
     """Specify characteristic parameters of embedding layer.
     Args:
       vocab_size: Number of tokens in the embedding. (Typically ~32,000)
@@ -76,16 +76,22 @@ class EmbeddingSharedWeights(object):
       raise ValueError("method {} must be 'gather' or 'matmul'".format(method))
     self.method = method
     self.scope = scope
+    self.pretrained_embeddings = pretrained_embeddings
+    if self.pretrained_embeddings is None:
+      self.initializer = tf.random_normal_initializer(
+                  0., self.hidden_size ** -0.5)
+    else:
+      self.initializer = pretrained_embeddings
 
-  def create_vars(self):
+  def create_vars(self, is_train=True):
     with tf.variable_scope(self.scope):
       with tf.variable_scope("embedding_and_softmax", reuse=tf.AUTO_REUSE):
         # Create and initialize weights. The random normal initializer was chosen
         # randomly, and works well.
         self.shared_weights = tf.get_variable(
-            "weights", [self.vocab_size, self.hidden_size],
-            initializer=tf.random_normal_initializer(
-                0., self.hidden_size ** -0.5))
+            "weights", shape=[self.vocab_size, self.hidden_size] if self.pretrained_embeddings is None else None,
+            initializer=self.initializer,
+            trainable=is_train)
 
       self.built = True
 

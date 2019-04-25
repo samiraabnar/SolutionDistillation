@@ -29,6 +29,7 @@ tf.app.flags.DEFINE_integer("ff_filter_size", 512, "")
 tf.app.flags.DEFINE_float("initializer_gain", 1.0, "")
 tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
 tf.app.flags.DEFINE_boolean('train_embeddings', True, " False | True")
+tf.app.flags.DEFINE_boolean('rep_sent_mode', "final", "none | final | all")
 
 
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
@@ -110,7 +111,7 @@ if __name__ == '__main__':
                            vocab_size=hparams.vocab_size,
                            label_smoothing=hparams.label_smoothing,
                            attention_mechanism=None,
-                           sent_rep_mode="all",
+                           sent_rep_mode=hparams.sent_rep_mode,
                            embedding_dim=300,
                            train_embeddings = hparams.train_embeddings)
 

@@ -47,7 +47,7 @@ class BiLSTM(object):
           self.attention = FeedforwardSelfAttention(scope="attention")
           self.attention.create_vars()
 
-  def apply(self, inputs, inputs_length, is_train=True):
+  def apply(self, inputs, inputs_length, init_state=None, is_train=True):
     self.batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       # Run the data through the RNN layers
@@ -62,7 +62,7 @@ class BiLSTM(object):
           cell_fw=fw_cell,
           cell_bw=bw_cell,
           inputs=inputs,
-          sequence_length=inputs_length,
+          sequence_length=tf.cast(inputs_length, dtype=tf.int32),
           dtype=tf.float32,
         )
 
@@ -103,7 +103,7 @@ class BiLSTM(object):
 
   def predict(self, inputs_length,
               compute_decoding_step_input_fn,
-              output_embedding_fn, embedding_layer, eos_id, target_length=None, init_state=None, is_train=True):
+              embedding_layer, eos_id, output_embedding_fn=None, target_length=None, init_state=None, is_train=True):
     self.batch_size = tf.shape(inputs_length)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       # Run the data through the RNN layers
@@ -124,7 +124,9 @@ class BiLSTM(object):
 
         # This loop gets called once for every "timestep" and obtains one column of the input data
         def lstm_loop(output_lengths, all_outputs, last_lstm_prediction, last_state,finish_flags, step):
-          last_lstm_prediction = output_embedding_fn(last_lstm_prediction)
+          if output_embedding_fn is not None:
+            last_lstm_prediction = output_embedding_fn(last_lstm_prediction)
+            
           last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
           logits = embedding_layer.linear(last_lstm_prediction)
           tf.logging.info('logits in the loop')

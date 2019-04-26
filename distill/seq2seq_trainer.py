@@ -70,7 +70,7 @@ if __name__ == '__main__':
            'arithmatic': Arithmatic('data/arithmatic'),
            'sst': SST(data_path="data/sst/",
                  add_subtrees=True,
-                 pretrained=True,
+                 pretrained=False,
                  pretrained_path="data/sst/filtered_glove.txt",
                  embedding_size=300),
            'ptb_lm': PTB('data/ptb')}

@@ -78,15 +78,16 @@ class Seq2SeqTrainer(Trainer):
     tf.summary.scalar("loss", test_loss, family="test")
 
     tf.summary.scalar("length", tf.shape(train_output_dic['logits'])[1], family="train")
-    tf.summary.scalar("length", tf.shape(train_output_dic['logits'])[1], family="dev")
-    tf.summary.scalar("length", tf.shape(train_output_dic['logits'])[1], family="test")
+    tf.summary.scalar("length", tf.shape(dev_output_dic['logits'])[1], family="dev")
+    tf.summary.scalar("length", tf.shape(test_output_dic['logits'])[1], family="test")
 
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")
     self.add_metric_summaries(dev_output_dic['logits'], dev_output_dic['targets'], "dev")
     self.add_metric_summaries(test_output_dic['logits'], test_output_dic['targets'], "test")
 
 
-
+    tf.summary.scalar("number_of_training_params",
+                      tf.sum([tf.prod(v.get_shape().as_list()) for v in tf.trainable_variables()]))
     update_op, learning_rate = self.get_train_op(train_loss, train_output_dic["trainable_vars"],
                                                  start_learning_rate=0.0005,
                                                  base_learning_rate=self.model.hparams.learning_rate,

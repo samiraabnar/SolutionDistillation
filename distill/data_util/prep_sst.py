@@ -51,9 +51,6 @@ class SST(object):
     self.pad = '<pad>'
     self.unk = '<unk>'
     self.pretrained = True
-    #if pretrained:
-    #  self.vocab = PretrainedVocab(self.vocab_path, pretrained_path, embedding_size)
-    #else:
     self.vocab = Vocab(path=self.vocab_path)
     self.load_vocab()
 
@@ -420,7 +417,7 @@ def test():
 
 if __name__ == '__main__':
   build_full_sst()
-  #test_seq2seq()
+  test_seq2seq()
 
   sst_prep = SST(data_path="data/sst/",
                  add_subtrees=True,
@@ -433,3 +430,4 @@ if __name__ == '__main__':
   print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="dev", feature_type="full", add_subtrees=True))))
 
   sst_prep.prepare_pretrained('data/glove.840B.300d.txt','glove_300', 300)
+

@@ -89,12 +89,14 @@ class LSTMSeq2Seq(object):
 
       with tf.variable_scope("decoder"):
         if is_train and target_length is None:
+          # Shift targets to the right, and remove the last element
+          embedded_targets = tf.pad(
+            embedded_targets, [[0, 0], [1, 0], [0, 0]])[:, :-1, :]
           transpose_embedded_targets = tf.transpose(embedded_targets, [1,0,2])
           decoder_inputs = tf.map_fn(compute_decoding_step_input, transpose_embedded_targets) #(Length, batch_size, hidden_dim)
           decoder_inputs = tf.transpose(decoder_inputs,[1,0,2])
           tf.logging.info('decoder_inputs')
           tf.logging.info(decoder_inputs)
-
           decoder_inputs = tf.concat([decoder_inputs, embedded_targets], axis=-1)
           tf.logging.info('decoder_inputs')
           tf.logging.info(decoder_inputs)

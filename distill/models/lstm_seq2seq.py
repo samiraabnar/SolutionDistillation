@@ -101,6 +101,7 @@ class LSTMSeq2Seq(object):
           lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=targets_length,
                                                             is_train=is_train)
         elif target_length == 1:
+          #This means the task is classification, we need neither teacher forcing nor the autoregressive process.
           transpose_embedded_targets = tf.transpose(embedded_targets, [1, 0, 2])
           decoder_inputs = tf.map_fn(compute_decoding_step_input,
                                      transpose_embedded_targets)  # (Length, batch_size, hidden_dim)
@@ -110,6 +111,7 @@ class LSTMSeq2Seq(object):
           lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=targets_length,
                                                             is_train=is_train)
         else:
+          #When generating a sequence,
           lstm_decoder_output_dic = self.lstm_decoder.predict(inputs_length=inputs_lengths,
                                                               target_length=target_length,
                                                               compute_decoding_step_input_fn=compute_decoding_step_input,

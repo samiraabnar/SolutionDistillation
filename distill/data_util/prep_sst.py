@@ -78,14 +78,13 @@ class SST(object):
 
     ordered_embeddings = []
 
-    random_for_unknown= np.random.uniform(
-      -0.05, 0.05, embedding_dim).astype(np.float32)
-
+    init_tokens = {'pad': '<pad>', 'eos': '<eos>', 'unk': '<unk>'}
     for token in self.vocab.index_to_word:
       if token in full_embeddings:
         ordered_embeddings.append(full_embeddings[token])
-      else:
-        ordered_embeddings.append(random_for_unknown)
+      elif token in init_tokens:
+        ordered_embeddings.append(np.random.uniform(
+      -0.05, 0.05, embedding_dim).astype(np.float32))
 
     np.save(filtered_path, ordered_embeddings)
 

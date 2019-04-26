@@ -33,9 +33,9 @@ tf.app.flags.DEFINE_string('sent_rep_mode', "final", "none | final | all")
 
 
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
-tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.25, "")
+tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
-tf.app.flags.DEFINE_float("learning_rate", 0.01, "")
+tf.app.flags.DEFINE_float("learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
 
 

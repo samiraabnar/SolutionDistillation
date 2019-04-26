@@ -87,7 +87,7 @@ class Seq2SeqTrainer(Trainer):
 
 
     tf.summary.scalar("number_of_training_params",
-                      tf.sum([tf.prod(v.get_shape().as_list()) for v in tf.trainable_variables()]))
+                      tf.reduce_sum([tf.reduce_prod(v.get_shape().as_list()) for v in tf.trainable_variables()]))
     update_op, learning_rate = self.get_train_op(train_loss, train_output_dic["trainable_vars"],
                                                  start_learning_rate=0.0005,
                                                  base_learning_rate=self.model.hparams.learning_rate,

@@ -124,9 +124,6 @@ class LSTMSeq2Seq(object):
       outputs = lstm_decoder_output_dic['seq_outputs']
       tf.logging.info("outputs")
       tf.logging.info(outputs)
-      if is_train:
-        tf.nn.dropout(
-          outputs, self.hparams.hidden_dropout_keep_prob)
 
       output_mask = tf.cast(tf.sequence_mask(lstm_decoder_output_dic['outputs_lengths'], tf.shape(outputs)[1]), dtype=tf.int64)
 

@@ -10,3 +10,4 @@ data/*
 .ipynb_checkpoints
 .ipynb_checkpoints/*
 envname
+*.pyc

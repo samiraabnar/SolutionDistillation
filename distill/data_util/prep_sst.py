@@ -43,14 +43,14 @@ def get_word_embs(word_emb_path, word_emb_size, vocabulary_size=99002):
   return word_emb_matrix, word2id
 
 class SST(object):
-  def __init__(self, data_path, add_subtrees=False, pretrained=True, pretrained_path="data/sst/filtered_glove.txt", embedding_size=300):
+  def __init__(self, data_path, add_subtrees=False, pretrained=True):
     self.data_path = data_path
     self.add_subtrees = add_subtrees
-    self.vocab_path = os.path.join(data_path, "pretrained_" if pretrained else '' +"vocab")
+    self.vocab_path = os.path.join(data_path, "vocab")
     self.eos = '<eos>'
     self.pad = '<pad>'
     self.unk = '<unk>'
-    self.pretrained = True
+    self.pretrained = pretrained
     self.vocab = Vocab(path=self.vocab_path)
     self.load_vocab()
 
@@ -338,9 +338,7 @@ def build_sst():
 def build_full_sst():
   sst_prep = SST(data_path="data/sst/",
                  add_subtrees=True,
-                 pretrained=True,
-                 pretrained_path="data/sst/filtered_glove.txt",
-                 embedding_size=300)
+                 pretrained=True)
   sst_prep.load_data()
 
   sst_prep.build_tfrecords(sst_prep.get_all_tf_features, mode="train", feature_type="full")
@@ -366,9 +364,7 @@ def build_sst_main():
 def test_seq2seq():
   sst_prep = SST(data_path="data/sst/",
                  add_subtrees=True,
-                 pretrained=True,
-                 pretrained_path="data/sst/filtered_glove.txt",
-                 embedding_size=300)
+                 pretrained=True)
 
   batch_size = 10
   dataset = tf.data.TFRecordDataset(sst_prep.get_tfrecord_path(mode="train", feature_type="full"))
@@ -429,9 +425,7 @@ if __name__ == '__main__':
 
   sst_prep = SST(data_path="data/sst/",
                  add_subtrees=True,
-                 pretrained=True,
-                 pretrained_path="data/sst/filtered_glove.txt",
-                 embedding_size=300)
+                 pretrained=True)
 
   print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="train", feature_type="full", add_subtrees=True))))
   print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="test", feature_type="full", add_subtrees=True))))

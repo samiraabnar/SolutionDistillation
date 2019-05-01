@@ -112,7 +112,8 @@ if __name__ == '__main__':
                            attention_mechanism=None,
                            sent_rep_mode=hparams.sent_rep_mode,
                            embedding_dim=300,
-                           train_embeddings = hparams.train_embeddings)
+                           train_embeddings = hparams.train_embeddings,
+                           learning_rate=hparams.learning_rate)
 
 
   model_params = {"transformer": transformer_params,

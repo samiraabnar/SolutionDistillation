@@ -51,6 +51,7 @@ class SST(object):
     self.pad = '<pad>'
     self.unk = '<unk>'
     self.pretrained = pretrained
+    self.fine_grained = True
     self.vocab = Vocab(path=self.vocab_path)
     self.load_vocab()
 
@@ -113,6 +114,7 @@ class SST(object):
       self.vocab.save()
 
   def generator(self, mode):
+    label_set = []
     for example_id, tree in enumerate(self.data[mode]):
       words = tree.get_words()
       node = tree.root
@@ -180,6 +182,7 @@ class SST(object):
   def load_data(self):
     data_splits = ["train", "test", "dev"]
     self.data = {}
+    label_set = []
     for tag in data_splits:
       file = os.path.join(self.data_path, tag + ".txt")
       print("Loading %s trees.." % file)
@@ -190,8 +193,12 @@ class SST(object):
           if self.add_subtrees and tag == 'train':
             sub_trees = get_subtrees(tree.root)
             self.data[tag].extend(sub_trees)
+            label_set.append(tree.root.label)
           else:
             self.data[tag].append(tree)
+            label_set.append(tree.root.label)
+
+      print(list(set(label_set)))
 
   def build_tfrecords(self,tf_feature_fn, mode, feature_type="tree"):
     tf_example_features = []
@@ -225,8 +232,8 @@ class SST(object):
     return 1
 
   @property
-  def target_vocab(self, fine_grained=True):
-    if fine_grained:
+  def target_vocab(self):
+    if self.fine_grained:
       return [0,1,2,3,4]
     else:
       return [0, 1]

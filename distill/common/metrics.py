@@ -93,7 +93,8 @@ def _convert_to_eval_metric(metric_fn):
 def get_eval_metrics(logits, labels, params):
   """Return dictionary of model evaluation metrics."""
   metrics = {
-      "accuracy": _convert_to_eval_metric(padded_accuracy)(logits, labels),
+      "accuracy": _convert_to_eval_metric(accuracy)(logits, labels),
+      "padded_accuracy": _convert_to_eval_metric(padded_accuracy)(logits, labels),
       "accuracy_top5": _convert_to_eval_metric(padded_accuracy_top5)(
           logits, labels),
       "accuracy_per_sequence": _convert_to_eval_metric(
@@ -116,6 +117,17 @@ def get_eval_metrics(logits, labels, params):
   metrics = {"metrics/%s" % k: v for k, v in six.iteritems(metrics)}
   return metrics
 
+
+
+
+def accuracy(logits, labels):
+  """Percentage of times that predictions matches labels on non-0s."""
+  with tf.variable_scope("accuracy", values=[logits, labels]):
+    logits, labels = _pad_tensors_to_same_length(logits, labels)
+    weights = tf.ones_like(labels)
+    outputs = tf.to_int32(tf.argmax(logits, axis=-1))
+    padded_labels = tf.to_int32(labels)
+    return tf.to_float(tf.equal(outputs, padded_labels)), weights
 
 def padded_accuracy(logits, labels):
   """Percentage of times that predictions matches labels on non-0s."""

@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from distill.data_util.prep_arithmatic import Arithmatic
 from distill.data_util.prep_sst import SST
 from distill.layers.embedding import Embedding, EmbeddingSharedWeights
 from distill.layers.lstm import LSTM
@@ -188,9 +189,9 @@ if __name__ == '__main__':
 
   tf.logging.set_verbosity(tf.logging.INFO)
 
-  bin_iden = SST(data_path="data/sst/",
-                 add_subtrees=True,
-                 pretrained=False)
+  bin_iden = Arithmatic('data/arithmatic') #SST(data_path="data/sst/",
+             #    add_subtrees=True,
+             #    pretrained=False)
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)

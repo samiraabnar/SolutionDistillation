@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from distill.data_util.prep_sst import SST
 from distill.layers.embedding import Embedding, EmbeddingSharedWeights
 from distill.layers.lstm import LSTM
 from distill.layers.bilstm import BiLSTM
@@ -182,7 +183,9 @@ if __name__ == '__main__':
 
   tf.logging.set_verbosity(tf.logging.INFO)
 
-  bin_iden = AlgorithmicIdentityBinary40('data/alg')
+  bin_iden = SST(data_path="data/sst/",
+                 add_subtrees=True,
+                 pretrained=False)
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
@@ -196,7 +199,7 @@ if __name__ == '__main__':
     def __init__(self):
       self.vocab_size = bin_iden.vocab_length
       self.hidden_dim = 32
-      self.output_dim = self.vocab_size
+      self.output_dim = len(bin_iden.target_vocab),
       self.embedding_dim = 32
       self.input_dropout_keep_prob = 0.5
       self.hidden_dropout_keep_prob = 0.5
@@ -211,15 +214,25 @@ if __name__ == '__main__':
   model = LSTMSeq2Seq(Config(), task=bin_iden, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 
-  input, _,_,_= example
-  _ = model.apply(example, is_train=True)
-  outputs = model.apply(example, is_train=False)
+  input, target,_,_= example
+  _ = model.apply(example, is_train=True, target_length=bin_iden.target_length)
+  outputs = model.apply(example, is_train=False, target_length=bin_iden.target_length)
 
   predictions = outputs['predictions']
 
   global_step = tf.train.get_or_create_global_step()
   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                       iterator.initializer))
-  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_lstm_seq2seq', scaffold=scaffold) as sess:
     for _ in np.arange(1):
-      print(sess.run([input, predictions]))
+      _inputs = sess.run([input])
+      _targets = sess.run([target])
+
+      _predictions = sess.run([predictions])
+      _outputs = sess.run([outputs['outputs']])
+
+      print("input: ", _inputs)
+      print("targets: ", _targets)
+
+      print("predictions: ", _predictions)
+      print("outputs: ", _outputs)

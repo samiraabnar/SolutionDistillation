@@ -70,7 +70,8 @@ class LSTMHparam(object):
                attention_mechanism,
                sent_rep_mode,
                embedding_dim,
-               train_embeddings
+               train_embeddings,
+               learning_rate,
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -90,7 +91,7 @@ class LSTMHparam(object):
     self.sent_rep_mode = sent_rep_mode
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
-    self.learning_rate = 0.001
+    self.learning_rate = learning_rate
     self.learning_rate_warmup_steps = 2000
     self.initializer_gain = 1.0
     self.initializer = "uniform_unit_scaling"
@@ -98,7 +99,7 @@ class LSTMHparam(object):
     self.optimizer_adam_beta1 = 0.9
     self.optimizer_adam_beta2 = 0.98
     self.num_sampled_classes = 0
-    self.label_smoothing = 0.1
+    self.label_smoothing = 0.0 #0.1
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.train_embeddings = train_embeddings

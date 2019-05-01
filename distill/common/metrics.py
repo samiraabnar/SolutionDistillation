@@ -121,13 +121,13 @@ def get_eval_metrics(logits, labels, params):
 
 
 def accuracy(logits, labels):
-  """Percentage of times that predictions matches labels on non-0s."""
+  """Percentage of times that predictions matches labels"""
   with tf.variable_scope("accuracy", values=[logits, labels]):
     logits, labels = _pad_tensors_to_same_length(logits, labels)
     weights = tf.ones_like(labels)
     outputs = tf.to_int32(tf.argmax(logits, axis=-1))
-    padded_labels = tf.to_int32(labels)
-    return tf.to_float(tf.equal(outputs, padded_labels)), weights
+    labels = tf.to_int32(labels)
+    return tf.to_float(tf.equal(outputs, labels)), weights
 
 def padded_accuracy(logits, labels):
   """Percentage of times that predictions matches labels on non-0s."""

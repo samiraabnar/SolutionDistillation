@@ -20,8 +20,12 @@ class Trainer(object):
       warmup_rate = slope * tf.cast(self.global_step,
                                     tf.float32) + start_learning_rate
 
-      decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
+      if self.config.decay_learning_rate:
+        decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
                                                        100, 0.98, staircase=False)
+      else:
+        decay_learning_rate = base_learning_rate
+
       learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
                                decay_learning_rate)
 

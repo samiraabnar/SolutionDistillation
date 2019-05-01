@@ -77,9 +77,14 @@ class Seq2SeqTrainer(Trainer):
     tf.summary.scalar("loss", test_loss, family="test")
 
     tf.summary.scalar("length", tf.shape(train_output_dic['logits'])[1], family="train")
-    tf.summary.scalar("classification_accuracy", tf.reduce_mean(tf.cast(tf.equal(train_output_dic['predictions'],train_output_dic['targets']),dtype=tf.int32)), family="train")
     tf.summary.scalar("length", tf.shape(dev_output_dic['logits'])[1], family="dev")
     tf.summary.scalar("length", tf.shape(test_output_dic['logits'])[1], family="test")
+
+
+    if self.task.target_length == 1:
+      tf.summary.scalar("classification_accuracy", tf.reduce_mean(
+        tf.cast(tf.equal(train_output_dic['predictions'][:, 0], train_output_dic['targets'][:, 0]), dtype=tf.int32)),
+                        family="train")
 
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")
     self.add_metric_summaries(dev_output_dic['logits'], dev_output_dic['targets'], "dev")

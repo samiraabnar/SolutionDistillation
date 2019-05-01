@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
-  dataset = dataset.padded_batch(1, padded_shapes=bin_iden.get_padded_shapes())
+  dataset = dataset.padded_batch(5, padded_shapes=bin_iden.get_padded_shapes())
   iterator = dataset.make_initializable_iterator()
 
   example = iterator.get_next()
@@ -224,12 +224,16 @@ if __name__ == '__main__':
   global_step = tf.train.get_or_create_global_step()
   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                       iterator.initializer))
+
+  accuracy = tf.equal(predictions, target)
   with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_lstm_seq2seq', scaffold=scaffold) as sess:
     for _ in np.arange(1):
-      _inputs, _targets, _predictions, _logits = sess.run([input, target, predictions, outputs['logits']])
+      acc, _inputs, _targets, _predictions, _logits = sess.run([accuracy, input, target, predictions, outputs['logits']])
 
       print("input: ", _inputs)
       print("targets: ", _targets)
 
       print("predictions: ", _predictions)
       print("logits: ", _logits)
+
+      print(acc)

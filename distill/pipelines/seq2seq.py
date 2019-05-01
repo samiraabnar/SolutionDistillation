@@ -82,8 +82,11 @@ class Seq2SeqTrainer(Trainer):
 
 
     if self.task.target_length == 1:
+      batch_size = tf.shape(train_output_dic['targets'])[0]
       tf.summary.scalar("classification_accuracy", tf.reduce_mean(
-        tf.cast(tf.equal(train_output_dic['predictions'][:, 0], train_output_dic['targets'][:, 0]), dtype=tf.int32)),
+        tf.cast(tf.equal(
+          tf.reshape(train_output_dic['predictions'],(batch_size)),
+          tf.reshape(train_output_dic['targets'], (batch_size)), dtype=tf.int32))),
                         family="train")
 
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")

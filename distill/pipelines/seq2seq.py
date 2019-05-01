@@ -58,7 +58,6 @@ class Seq2SeqTrainer(Trainer):
     train_examples = train_iterator.get_next()
     dev_examples = dev_iterator.get_next()
     test_examples = test_iterator.get_next()
-    _, labels, _, _ = train_examples
     pretrained_embeddings = None
     if self.task.pretrained:
       pretrained_embeddings = self.task.get_pretrained_mat("glove_300")
@@ -78,7 +77,7 @@ class Seq2SeqTrainer(Trainer):
     tf.summary.scalar("loss", test_loss, family="test")
 
     tf.summary.scalar("length", tf.shape(train_output_dic['logits'])[1], family="train")
-    tf.summary.scalar("classification_accuracy", tf.reduce_mean(tf.cast(tf.equal(train_output_dic['predictions'],labels),dtype=tf.int32)), family="train")
+    tf.summary.scalar("classification_accuracy", tf.reduce_mean(tf.cast(tf.equal(train_output_dic['predictions'],train_output_dic['targets']),dtype=tf.int32)), family="train")
     tf.summary.scalar("length", tf.shape(dev_output_dic['logits'])[1], family="dev")
     tf.summary.scalar("length", tf.shape(test_output_dic['logits'])[1], family="test")
 

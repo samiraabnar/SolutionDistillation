@@ -76,6 +76,7 @@ class LSTM(object):
 
         tf.logging.info("seq_outputs"),
         tf.logging.info(lstm_outputs)
+        lstm_outputs = tf.nn.tanh(lstm_outputs)
 
       if self.attention_mechanism is not None:
         with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):

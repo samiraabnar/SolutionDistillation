@@ -197,17 +197,18 @@ if __name__ == '__main__':
       self.vocab_size = bin_iden.vocab_length
       self.hidden_dim = 32
       self.output_dim = self.vocab_size
-      self.embedding_dim = 10
+      self.embedding_dim = 32
       self.input_dropout_keep_prob = 0.5
       self.hidden_dropout_keep_prob = 0.5
       self.attention_mechanism = None
       self.depth = 1
       self.sent_rep_mode = "all"
       self.scope = "lstm_seq2seq"
+      self.train_embeddings=False
 
 
   print("eos id: ", bin_iden.eos_id)
-  model = BidiLSTMSeq2Seq(Config(), eos_id=bin_iden.eos_id, scope="Seq2SeqLSTM")
+  model = LSTMSeq2Seq(Config(), task=bin_iden, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 
   input, _,_,_= example
@@ -220,5 +221,5 @@ if __name__ == '__main__':
   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                       iterator.initializer))
   with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
-    for _ in np.arange(10):
+    for _ in np.arange(1):
       print(sess.run([input, predictions]))

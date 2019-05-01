@@ -4,7 +4,7 @@ from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
 class LSTM(object):
-  def __init__(self, hidden_dim, output_dim, attention_mechanism=None, hidden_keep_prob=0.8,depth=1, sent_rep_mode="all",scope="LSTM"):
+  def __init__(self, hidden_dim, output_dim, attention_mechanism, hidden_keep_prob,depth, sent_rep_mode="all",scope="LSTM"):
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
     self.scope = scope

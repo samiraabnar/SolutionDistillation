@@ -132,6 +132,7 @@ class LSTMSeq2Seq(object):
       predictions = tf.argmax(logits, axis=-1) * output_mask
 
     return {'logits': logits,
+            'output_mask': output_mask,
             'outputs': outputs,
             'predictions': predictions,
             'targets': targets,
@@ -225,14 +226,10 @@ if __name__ == '__main__':
                                                       iterator.initializer))
   with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_lstm_seq2seq', scaffold=scaffold) as sess:
     for _ in np.arange(1):
-      _inputs = sess.run([input])
-      _targets = sess.run([target])
-
-      _predictions = sess.run([predictions])
-      _outputs = sess.run([outputs['outputs']])
+      _inputs, _targets, _predictions, _logits = sess.run([input, target, predictions, outputs['logits']])
 
       print("input: ", _inputs)
       print("targets: ", _targets)
 
       print("predictions: ", _predictions)
-      print("outputs: ", _outputs)
+      print("logits: ", _logits)

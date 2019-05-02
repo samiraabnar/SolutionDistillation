@@ -90,7 +90,7 @@ class Seq2SeqTrainer(Trainer):
       tf.summary.scalar("classification_accuracy", tf.reduce_mean(
         tf.cast(tf.equal(
           tf.to_int32(tf.argmax(train_output_dic['logits'],axis=-1)),
-          tf.to_int32(train_output_dic['targets']), dtype=tf.float32))),
+          tf.to_int32(train_output_dic['targets'])))),
                         family="train")
 
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")

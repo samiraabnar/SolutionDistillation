@@ -1,6 +1,6 @@
 import tensorflow as tf
 from distill.pipelines.basic_trainer import Trainer
-from distill.common.metrics import padded_cross_entropy_loss, get_eval_metrics
+from distill.common.metrics import padded_cross_entropy_loss, get_eval_metrics, cross_entropy_loss
 
 
 class Seq2SeqTrainer(Trainer):
@@ -33,8 +33,13 @@ class Seq2SeqTrainer(Trainer):
     return train_iterator, dev_iterator, test_iterator
 
   def compute_loss(self,logits, targets):
-    xentropy, weights = padded_cross_entropy_loss(
-      logits, targets, self.config.label_smoothing, self.config.output_dim)
+    if self.task.target_length == 1:
+      xentropy, weights = cross_entropy_loss(
+        logits, targets, self.config.label_smoothing, self.config.output_dim)
+    else:
+      xentropy, weights = padded_cross_entropy_loss(
+        logits, targets, self.config.label_smoothing, self.config.output_dim)
+
     loss = tf.reduce_sum(xentropy) / tf.reduce_sum(weights)
 
     return loss
@@ -82,11 +87,10 @@ class Seq2SeqTrainer(Trainer):
 
 
     if self.task.target_length == 1:
-      batch_size = tf.shape(train_output_dic['targets'])[0]
       tf.summary.scalar("classification_accuracy", tf.reduce_mean(
         tf.cast(tf.equal(
-          tf.argmax(train_output_dic['logits'],axis=-1),
-          train_output_dic['targets']), dtype=tf.float32)),
+          tf.to_int32(tf.argmax(train_output_dic['logits'],axis=-1)),
+          tf.to_int32(train_output_dic['targets']), dtype=tf.float32))),
                         family="train")
 
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")

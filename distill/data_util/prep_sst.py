@@ -310,7 +310,7 @@ class SST(object):
   def get_padded_shapes():
     return [None], [None], [], []
 
-  def get_tfrecord_path(self, mode, feature_type="full", add_subtrees=True):
+  def get_tfrecord_path(self, mode, feature_type="full", add_subtrees=False):
 
     if mode == "train":
       subtree_name_token = '_allsubs' if add_subtrees else ''
@@ -344,7 +344,7 @@ def build_sst():
 
 def build_full_sst():
   sst_prep = SST(data_path="data/sst/",
-                 add_subtrees=True,
+                 add_subtrees=False,
                  pretrained=True)
   sst_prep.load_data()
 
@@ -370,7 +370,7 @@ def build_sst_main():
 
 def test_seq2seq():
   sst_prep = SST(data_path="data/sst/",
-                 add_subtrees=True,
+                 add_subtrees=False,
                  pretrained=True)
 
   batch_size = 10
@@ -431,12 +431,12 @@ if __name__ == '__main__':
   test_seq2seq()
 
   sst_prep = SST(data_path="data/sst/",
-                 add_subtrees=True,
+                 add_subtrees=False,
                  pretrained=True)
 
-  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="train", feature_type="full", add_subtrees=True))))
-  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="test", feature_type="full", add_subtrees=True))))
-  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="dev", feature_type="full", add_subtrees=True))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="train", feature_type="full", add_subtrees=False))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="test", feature_type="full", add_subtrees=False))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="dev", feature_type="full", add_subtrees=False))))
 
   sst_prep.prepare_pretrained('data/glove.840B.300d.txt','glove_300', 300)
 

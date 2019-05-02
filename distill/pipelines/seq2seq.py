@@ -93,6 +93,21 @@ class Seq2SeqTrainer(Trainer):
           tf.cast(train_output_dic['targets'], dtype=tf.int32)))),
                         family="train")
 
+    if self.task.target_length == 1:
+      tf.summary.scalar("classification_accuracy", tf.reduce_mean(
+        tf.to_float(tf.equal(
+          tf.to_int32(tf.argmax(dev_output_dic['logits'],axis=-1)),
+          tf.cast(dev_output_dic['targets'], dtype=tf.int32)))),
+                        family="dev")
+
+    if self.task.target_length == 1:
+      tf.summary.scalar("classification_accuracy", tf.reduce_mean(
+        tf.to_float(tf.equal(
+          tf.to_int32(tf.argmax(test_output_dic['logits'],axis=-1)),
+          tf.cast(test_output_dic['targets'], dtype=tf.int32)))),
+                        family="test")
+
+
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")
     self.add_metric_summaries(dev_output_dic['logits'], dev_output_dic['targets'], "dev")
     self.add_metric_summaries(test_output_dic['logits'], test_output_dic['targets'], "test")

@@ -72,7 +72,7 @@ if __name__ == '__main__':
            'arithmatic': Arithmatic('data/arithmatic'),
            'sst': SST(data_path="data/sst/",
                  add_subtrees=True,
-                 pretrained=False),
+                 pretrained=True),
            'ptb_lm': PTB('data/ptb')}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length

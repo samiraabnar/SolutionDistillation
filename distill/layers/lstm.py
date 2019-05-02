@@ -77,7 +77,7 @@ class LSTM(object):
           dtype=tf.float32,
           sequence_length=inputs_length,
           initial_state=init_state)
-        lstm_outputs = tf_layers.layer_norm(lstm_outputs)
+        # lstm_outputs = tf_layers.layer_norm(lstm_outputs)
 
         tf.logging.info("seq_outputs"),
         tf.logging.info(lstm_outputs)

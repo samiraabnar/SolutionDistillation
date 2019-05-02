@@ -88,7 +88,7 @@ class Seq2SeqTrainer(Trainer):
 
     if self.task.target_length == 1:
       tf.summary.scalar("classification_accuracy", tf.reduce_mean(
-        tf.cast(tf.equal(
+        tf.to_float(tf.equal(
           tf.to_int32(tf.argmax(train_output_dic['logits'],axis=-1)),
           tf.cast(train_output_dic['targets'], dtype=tf.int32)))),
                         family="train")

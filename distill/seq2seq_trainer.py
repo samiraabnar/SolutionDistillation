@@ -30,6 +30,7 @@ tf.app.flags.DEFINE_float("initializer_gain", 1.0, "")
 tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
 tf.app.flags.DEFINE_boolean('train_embeddings', True, " False | True")
 tf.app.flags.DEFINE_string('sent_rep_mode', "final", "none | final | all")
+tf.app.flags.DEFINE_string('attention_mechanism',None, 'attention_mechanism')
 
 
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")

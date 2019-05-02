@@ -22,7 +22,8 @@ class LSTM(object):
         lstm0 = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0, name="L0")
         dropout_lstm0 = tf.contrib.rnn.DropoutWrapper(lstm0,
                                                       output_keep_prob=self.hidden_keep_prob,
-                                                      variational_recurrent=True)
+                                                      variational_recurrent=True,
+                                                      dtype=tf.float32)
 
         lstms = [lstm0]
         drop_lstms = [dropout_lstm0]
@@ -30,7 +31,9 @@ class LSTM(object):
         lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0, name="L1")
         dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                       output_keep_prob=self.hidden_keep_prob,
-                                                      variational_recurrent=True)
+                                                      variational_recurrent=True,
+                                                      dtype=tf.float32
+                                                     )
         if self.num_layers > 1:
           lstms.extend([lstm] * (self.num_layers-1))
           drop_lstms.extend([dropout_lstm] * (self.num_layers - 1))

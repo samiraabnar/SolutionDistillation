@@ -98,7 +98,7 @@ class LSTMHparam(object):
     self.optimizer_adam_beta1 = 0.9
     self.optimizer_adam_beta2 = 0.98
     self.num_sampled_classes = 0
-    self.label_smoothing = 0.0 #0.1
+    self.label_smoothing = 0.1
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.train_embeddings = train_embeddings

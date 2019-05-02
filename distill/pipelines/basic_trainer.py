@@ -45,11 +45,10 @@ class Trainer(object):
       updates = opt.apply_gradients(zip(gradients, params), global_step=self.global_step)
 
       # Create an ExponentialMovingAverage object
-      #ema = tf.train.ExponentialMovingAverage(decay=0.9999)
+      ema = tf.train.ExponentialMovingAverage(decay=0.9999)
 
-      #with tf.control_dependencies([updates]+update_ops):
-      #  training_op = ema.apply(tf.trainable_variables())
-      training_op = updates
+      with tf.control_dependencies([updates]+update_ops):
+        training_op = ema.apply(tf.trainable_variables())
 
     return training_op, learning_rate
 

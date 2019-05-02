@@ -65,7 +65,7 @@ class Seq2SeqTrainer(Trainer):
     test_examples = test_iterator.get_next()
     pretrained_embeddings = None
     if self.task.pretrained:
-      pretrained_embeddings = self.task.get_pretrxained_mat("glove_300")
+      pretrained_embeddings = self.task.get_pretrained_mat("glove_300")
     self.model.create_vars(reuse=False,pretrained_embeddings=pretrained_embeddings)
 
     train_output_dic = self.model.apply(train_examples, target_length=self.task.target_length, is_train=True)

@@ -45,8 +45,6 @@ def cross_entropy_loss(logits, labels, smoothing, vocab_size):
       shape [batch_size, max(length_logits, length_labels)]
   """
   with tf.name_scope("loss", values=[logits, labels]):
-    logits, labels = _pad_tensors_to_same_length(logits, labels)
-
     # Calculate smoothing cross entropy
     with tf.name_scope("smoothing_cross_entropy", values=[logits, labels]):
       confidence = 1.0 - smoothing

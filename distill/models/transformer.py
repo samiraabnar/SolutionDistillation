@@ -160,7 +160,7 @@ class TransformerDecoder(object):
 
         decoder_inputs, _ = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
                                                     bias=decoder_self_attention_bias, cache=layer_cache)
-        decoder_inputs, _ = self_attention_layer.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
+        decoder_inputs, _ = enc_dec_attention.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
                                                        y_presence=encoder_outputs_presence,
                                                        bias=attention_bias)
         decoder_inputs,_ = feed_forward_network.apply(x=decoder_inputs, is_train=is_train)
@@ -360,7 +360,8 @@ class Transformer(object):
         outputs = self.decode(targets, encoder_outputs=encoder_outputs,
                               encoder_outputs_presence=encoder_outputs_presence,
                               attention_bias=attention_bias,
-                              is_train=is_train)
+                              is_train=is_train,
+                              target_length=target_length)
         logits = self.output_embedding_layer.linear(outputs)
 
       predictions = tf.argmax(logits, axis=-1)
@@ -396,7 +397,7 @@ class Transformer(object):
 
       return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train)
 
-  def decode(self, targets, encoder_outputs, attention_bias, encoder_outputs_presence=None, is_train=True):
+  def decode(self, targets, encoder_outputs, attention_bias, encoder_outputs_presence=None, is_train=True,target_length=None):
     """Generate logits for each value in the target sequence.
     Args:
       targets: target values for the output sequence.
@@ -433,7 +434,8 @@ class Transformer(object):
             encoder_outputs=encoder_outputs,
             decoder_self_attention_bias=decoder_self_attention_bias,
             attention_bias=attention_bias,
-            encoder_outputs_presence=encoder_outputs_presence)
+            encoder_outputs_presence=encoder_outputs_presence,
+            target_length=target_length)
 
 
       return outputs

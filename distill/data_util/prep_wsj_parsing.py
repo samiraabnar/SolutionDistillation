@@ -39,7 +39,7 @@ class ParseWSJ(object):
     self.eos = '<eos>'
     self.pad = '<pad>'
     self.unk = '<unk>'
-    self.start_token = '<s>'
+    self.pretrained = False
 
     self.load_vocab()
 

@@ -7,6 +7,7 @@ from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, Alg
 from distill.data_util.prep_arithmatic import Arithmatic
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
+from distill.data_util.prep_wsj_parsing import ParseWSJ
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer
 from distill.pipelines.seq2seq import Seq2SeqTrainer
@@ -73,7 +74,8 @@ if __name__ == '__main__':
            'sst': SST(data_path="data/sst/",
                  add_subtrees=True,
                  pretrained=True),
-           'ptb_lm': PTB('data/ptb')}
+           'ptb_lm': PTB('data/ptb'),
+           'wsj_parse': ParseWSJ('data/wsj')}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)

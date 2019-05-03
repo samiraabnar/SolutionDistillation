@@ -531,14 +531,15 @@ class UniversalTransformer(Transformer):
   def __init__(self, hparams, task, scope="Transformer"):
     super(UniversalTransformer, self).__init__(hparams, task, scope)
 
-  def create_vars(self, reuse=False):
+  def create_vars(self, reuse=False, pretrained_embeddings=None):
     self.initializer = tf.variance_scaling_initializer(
       self.initializer_gain, mode="fan_avg", distribution="uniform")
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
       self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
-                                                          method="matmul" if tpu else "gather", scope="InputEmbed")
-      self.input_embedding_layer.create_vars()
+                                                          method="matmul" if tpu else "gather", scope="InputEmbed",
+                                                          pretrained_embeddings=pretrained_embeddings)
+      self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
       if not self.task.share_input_output_embeddings:
         self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
                                                              embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")

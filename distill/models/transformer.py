@@ -434,8 +434,7 @@ class Transformer(object):
             encoder_outputs=encoder_outputs,
             decoder_self_attention_bias=decoder_self_attention_bias,
             attention_bias=attention_bias,
-            encoder_outputs_presence=encoder_outputs_presence,
-            target_length=target_length)
+            encoder_outputs_presence=encoder_outputs_presence)
 
 
       return outputs

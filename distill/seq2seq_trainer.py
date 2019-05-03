@@ -84,7 +84,7 @@ if __name__ == '__main__':
                                          hidden_dim=hparams.hidden_dim,
                                          output_dim=hparams.output_dim,
                                          depth=hparams.depth,
-                                         number_of_heads=2,
+                                         number_of_heads=1,
                                          ff_filter_size=512,
                                          initializer_gain=hparams.initializer_gain,
                                          batch_size=hparams.batch_size,

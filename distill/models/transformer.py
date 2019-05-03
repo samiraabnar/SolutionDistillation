@@ -146,7 +146,8 @@ class TransformerDecoder(object):
       self.output_normalization.create_vars()
 
   def apply(self, inputs, encoder_outputs, decoder_self_attention_bias, attention_bias, encoder_outputs_presence=None,
-            cache=None, is_train=True,  reuse=tf.AUTO_REUSE):
+            cache=None, is_train=True,  reuse=tf.AUTO_REUSE,
+            target_length=None):
     decoder_inputs = inputs
     with tf.variable_scope(self.scope, reuse=reuse):
       for n, layer in enumerate(self.layers):
@@ -159,7 +160,7 @@ class TransformerDecoder(object):
         feed_forward_network = layer[2]
 
         decoder_inputs, _ = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
-                                                    bias=decoder_self_attention_bias, cache=layer_cache)
+                                                      bias=decoder_self_attention_bias, cache=layer_cache)
         decoder_inputs, _ = enc_dec_attention.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
                                                        y_presence=encoder_outputs_presence,
                                                        bias=attention_bias)
@@ -281,7 +282,8 @@ class Transformer(object):
     self.vocab_size = hparams.vocab_size
     self.hidden_dim = hparams.hidden_dim
     self.number_of_heads = hparams.number_of_heads
-    self.depth = hparams.depth
+    self.decoder_depth = hparams.decoder_depth
+    self.encoder_depth = hparams.encoder_depth
     self.ff_filter_size = hparams.ff_filter_size
     self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
     self.initializer_gain = hparams.initializer_gain
@@ -306,11 +308,11 @@ class Transformer(object):
       else:
         self.output_embedding_layer = self.input_embedding_layer
 
-      self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+      self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
                                               self_attention_dir=self.hparams.encoder_self_attention_dir,
                                               scope="TransformerEncoder")
-      self.decoder_stack = TransformerDecoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+      self.decoder_stack = TransformerDecoder(self.hidden_dim, self.number_of_heads, self.decoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
                                               self_attention_dir=self.hparams.decoder_self_attention_dir,
                                               cross_attention_dir=self.hparams.decoder_cross_attention_dir,
@@ -434,7 +436,8 @@ class Transformer(object):
             encoder_outputs=encoder_outputs,
             decoder_self_attention_bias=decoder_self_attention_bias,
             attention_bias=attention_bias,
-            encoder_outputs_presence=encoder_outputs_presence)
+            encoder_outputs_presence=encoder_outputs_presence,
+            target_length=None)
 
 
       return outputs

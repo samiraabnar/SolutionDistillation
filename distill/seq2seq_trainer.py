@@ -22,7 +22,9 @@ tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer |
 
 
 tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
-tf.app.flags.DEFINE_integer("depth", 2, "")
+tf.app.flags.DEFINE_integer("encoder_depth", 2, "")
+tf.app.flags.DEFINE_integer("decoder_depth", 1, "")
+
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_integer("number_of_heads", 4, "")
@@ -83,7 +85,8 @@ if __name__ == '__main__':
   transformer_params = TransformerHparam(input_dim=hparams.input_dim,
                                          hidden_dim=hparams.hidden_dim,
                                          output_dim=hparams.output_dim,
-                                         depth=hparams.depth,
+                                         encoder_depth=hparams.encoder_depth,
+                                         decoder_depth=hparams.decoder_depth,
                                          number_of_heads=1,
                                          ff_filter_size=512,
                                          initializer_gain=hparams.initializer_gain,
@@ -102,7 +105,8 @@ if __name__ == '__main__':
   lstm_params = LSTMHparam(input_dim=hparams.input_dim,
                            hidden_dim=hparams.hidden_dim,
                            output_dim=hparams.output_dim,
-                           depth=hparams.depth,
+                           encoder_depth=hparams.encoder_depth,
+                           decoder_depth=hparams.decoder_depth,
                            number_of_heads=hparams.number_of_heads,
                            ff_filter_size=hparams.ff_filter_size,
                            initializer_gain=hparams.initializer_gain,

@@ -2,7 +2,8 @@ class TransformerHparam(object):
   def __init__(self, input_dim,
                hidden_dim,
                output_dim,
-               depth,
+               encoder_depth,
+               decoder_depth,
                batch_size,
                pretrained_embedding_path,
                input_dropout_keep_prob,
@@ -21,7 +22,8 @@ class TransformerHparam(object):
     self.vocab_size = vocab_size
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
-    self.depth = depth
+    self.encoder_depth = encoder_depth
+    self.decoder_depth = decoder_depth
     self.batch_size = batch_size
     self.pretrained_embedding_path = pretrained_embedding_path
     self.input_dropout_keep_prob = input_dropout_keep_prob
@@ -57,7 +59,8 @@ class LSTMHparam(object):
   def __init__(self, input_dim,
                hidden_dim,
                output_dim,
-               depth,
+               encoder_depth,
+               decoder_depth,
                batch_size,
                pretrained_embedding_path,
                input_dropout_keep_prob,
@@ -78,7 +81,8 @@ class LSTMHparam(object):
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
     self.embedding_dim = embedding_dim
-    self.depth = depth
+    self.encoder_depth = encoder_depth
+    self.decoder_depth = decoder_depth
     self.batch_size = batch_size
     self.pretrained_embedding_path = pretrained_embedding_path
     self.input_dropout_keep_prob = input_dropout_keep_prob

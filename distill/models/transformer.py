@@ -504,7 +504,7 @@ class Transformer(object):
       "layer_%d" % layer: {
         "k": tf.zeros([batch_size, 0, self.hparams.hidden_dim]),
         "v": tf.zeros([batch_size, 0, self.hparams.hidden_dim]),
-      } for layer in range(self.depth)}
+      } for layer in range(self.decoder_depth)}
 
     # Add encoder output and attention bias to the cache.
     cache["encoder_outputs"] = encoder_outputs
@@ -551,10 +551,10 @@ class UniversalTransformer(Transformer):
       else:
         self.output_embedding_layer = self.input_embedding_layer
 
-      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
                                               scope="TransformerEncoder")
-      self.decoder_stack = UniversalTransformerDecoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+      self.decoder_stack = UniversalTransformerDecoder(self.hidden_dim, self.number_of_heads, self.decoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
                                               scope="TransformerDecoder")
 

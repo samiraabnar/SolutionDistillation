@@ -72,7 +72,7 @@ if __name__ == '__main__':
            'reverse': AlgorithmicReverseProblem('data/alg'),
            'arithmatic': Arithmatic('data/arithmatic'),
            'sst': SST(data_path="data/sst/",
-                 add_subtrees=True,
+                 add_subtrees=False,
                  pretrained=True),
            'ptb_lm': PTB('data/ptb'),
            'wsj_parse': ParseWSJ('data/wsj')}

@@ -9,7 +9,7 @@ from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
 from distill.data_util.prep_wsj_parsing import ParseWSJ
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
-from distill.models.transformer import Transformer, UniversalTransformer
+from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer
 from distill.pipelines.seq2seq import Seq2SeqTrainer
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -63,7 +63,8 @@ if __name__ == '__main__':
   Models = {"lstm": LSTMSeq2Seq,
             "bilstm": BidiLSTMSeq2Seq,
             "transformer": Transformer,
-            "utransformer": UniversalTransformer}
+            "utransformer": UniversalTransformer,
+            "enc_transformer": EncodingTransformer}
 
 
   tasks = {'identity': AlgorithmicIdentityDecimal40('data/alg'),

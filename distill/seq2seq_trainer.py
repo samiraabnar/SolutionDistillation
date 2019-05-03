@@ -127,7 +127,8 @@ if __name__ == '__main__':
   model_params = {"transformer": transformer_params,
                   "utransformer": transformer_params,
                   "lstm": lstm_params,
-                  "bilstm": lstm_params}
+                  "bilstm": lstm_params,
+                  "enc_transformer":transformer_params}
 
 
   if hparams.save_dir is None:

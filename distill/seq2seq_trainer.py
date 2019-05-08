@@ -88,7 +88,7 @@ if __name__ == '__main__':
                                          output_dim=hparams.output_dim,
                                          encoder_depth=hparams.encoder_depth,
                                          decoder_depth=hparams.decoder_depth,
-                                         number_of_heads=1,
+                                         number_of_heads=2,
                                          ff_filter_size=512,
                                          initializer_gain=hparams.initializer_gain,
                                          batch_size=hparams.batch_size,

@@ -6,7 +6,9 @@ import os
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40, \
   AlgorithmicAdditionDecimal40, AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
 from distill.data_util.prep_arithmatic import Arithmatic
+from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
+from distill.data_util.prep_wsj_parsing import ParseWSJ
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer
 from distill.pipelines.distill_pipelines import Seq2SeqDistiller
@@ -29,6 +31,9 @@ tf.app.flags.DEFINE_string("student_model", "lstm", "")
 tf.app.flags.DEFINE_boolean("pretrain_teacher", True, "")
 tf.app.flags.DEFINE_integer("teacher_pretraining_iters", 100, "")
 tf.app.flags.DEFINE_string("rep_loss_mode", 'dot_product', "representation loss type (squared,softmax_cross_ent,sigmoid_cross_ent")
+
+tf.app.flags.DEFINE_boolean('train_embeddings', True, " False | True")
+tf.app.flags.DEFINE_string('attention_mechanism',None, 'attention_mechanism')
 
 
 tf.app.flags.DEFINE_string("model_type", "", "")
@@ -84,10 +89,10 @@ if __name__ == '__main__':
            'reverse': AlgorithmicReverseProblem('data/alg'),
            'arithmatic': Arithmatic('data/arithmatic'),
            'sst': SST(data_path="data/sst/",
-                 add_subtrees=True,
-                 pretrained=True,
-                 pretrained_path="data/sst/filtered_glove.txt",
-                 embedding_size=300)}
+                 add_subtrees=False,
+                 pretrained=True),
+           'ptb_lm': PTB('data/ptb'),
+           'wsj_parse': ParseWSJ('data/wsj')}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)
@@ -102,9 +107,13 @@ if __name__ == '__main__':
                                          batch_size=hparams.batch_size,
                                          pretrained_embedding_path=hparams.pretrained_embedding_path,
                                          input_dropout_keep_prob=hparams.input_dropout_keep_prob,
-                                         hidden_dropout_keep_prob=0.75,
+                                         hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
                                          vocab_size=hparams.vocab_size,
-                                         label_smoothing=hparams.label_smoothing
+                                         label_smoothing=hparams.label_smoothing,
+                                         encoder_self_attention_dir="top_down",
+                                         decoder_self_attention_dir="top_down",
+                                         decoder_cross_attention_dir="top_down",
+                                         train_embeddings=hparams.train_embeddings
                                          )
 
   lstm_params = LSTMHparam(input_dim=hparams.input_dim,
@@ -122,8 +131,10 @@ if __name__ == '__main__':
                            label_smoothing=hparams.label_smoothing,
                            attention_mechanism=None,
                            sent_rep_mode=hparams.sent_rep_mode,
-                           embedding_dim=hparams.vocab_size / 2 if hparams.vocab_size < 100 else 100
-                           )
+                           embedding_dim=300,
+                           train_embeddings = hparams.train_embeddings,
+                           learning_rate=hparams.learning_rate)
+
 
 
   model_params = {"transformer": transformer_params,

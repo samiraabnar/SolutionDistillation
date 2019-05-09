@@ -4,7 +4,7 @@ from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
 class LSTM(object):
-  def __init__(self, hidden_dim, output_dim, attention_mechanism=None, hidden_keep_prob=0.8,depth=1, sent_rep_mode="all",scope="LSTM"):
+  def __init__(self, hidden_dim, output_dim, attention_mechanism, hidden_keep_prob,depth, sent_rep_mode="all",scope="LSTM"):
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
     self.scope = scope
@@ -21,14 +21,19 @@ class LSTM(object):
       with tf.variable_scope("LSTM_Cells"):
         lstm0 = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0, name="L0")
         dropout_lstm0 = tf.contrib.rnn.DropoutWrapper(lstm0,
-                                               output_keep_prob=self.hidden_keep_prob)
+                                                      output_keep_prob=self.hidden_keep_prob,
+                                                      variational_recurrent=True,
+                                                      dtype=tf.float32)
 
         lstms = [lstm0]
         drop_lstms = [dropout_lstm0]
 
         lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0, name="L1")
         dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
-                                                      output_keep_prob=self.hidden_keep_prob)
+                                                      output_keep_prob=self.hidden_keep_prob,
+                                                      variational_recurrent=True,
+                                                      dtype=tf.float32
+                                                     )
         if self.num_layers > 1:
           lstms.extend([lstm] * (self.num_layers-1))
           drop_lstms.extend([dropout_lstm] * (self.num_layers - 1))
@@ -72,7 +77,7 @@ class LSTM(object):
           dtype=tf.float32,
           sequence_length=inputs_length,
           initial_state=init_state)
-        lstm_outputs = tf_layers.layer_norm(lstm_outputs)
+        # lstm_outputs = tf_layers.layer_norm(lstm_outputs)
 
         tf.logging.info("seq_outputs"),
         tf.logging.info(lstm_outputs)

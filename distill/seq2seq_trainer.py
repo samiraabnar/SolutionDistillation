@@ -7,8 +7,10 @@ from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, Alg
 from distill.data_util.prep_arithmatic import Arithmatic
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
+from distill.data_util.prep_wsj_parsing import ParseWSJ
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
-from distill.models.transformer import Transformer, UniversalTransformer
+from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer, \
+  EncodingUniversalTransformer
 from distill.pipelines.seq2seq import Seq2SeqTrainer
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -21,7 +23,9 @@ tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer |
 
 
 tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
-tf.app.flags.DEFINE_integer("depth", 2, "")
+tf.app.flags.DEFINE_integer("encoder_depth", 2, "")
+tf.app.flags.DEFINE_integer("decoder_depth", 1, "")
+
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_integer("number_of_heads", 4, "")
@@ -30,12 +34,14 @@ tf.app.flags.DEFINE_float("initializer_gain", 1.0, "")
 tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
 tf.app.flags.DEFINE_boolean('train_embeddings', True, " False | True")
 tf.app.flags.DEFINE_string('sent_rep_mode', "final", "none | final | all")
+tf.app.flags.DEFINE_string('attention_mechanism',None, 'attention_mechanism')
 
 
 tf.app.flags.DEFINE_float("input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.001, "")
+tf.app.flags.DEFINE_boolean("decay_learning_rate", True, "True | False")
 tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
 
 
@@ -52,13 +58,18 @@ tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 
 hparams = tf.app.flags.FLAGS
 
+
+
+
 if __name__ == '__main__':
 
 
   Models = {"lstm": LSTMSeq2Seq,
             "bilstm": BidiLSTMSeq2Seq,
             "transformer": Transformer,
-            "utransformer": UniversalTransformer}
+            "utransformer": UniversalTransformer,
+            "enc_transformer": EncodingTransformer,
+            "enc_utransformer": EncodingUniversalTransformer}
 
 
   tasks = {'identity': AlgorithmicIdentityDecimal40('data/alg'),
@@ -69,9 +80,10 @@ if __name__ == '__main__':
            'reverse': AlgorithmicReverseProblem('data/alg'),
            'arithmatic': Arithmatic('data/arithmatic'),
            'sst': SST(data_path="data/sst/",
-                 add_subtrees=True,
-                 pretrained=False),
-           'ptb_lm': PTB('data/ptb')}
+                 add_subtrees=False,
+                 pretrained=True),
+           'ptb_lm': PTB('data/ptb'),
+           'wsj_parse': ParseWSJ('data/wsj')}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)
@@ -79,8 +91,9 @@ if __name__ == '__main__':
   transformer_params = TransformerHparam(input_dim=hparams.input_dim,
                                          hidden_dim=hparams.hidden_dim,
                                          output_dim=hparams.output_dim,
-                                         depth=hparams.depth,
-                                         number_of_heads=4,
+                                         encoder_depth=hparams.encoder_depth,
+                                         decoder_depth=hparams.decoder_depth,
+                                         number_of_heads=2,
                                          ff_filter_size=512,
                                          initializer_gain=hparams.initializer_gain,
                                          batch_size=hparams.batch_size,
@@ -98,7 +111,8 @@ if __name__ == '__main__':
   lstm_params = LSTMHparam(input_dim=hparams.input_dim,
                            hidden_dim=hparams.hidden_dim,
                            output_dim=hparams.output_dim,
-                           depth=hparams.depth,
+                           encoder_depth=hparams.encoder_depth,
+                           decoder_depth=hparams.decoder_depth,
                            number_of_heads=hparams.number_of_heads,
                            ff_filter_size=hparams.ff_filter_size,
                            initializer_gain=hparams.initializer_gain,
@@ -111,19 +125,22 @@ if __name__ == '__main__':
                            attention_mechanism=None,
                            sent_rep_mode=hparams.sent_rep_mode,
                            embedding_dim=300,
-                           train_embeddings = hparams.train_embeddings)
+                           train_embeddings = hparams.train_embeddings,
+                           learning_rate=hparams.learning_rate)
 
 
   model_params = {"transformer": transformer_params,
                   "utransformer": transformer_params,
                   "lstm": lstm_params,
-                  "bilstm": lstm_params}
+                  "bilstm": lstm_params,
+                  "enc_transformer":transformer_params,
+                  "enc_utransformer": transformer_params,}
 
 
   if hparams.save_dir is None:
     hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name,
                                     '_'.join([hparams.model,
-                                              'depth'+str(model_params[hparams.model].depth),
+                                              'depth'+str(model_params[hparams.model].encoder_depth),
                                               'hidden_dim'+str(model_params[hparams.model].hidden_dim),
                                               'batch_size'+str(model_params[hparams.model].batch_size),
                                               hparams.exp_name]))

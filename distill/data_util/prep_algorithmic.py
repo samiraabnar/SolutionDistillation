@@ -13,6 +13,7 @@ class Algorithmic(object):
     self.eos = '<eos>'
     self.pad = '<pad>'
     self.load_vocab()
+    self.pretrained = False
 
   @property
   def share_input_output_embeddings(self):

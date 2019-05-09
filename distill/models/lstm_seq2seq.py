@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+from distill.data_util.prep_arithmatic import Arithmatic
+from distill.data_util.prep_sst import SST
 from distill.layers.embedding import Embedding, EmbeddingSharedWeights
 from distill.layers.lstm import LSTM
 from distill.layers.bilstm import BiLSTM
@@ -127,10 +129,15 @@ class LSTMSeq2Seq(object):
 
       output_mask = tf.cast(tf.sequence_mask(lstm_decoder_output_dic['outputs_lengths'], tf.shape(outputs)[1]), dtype=tf.int64)
 
+
+
       logits = self.output_embedding_layer.linear(outputs)
-      predictions = tf.argmax(logits, axis=-1) * output_mask
+      tf.logging.info("logits")
+      tf.logging.info(logits)
+      predictions = tf.cast(tf.argmax(logits, axis=-1) * output_mask, dtype=tf.int64)
 
     return {'logits': logits,
+            'output_mask': output_mask,
             'outputs': outputs,
             'predictions': predictions,
             'targets': targets,
@@ -182,11 +189,13 @@ if __name__ == '__main__':
 
   tf.logging.set_verbosity(tf.logging.INFO)
 
-  bin_iden = AlgorithmicIdentityBinary40('data/alg')
+  bin_iden = Arithmatic('data/arithmatic') #SST(data_path="data/sst/",
+             #    add_subtrees=True,
+             #    pretrained=False)
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
-  dataset = dataset.padded_batch(1, padded_shapes=bin_iden.get_padded_shapes())
+  dataset = dataset.padded_batch(5, padded_shapes=bin_iden.get_padded_shapes())
   iterator = dataset.make_initializable_iterator()
 
   example = iterator.get_next()
@@ -196,29 +205,40 @@ if __name__ == '__main__':
     def __init__(self):
       self.vocab_size = bin_iden.vocab_length
       self.hidden_dim = 32
-      self.output_dim = self.vocab_size
-      self.embedding_dim = 10
+      self.output_dim = len(bin_iden.target_vocab),
+      self.embedding_dim = 32
       self.input_dropout_keep_prob = 0.5
       self.hidden_dropout_keep_prob = 0.5
       self.attention_mechanism = None
       self.depth = 1
       self.sent_rep_mode = "all"
       self.scope = "lstm_seq2seq"
+      self.train_embeddings=False
 
 
   print("eos id: ", bin_iden.eos_id)
-  model = BidiLSTMSeq2Seq(Config(), eos_id=bin_iden.eos_id, scope="Seq2SeqLSTM")
+  model = LSTMSeq2Seq(Config(), task=bin_iden, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 
-  input, _,_,_= example
-  _ = model.apply(example, is_train=True)
-  outputs = model.apply(example, is_train=False)
+  input, target,_,_= example
+  _ = model.apply(example, is_train=True, target_length=bin_iden.target_length)
+  outputs = model.apply(example, is_train=False, target_length=bin_iden.target_length)
 
   predictions = outputs['predictions']
 
   global_step = tf.train.get_or_create_global_step()
   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                       iterator.initializer))
-  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
-    for _ in np.arange(10):
-      print(sess.run([input, predictions]))
+
+  accuracy = tf.equal(predictions, target)
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_lstm_seq2seq', scaffold=scaffold) as sess:
+    for _ in np.arange(1):
+      acc, _inputs, _targets, _predictions, _logits = sess.run([accuracy, input, target, predictions, outputs['logits']])
+
+      print("input: ", _inputs)
+      print("targets: ", _targets)
+
+      print("predictions: ", _predictions)
+      print("logits: ", _logits)
+
+      print(acc)

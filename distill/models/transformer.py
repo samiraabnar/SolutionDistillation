@@ -146,7 +146,8 @@ class TransformerDecoder(object):
       self.output_normalization.create_vars()
 
   def apply(self, inputs, encoder_outputs, decoder_self_attention_bias, attention_bias, encoder_outputs_presence=None,
-            cache=None, is_train=True,  reuse=tf.AUTO_REUSE):
+            cache=None, is_train=True,  reuse=tf.AUTO_REUSE,
+            target_length=None):
     decoder_inputs = inputs
     with tf.variable_scope(self.scope, reuse=reuse):
       for n, layer in enumerate(self.layers):
@@ -159,8 +160,8 @@ class TransformerDecoder(object):
         feed_forward_network = layer[2]
 
         decoder_inputs, _ = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
-                                                    bias=decoder_self_attention_bias, cache=layer_cache)
-        decoder_inputs, _ = self_attention_layer.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
+                                                      bias=decoder_self_attention_bias, cache=layer_cache)
+        decoder_inputs, _ = enc_dec_attention.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
                                                        y_presence=encoder_outputs_presence,
                                                        bias=attention_bias)
         decoder_inputs,_ = feed_forward_network.apply(x=decoder_inputs, is_train=is_train)
@@ -281,7 +282,8 @@ class Transformer(object):
     self.vocab_size = hparams.vocab_size
     self.hidden_dim = hparams.hidden_dim
     self.number_of_heads = hparams.number_of_heads
-    self.depth = hparams.depth
+    self.decoder_depth = hparams.decoder_depth
+    self.encoder_depth = hparams.encoder_depth
     self.ff_filter_size = hparams.ff_filter_size
     self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
     self.initializer_gain = hparams.initializer_gain
@@ -306,11 +308,11 @@ class Transformer(object):
       else:
         self.output_embedding_layer = self.input_embedding_layer
 
-      self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+      self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
                                               self_attention_dir=self.hparams.encoder_self_attention_dir,
                                               scope="TransformerEncoder")
-      self.decoder_stack = TransformerDecoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+      self.decoder_stack = TransformerDecoder(self.hidden_dim, self.number_of_heads, self.decoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
                                               self_attention_dir=self.hparams.decoder_self_attention_dir,
                                               cross_attention_dir=self.hparams.decoder_cross_attention_dir,
@@ -360,7 +362,8 @@ class Transformer(object):
         outputs = self.decode(targets, encoder_outputs=encoder_outputs,
                               encoder_outputs_presence=encoder_outputs_presence,
                               attention_bias=attention_bias,
-                              is_train=is_train)
+                              is_train=is_train,
+                              target_length=target_length)
         logits = self.output_embedding_layer.linear(outputs)
 
       predictions = tf.argmax(logits, axis=-1)
@@ -392,11 +395,11 @@ class Transformer(object):
 
       if is_train:
         encoder_inputs = tf.nn.dropout(
-            encoder_inputs, self.hparams.input_dropout_keep_prob)
+            encoder_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
 
       return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train)
 
-  def decode(self, targets, encoder_outputs, attention_bias, encoder_outputs_presence=None, is_train=True):
+  def decode(self, targets, encoder_outputs, attention_bias, encoder_outputs_presence=None, is_train=True,target_length=None):
     """Generate logits for each value in the target sequence.
     Args:
       targets: target values for the output sequence.
@@ -421,7 +424,7 @@ class Transformer(object):
             length, self.hidden_dim)
       if is_train:
         decoder_inputs = tf.nn.dropout(
-            decoder_inputs, self.dropout_keep_prob)
+            decoder_inputs, keep_prob=self.dropout_keep_prob)
 
       # Run values
       decoder_self_attention_bias = get_decoder_self_attention_bias(
@@ -433,7 +436,8 @@ class Transformer(object):
             encoder_outputs=encoder_outputs,
             decoder_self_attention_bias=decoder_self_attention_bias,
             attention_bias=attention_bias,
-            encoder_outputs_presence=encoder_outputs_presence)
+            encoder_outputs_presence=encoder_outputs_presence,
+            target_length=None)
 
 
       return outputs
@@ -500,7 +504,7 @@ class Transformer(object):
       "layer_%d" % layer: {
         "k": tf.zeros([batch_size, 0, self.hparams.hidden_dim]),
         "v": tf.zeros([batch_size, 0, self.hparams.hidden_dim]),
-      } for layer in range(self.depth)}
+      } for layer in range(self.decoder_depth)}
 
     # Add encoder output and attention bias to the cache.
     cache["encoder_outputs"] = encoder_outputs
@@ -531,14 +535,15 @@ class UniversalTransformer(Transformer):
   def __init__(self, hparams, task, scope="Transformer"):
     super(UniversalTransformer, self).__init__(hparams, task, scope)
 
-  def create_vars(self, reuse=False):
+  def create_vars(self, reuse=False, pretrained_embeddings=None):
     self.initializer = tf.variance_scaling_initializer(
       self.initializer_gain, mode="fan_avg", distribution="uniform")
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
       self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
-                                                          method="matmul" if tpu else "gather", scope="InputEmbed")
-      self.input_embedding_layer.create_vars()
+                                                          method="matmul" if tpu else "gather", scope="InputEmbed",
+                                                          pretrained_embeddings=pretrained_embeddings)
+      self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
       if not self.task.share_input_output_embeddings:
         self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
                                                              embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")
@@ -546,15 +551,196 @@ class UniversalTransformer(Transformer):
       else:
         self.output_embedding_layer = self.input_embedding_layer
 
-      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
                                               scope="TransformerEncoder")
-      self.decoder_stack = UniversalTransformerDecoder(self.hidden_dim, self.number_of_heads, self.depth, self.ff_filter_size,
+      self.decoder_stack = UniversalTransformerDecoder(self.hidden_dim, self.number_of_heads, self.decoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
                                               scope="TransformerDecoder")
 
       self.encoder_stack.create_vars(reuse=tf.AUTO_REUSE)
       self.decoder_stack.create_vars(reuse=tf.AUTO_REUSE)
+
+class EncodingTransformer(object):
+  """Transformer model for sequence to sequence data.
+  Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
+  The Transformer model consists of an encoder and decoder. The input is an int
+  sequence (or a batch of sequences). The encoder produces a continous
+  representation, and the decoder uses the encoder output to generate
+  probabilities for the output sequence.
+  """
+
+  def __init__(self, hparams, task, scope="Transformer"):
+    self.hparams = hparams
+    self.vocab_size = hparams.vocab_size
+    self.hidden_dim = hparams.hidden_dim
+    self.number_of_heads = hparams.number_of_heads
+    self.encoder_depth = hparams.encoder_depth
+    self.ff_filter_size = hparams.ff_filter_size
+    self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.initializer_gain = hparams.initializer_gain
+    self.scope = scope
+    self.task = task
+    self.eos_id = self.task.eos_id
+
+  def create_vars(self, reuse=False,pretrained_embeddings=None):
+    self.initializer = tf.variance_scaling_initializer(
+      self.initializer_gain, mode="fan_avg", distribution="uniform")
+
+    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
+
+      self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
+                                                       method="matmul" if tpu else "gather", scope="InputEmbed",
+                                                          pretrained_embeddings=pretrained_embeddings)
+      self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
+      if not self.task.share_input_output_embeddings:
+        self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
+                                       embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")
+        self.output_embedding_layer.create_vars()
+      else:
+        self.output_embedding_layer = self.input_embedding_layer
+
+      self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
+                                              self.dropout_keep_prob,
+                                              self_attention_dir=self.hparams.encoder_self_attention_dir,
+                                              scope="TransformerEncoder")
+
+
+      self.encoder_stack.create_vars(reuse=False)
+
+  def apply(self, examples, target_length=None, reuse=tf.AUTO_REUSE, is_train=True):
+    """Calculate target logits or inferred target sequences.
+    Args:
+      inputs: int tensor with shape [batch_size, input_length].
+      targets: None or int tensor with shape [batch_size, target_length].
+    Returns:
+      If targets is defined, then return logits for each word in the target
+      sequence. float tensor with shape [batch_size, target_length, vocab_size]
+      If target is none, then generate output sequence one token at a time.
+        returns a dictionary {
+          output: [batch_size, decoded length]
+          score: [batch_size, float]}
+    """
+    inputs, targets, inputs_lengths, targets_lengths = examples
+
+    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
+      # Calculate attention bias for encoder self-attention and decoder
+      # multi-headed attention layers.
+      attention_bias = get_padding_bias(inputs)
+
+      # Run the inputs through the encoder layer to map the symbol
+      # representations to continuous representations.
+      encoder_outputs, encoder_outputs_presence = self.encode(inputs, attention_bias, is_train)
+      tf.logging.info('encoder outputs')
+      tf.logging.info(encoder_outputs)
+
+
+      outputs = self.decode(encoder_outputs=encoder_outputs,
+                            encoder_outputs_presence=encoder_outputs_presence,
+                            is_train=is_train)
+
+      logits = self.output_embedding_layer.linear(outputs)
+
+      predictions = tf.argmax(logits, axis=-1)
+
+      return {'logits': logits,
+              'outputs': outputs,
+              'predictions': predictions,
+              'targets': targets,
+              'trainable_vars': tf.trainable_variables(scope=self.scope),
+              }
+
+  def encode(self, inputs, attention_bias, is_train=True):
+    """Generate continuous representation for inputs.
+    Args:
+      inputs: int tensor with shape [batch_size, input_length].
+      attention_bias: float tensor with shape [batch_size, 1, 1, input_length]
+    Returns:
+      float tensor with shape [batch_size, input_length, hidden_size]
+    """
+    with tf.variable_scope("encode", reuse=tf.AUTO_REUSE):
+      embedded_inputs = self.input_embedding_layer.apply(inputs)
+      inputs_padding = get_padding(inputs)
+
+      with tf.name_scope("add_pos_encoding"):
+        length = tf.shape(embedded_inputs)[1]
+        pos_encoding = get_position_encoding(
+            length, self.hidden_dim)
+        encoder_inputs = embedded_inputs + pos_encoding
+
+      if is_train:
+        encoder_inputs = tf.nn.dropout(
+            encoder_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
+      return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train)
+
+  def decode(self,encoder_outputs, encoder_outputs_presence=None, is_train=True):
+    """Generate logits for each value in the target sequence.
+    Args:
+      targets: target values for the output sequence.
+        int tensor with shape [batch_size, target_length]
+      encoder_outputs: continuous representation of input sequence.
+        float tensor with shape [batch_size, input_length, hidden_size]
+      attention_bias: float tensor with shape [batch_size, 1, 1, input_length]
+    Returns:
+      float32 tensor with shape [batch_size, target_length, vocab_size]
+    """
+    with tf.name_scope("decode"):
+      if encoder_outputs_presence is not None:
+        outputs = tf.reduce_sum(encoder_outputs * encoder_outputs_presence, axis=1)
+      else:
+        outputs = tf.reduce_mean(encoder_outputs, axis=1)
+
+
+      return tf.expand_dims(outputs, axis=1)
+
+
+class EncodingUniversalTransformer(EncodingTransformer):
+  """Transformer model for sequence to sequence data.
+  Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
+  The Transformer model consists of an encoder and decoder. The input is an int
+  sequence (or a batch of sequences). The encoder produces a continous
+  representation, and the decoder uses the encoder output to generate
+  probabilities for the output sequence.
+  """
+
+  def __init__(self, hparams, task, scope="EncUTransformer"):
+    self.hparams = hparams
+    self.vocab_size = hparams.vocab_size
+    self.hidden_dim = hparams.hidden_dim
+    self.number_of_heads = hparams.number_of_heads
+    self.encoder_depth = hparams.encoder_depth
+    self.ff_filter_size = hparams.ff_filter_size
+    self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.initializer_gain = hparams.initializer_gain
+    self.scope = scope
+    self.task = task
+    self.eos_id = self.task.eos_id
+
+  def create_vars(self, reuse=False,pretrained_embeddings=None):
+    self.initializer = tf.variance_scaling_initializer(
+      self.initializer_gain, mode="fan_avg", distribution="uniform")
+
+    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
+
+      self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
+                                                       method="matmul" if tpu else "gather", scope="InputEmbed",
+                                                          pretrained_embeddings=pretrained_embeddings)
+      self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
+      if not self.task.share_input_output_embeddings:
+        self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
+                                       embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")
+        self.output_embedding_layer.create_vars()
+      else:
+        self.output_embedding_layer = self.input_embedding_layer
+
+      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
+                                              self.dropout_keep_prob,
+                                              self_attention_dir=self.hparams.encoder_self_attention_dir,
+                                              scope="UniversalTransformerEncoder")
+
+
+      self.encoder_stack.create_vars(reuse=tf.AUTO_REUSE)
 
 
 if __name__ == '__main__':
@@ -565,10 +751,8 @@ if __name__ == '__main__':
   #bin_iden = AlgorithmicIdentityBinary40('data/alg')
   #bin_iden = Arithmatic('data/arithmatic')
   bin_iden = SST(data_path="data/sst/",
-      add_subtrees=True,
-      pretrained=True,
-      pretrained_path="data/sst/filtered_glove.txt",
-      embedding_size=300)
+      add_subtrees=False,
+      pretrained=True)
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
@@ -583,11 +767,12 @@ if __name__ == '__main__':
       self.vocab_size = bin_iden.vocab_length
       self.hidden_dim = 32
       self.output_dim = self.vocab_size
-      self.embedding_dim = 10
+      self.embedding_dim = 32
       self.input_dropout_keep_prob = 0.5
       self.hidden_dropout_keep_prob = 0.5
       self.attention_mechanism = None
-      self.depth = 1
+      self.encoder_depth = 1
+      self.decoder_depth = 1
       self.sent_rep_mode = "all"
       self.scope = "transformer"
       self.batch_size = 64
@@ -616,9 +801,10 @@ if __name__ == '__main__':
       self.encoder_self_attention_dir = "buttom_up"
       self.decoder_self_attention_dir = "top_down"
       self.decoder_cross_attention_dir = "top_down"
+      self.train_embeddings = True
 
 
-  transformer = UniversalTransformer(Config(),
+  transformer = EncodingTransformer(Config(),
                             task=bin_iden,
                             scope="Transformer")
   transformer.create_vars(reuse=False)

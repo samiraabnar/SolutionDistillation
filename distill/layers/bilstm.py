@@ -4,12 +4,11 @@ from distill.layers.attention import FeedforwardSelfAttention
 from distill.layers.embedding import Embedding
 
 class BiLSTM(object):
-  def __init__(self, hidden_dim, output_dim, attention_mechanism=None, input_keep_prob=0.8,
-               hidden_keep_prob=0.8,depth=1, sent_rep_mode="all", scope="biLSTM"):
+  def __init__(self, hidden_dim, output_dim, attention_mechanism,
+               hidden_keep_prob,depth, sent_rep_mode, scope="biLSTM"):
     self.hidden_dim = hidden_dim
     self.output_dim = output_dim
     self.scope = scope
-    self.input_keep_prob = input_keep_prob
     self.hidden_keep_prob = hidden_keep_prob
     self.num_layers = depth
     self.attention_mechanism = attention_mechanism

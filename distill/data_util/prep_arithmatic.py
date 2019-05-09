@@ -100,6 +100,8 @@ class Arithmatic(object):
     self.pad = '<pad>'
 
     self.load_vocab()
+    self.pretrained = False
+
 
   @property
   def share_input_output_embeddings(self):
@@ -170,9 +172,9 @@ class Arithmatic(object):
       while exp < 0 or exp >= self.num_of_symbols:
         exp_str = binary_math_tree_generator(length, np.arange(1,self.num_of_symbols), ['-', '+', '*'])
         exp = eval(exp_str)
-      exp_tokens = exp_str.split()
+      exp_tokens = exp_str.split() + [self.eos]
       output = [str(exp)]
-      example = {'inputs': self.encode(exp_tokens + [self.eos]),
+      example = {'inputs': self.encode(exp_tokens),
                  'targets':self.encode(output),
                  'inputs_length': len(exp_tokens),
                  'targets_length': len(output)}

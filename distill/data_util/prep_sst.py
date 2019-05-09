@@ -51,6 +51,10 @@ class SST(object):
     self.pad = '<pad>'
     self.unk = '<unk>'
     self.pretrained = pretrained
+<<<<<<< HEAD
+=======
+    self.fine_grained = True
+>>>>>>> 5f043b4a78bbffe3adc186e8d92b9f87b3329532
     self.vocab = Vocab(path=self.vocab_path)
     self.load_vocab()
 
@@ -65,13 +69,16 @@ class SST(object):
   def prepare_pretrained(self, full_pretrained_path, pretrained_model, embedding_dim):
     filtered_path = self.get_pretrained_path(pretrained_model)
     full_embeddings = {}
+    print(self.vocab.index_to_word)
+
     with open(full_pretrained_path, encoding='utf-8') as f:
       for line in f:
         line = line.strip()
         if not line: continue
         vocab, embed = line.split(u' ', 1)
-        if vocab in self.vocab.index_to_word:
-          full_embeddings[vocab] = embed
+        if vocab.lower() in self.vocab.word_to_index:
+          print(vocab)
+          full_embeddings[vocab] = np.asarray(embed.split(), dtype=np.float32)
 
     ordered_embeddings = []
 
@@ -82,8 +89,12 @@ class SST(object):
                    '<unk>':np.random.uniform(
       -0.05, 0.05, embedding_dim).astype(np.float32)}
 
-    for token in self.vocab.index_to_word:
+    print("total numbr of vocabs in filtered Glove", len(list(full_embeddings.keys())))
+    print("total number of vocabs:", len(self.vocab.index_to_word))
+    for key in np.arange(len(self.vocab.index_to_word)):
+      token = self.vocab.index_to_word[key]
       if token in full_embeddings:
+        print("in glove ", token)
         ordered_embeddings.append(full_embeddings[token].astype(np.float32))
       elif token in init_tokens:
         ordered_embeddings.append(init_tokens[token])
@@ -108,11 +119,12 @@ class SST(object):
       # Get list of tokenized sentences
       train_sents = [t.get_words() for t in self.data["train"]]
       # Get list of all words
-      all_words = list(itertools.chain.from_iterable(train_sents))
+      all_words = list(map(str.lower,list(itertools.chain.from_iterable(train_sents))))
       self.vocab.build_vocab(all_words)
       self.vocab.save()
 
   def generator(self, mode):
+    label_set = []
     for example_id, tree in enumerate(self.data[mode]):
       words = tree.get_words()
       node = tree.root
@@ -180,6 +192,7 @@ class SST(object):
   def load_data(self):
     data_splits = ["train", "test", "dev"]
     self.data = {}
+    label_set = []
     for tag in data_splits:
       file = os.path.join(self.data_path, tag + ".txt")
       print("Loading %s trees.." % file)
@@ -190,8 +203,12 @@ class SST(object):
           if self.add_subtrees and tag == 'train':
             sub_trees = get_subtrees(tree.root)
             self.data[tag].extend(sub_trees)
+            label_set.append(tree.root.label)
           else:
             self.data[tag].append(tree)
+            label_set.append(tree.root.label)
+
+      print(list(set(label_set)))
 
   def build_tfrecords(self,tf_feature_fn, mode, feature_type="tree"):
     tf_example_features = []
@@ -225,8 +242,8 @@ class SST(object):
     return 1
 
   @property
-  def target_vocab(self, fine_grained=True):
-    if fine_grained:
+  def target_vocab(self):
+    if self.fine_grained:
       return [0,1,2,3,4]
     else:
       return [0, 1]
@@ -303,7 +320,7 @@ class SST(object):
   def get_padded_shapes():
     return [None], [None], [], []
 
-  def get_tfrecord_path(self, mode, feature_type="full", add_subtrees=True):
+  def get_tfrecord_path(self, mode, feature_type="full", add_subtrees=False):
 
     if mode == "train":
       subtree_name_token = '_allsubs' if add_subtrees else ''
@@ -337,7 +354,11 @@ def build_sst():
 
 def build_full_sst():
   sst_prep = SST(data_path="data/sst/",
+<<<<<<< HEAD
                  add_subtrees=True,
+=======
+                 add_subtrees=False,
+>>>>>>> 5f043b4a78bbffe3adc186e8d92b9f87b3329532
                  pretrained=True)
   sst_prep.load_data()
 
@@ -363,7 +384,11 @@ def build_sst_main():
 
 def test_seq2seq():
   sst_prep = SST(data_path="data/sst/",
+<<<<<<< HEAD
                  add_subtrees=True,
+=======
+                 add_subtrees=False,
+>>>>>>> 5f043b4a78bbffe3adc186e8d92b9f87b3329532
                  pretrained=True)
 
   batch_size = 10
@@ -424,12 +449,12 @@ if __name__ == '__main__':
   test_seq2seq()
 
   sst_prep = SST(data_path="data/sst/",
-                 add_subtrees=True,
+                 add_subtrees=False,
                  pretrained=True)
 
-  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="train", feature_type="full", add_subtrees=True))))
-  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="test", feature_type="full", add_subtrees=True))))
-  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="dev", feature_type="full", add_subtrees=True))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="train", feature_type="full", add_subtrees=False))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="test", feature_type="full", add_subtrees=False))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="dev", feature_type="full", add_subtrees=False))))
 
   sst_prep.prepare_pretrained('data/glove.840B.300d.txt','glove_300', 300)
 

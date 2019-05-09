@@ -168,12 +168,12 @@ if __name__ == '__main__':
                                                       )
 
 
-  model_params = {"transformer": transformer_params,
-                  "utransformer": transformer_params,
-                  "lstm": lstm_params,
-                  "bilstm": lstm_params,
-                  "enc_transformer":transformer_params,
-                  "enc_utransformer": transformer_params,}
+  model_params = {"transformer": TransformerHparam,
+                  "utransformer": TransformerHparam,
+                  "lstm": LSTMHparam,
+                  "bilstm": LSTMHparam,
+                  "enc_transformer":TransformerHparam,
+                  "enc_utransformer": TransformerHparam,}
 
   hparams.model_type ='_'.join([hparams.teacher_model,'to',hparams.student_model])
 

@@ -22,6 +22,7 @@ tf.app.flags.DEFINE_string("task_name", "identity_binary", "")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
+tf.app.flags.DEFINE_string("model_type", "transformer2transformer", "")
 tf.app.flags.DEFINE_string("teacher_model", "transformer", "")
 tf.app.flags.DEFINE_string("student_model", "transformer", "")
 

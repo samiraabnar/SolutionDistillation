@@ -5,7 +5,6 @@ class TransformerHparam(object):
                encoder_depth,
                decoder_depth,
                batch_size,
-               pretrained_embedding_path,
                input_dropout_keep_prob,
                hidden_dropout_keep_prob,
                number_of_heads,
@@ -14,9 +13,13 @@ class TransformerHparam(object):
                vocab_size,
                label_smoothing,
                train_embeddings,
+               learning_rate,
                encoder_self_attention_dir="top_down",
                decoder_self_attention_dir="top_down",
-               decoder_cross_attention_dir="top_down"
+               decoder_cross_attention_dir="top_down",
+               attention_mechanism=None,
+               sent_rep_mode=None,
+               embedding_dim=None,
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -25,7 +28,6 @@ class TransformerHparam(object):
     self.encoder_depth = encoder_depth
     self.decoder_depth = decoder_depth
     self.batch_size = batch_size
-    self.pretrained_embedding_path = pretrained_embedding_path
     self.input_dropout_keep_prob = input_dropout_keep_prob
     self.hidden_dropout_keep_prob = hidden_dropout_keep_prob
     self.number_of_heads = number_of_heads
@@ -34,7 +36,7 @@ class TransformerHparam(object):
     self.label_smoothing = label_smoothing
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
-    self.learning_rate = 0.001
+    self.learning_rate = learning_rate
     self.learning_rate_warmup_steps = 1000
     self.initializer_gain = 1.0
     self.initializer = "uniform_unit_scaling"
@@ -61,7 +63,6 @@ class LSTMHparam(object):
                encoder_depth,
                decoder_depth,
                batch_size,
-               pretrained_embedding_path,
                input_dropout_keep_prob,
                hidden_dropout_keep_prob,
                number_of_heads,
@@ -69,11 +70,14 @@ class LSTMHparam(object):
                initializer_gain,
                vocab_size,
                label_smoothing,
-               attention_mechanism,
-               sent_rep_mode,
                embedding_dim,
                train_embeddings,
                learning_rate,
+               encoder_self_attention_dir="top_down",
+               decoder_self_attention_dir="top_down",
+               decoder_cross_attention_dir="top_down",
+               attention_mechanism=None,
+               sent_rep_mode=None,
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -83,7 +87,6 @@ class LSTMHparam(object):
     self.encoder_depth = encoder_depth
     self.decoder_depth = decoder_depth
     self.batch_size = batch_size
-    self.pretrained_embedding_path = pretrained_embedding_path
     self.input_dropout_keep_prob = input_dropout_keep_prob
     self.hidden_dropout_keep_prob = hidden_dropout_keep_prob
     self.number_of_heads = number_of_heads
@@ -101,7 +104,7 @@ class LSTMHparam(object):
     self.optimizer_adam_beta1 = 0.9
     self.optimizer_adam_beta2 = 0.98
     self.num_sampled_classes = 0
-    self.label_smoothing = 0.1
+    self.label_smoothing = label_smoothing
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.train_embeddings = train_embeddings

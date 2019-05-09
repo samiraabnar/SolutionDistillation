@@ -35,10 +35,10 @@ class Seq2SeqTrainer(Trainer):
   def compute_loss(self,logits, targets):
     if self.task.target_length == 1:
       xentropy, weights = cross_entropy_loss(
-        logits, targets, self.config.label_smoothing, self.config.output_dim)
+        logits, targets, self.model.hparams.label_smoothing, self.config.output_dim)
     else:
       xentropy, weights = padded_cross_entropy_loss(
-        logits, targets, self.config.label_smoothing, self.config.output_dim)
+        logits, targets, self.model.hparams.label_smoothing, self.config.output_dim)
 
     loss = tf.reduce_sum(xentropy) / tf.reduce_sum(weights)
 

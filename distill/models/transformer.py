@@ -32,7 +32,7 @@ class TransformerEncoder(object):
       for i in np.arange(self.depth):
         # Create sublayers for each layer.
 
-        if self.self_attention_dir == "buttom_up":
+        if self.self_attention_dir == "bottom_up":
           self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                             num_heads=self.number_of_heads,
                                                                             attention_dropout_keepprob=self.dropout_keep_prob,
@@ -101,7 +101,7 @@ class TransformerDecoder(object):
       self.layers = []
       for i in np.arange(self.depth):
         # Create sublayers for each layer.
-        if self.self_attention_dir == "buttom_up":
+        if self.self_attention_dir == "bottom_up":
           self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
                                                                   attention_dropout_keepprob=self.dropout_keep_prob,
@@ -112,7 +112,7 @@ class TransformerDecoder(object):
                                                                     attention_dropout_keepprob=self.dropout_keep_prob,
                                                                     scope="SelfAttention" + str(i))
 
-        if self.cross_attention_dir == "buttom_up":
+        if self.cross_attention_dir == "bottom_up":
           enc_dec_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
                                                                   attention_dropout_keepprob=self.dropout_keep_prob,
@@ -179,7 +179,7 @@ class UniversalTransformerEncoder(TransformerEncoder):
       self.layers = []
       for i in np.arange(self.depth):
         # Create sublayers for each layer.
-        if self.self_attention_dir == "buttom_up":
+        if self.self_attention_dir == "bottom_up":
           self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                             num_heads=self.number_of_heads,
                                                                             attention_dropout_keepprob=self.dropout_keep_prob,
@@ -223,7 +223,7 @@ class UniversalTransformerDecoder(TransformerDecoder):
       self.layers = []
       for i in np.arange(self.depth):
         # Create sublayers for each layer.
-        if self.self_attention_dir == "buttom_up":
+        if self.self_attention_dir == "bottom_up":
           self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
                                                                   attention_dropout_keepprob=self.dropout_keep_prob,
@@ -234,7 +234,7 @@ class UniversalTransformerDecoder(TransformerDecoder):
                                                                     attention_dropout_keepprob=self.dropout_keep_prob,
                                                                     scope="SelfAttention")
 
-        if self.cross_attention_dir == "buttom_up":
+        if self.cross_attention_dir == "bottom_up":
           enc_dec_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
                                                                   attention_dropout_keepprob=self.dropout_keep_prob,
@@ -798,7 +798,7 @@ if __name__ == '__main__':
       self.alpha = 1
       self.beam_size = 5
       self.extra_decode_length = 5
-      self.encoder_self_attention_dir = "buttom_up"
+      self.encoder_self_attention_dir = "bottom_up"
       self.decoder_self_attention_dir = "top_down"
       self.decoder_cross_attention_dir = "top_down"
       self.train_embeddings = True

@@ -106,26 +106,26 @@ class LSTMSeq2Seq(object):
           tf.logging.info(decoder_inputs)
           lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=targets_length,
                                                             is_train=is_train)
+          outputs = lstm_decoder_output_dic['seq_outputs']
+          tf.logging.info("outputs")
+          tf.logging.info(outputs)
+
         elif target_length == 1:
-          #This means the task is classification, we need neither teacher forcing nor the autoregressive process.
+          # This means the task is classification.
           transpose_embedded_targets = tf.transpose(embedded_targets, [1, 0, 2])
           decoder_inputs = tf.map_fn(compute_decoding_step_input,
                                      transpose_embedded_targets)  # (Length, batch_size, hidden_dim)
-          decoder_inputs = tf.transpose(decoder_inputs, [1, 0, 2])
-          tf.logging.info('decoder_inputs')
-          tf.logging.info(decoder_inputs)
-          lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=targets_length,
-                                                            is_train=is_train)
+          outputs = tf.transpose(decoder_inputs, [1, 0, 2])
+
         else:
           #When generating a sequence,
           lstm_decoder_output_dic = self.lstm_decoder.predict(inputs_length=inputs_lengths,
                                                               target_length=target_length,
                                                               compute_decoding_step_input_fn=compute_decoding_step_input,
                                                               embedding_layer=self.output_embedding_layer,eos_id=self.eos_id, is_train=is_train)
-
-      outputs = lstm_decoder_output_dic['seq_outputs']
-      tf.logging.info("outputs")
-      tf.logging.info(outputs)
+          outputs = lstm_decoder_output_dic['seq_outputs']
+          tf.logging.info("outputs")
+          tf.logging.info(outputs)
 
       output_mask = tf.cast(tf.sequence_mask(lstm_decoder_output_dic['outputs_lengths'], tf.shape(outputs)[1]), dtype=tf.int64)
 

@@ -20,9 +20,11 @@ tf.app.flags.DEFINE_string("task_name", "arithmatic", "sst | arithmatic | identi
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer | lstm | bilstm")
+tf.app.flags.DEFINE_string("encoder_attention_dir", "top_down", "top_down | bottom_up")
 
 
-tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
+
+tf.app.flags.DEFINE_integer("hidden_dim", 300, "")
 tf.app.flags.DEFINE_integer("encoder_depth", 2, "")
 tf.app.flags.DEFINE_integer("decoder_depth", 1, "")
 
@@ -102,7 +104,7 @@ if __name__ == '__main__':
                                          hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
                                          vocab_size=hparams.vocab_size,
                                          label_smoothing=hparams.label_smoothing,
-                                         encoder_self_attention_dir="top_down",
+                                         encoder_self_attention_dir=hparams.encoder_attention_dir,
                                          decoder_self_attention_dir="top_down",
                                          decoder_cross_attention_dir="top_down",
                                          train_embeddings=hparams.train_embeddings

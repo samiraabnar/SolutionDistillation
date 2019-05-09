@@ -35,7 +35,9 @@ tf.app.flags.DEFINE_integer("teacher_pretraining_iters", 100, "")
 tf.app.flags.DEFINE_string("rep_loss_mode", 'dot_product', "representation loss type (squared,softmax_cross_ent,sigmoid_cross_ent")
 
 tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer | lstm | bilstm")
-tf.app.flags.DEFINE_string("encoder_attention_dir", "top_down", "top_down | bottom_up")
+tf.app.flags.DEFINE_string("teacher_encoder_attention_dir", "top_down", "top_down | bottom_up")
+tf.app.flags.DEFINE_string("student_encoder_attention_dir", "top_down", "top_down | bottom_up")
+
 
 tf.app.flags.DEFINE_integer("teacher_hidden_dim", 300, "")
 tf.app.flags.DEFINE_integer("teacher_encoder_depth", 2, "")

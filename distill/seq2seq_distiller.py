@@ -169,14 +169,7 @@ if __name__ == '__main__':
                                                       )
 
 
-  model_params = {"transformer": TransformerHparam,
-                  "utransformer": TransformerHparam,
-                  "lstm": LSTMHparam,
-                  "bilstm": LSTMHparam,
-                  "enc_transformer":TransformerHparam,
-                  "enc_utransformer": TransformerHparam,}
-
-  hparams.model_type ='_'.join([hparams.teacher_model,'to',hparams.student_model])
+  hparams.model_type = '_'.join([hparams.teacher_model,'to',hparams.student_model])
 
   if hparams.save_dir is None:
     hparams.save_dir = os.path.join(hparams.log_dir, hparams.task_name, '_'.join(
@@ -184,10 +177,10 @@ if __name__ == '__main__':
        'teacher_depth' + str(hparams.teacher_encoder_depth), 'std_hidden_dim' + str(hparams.student_hidden_dim),
        'teacher_hidden_dim' + str(hparams.teacher_hidden_dim), hparams.exp_name]))
 
-  student_model = Models[hparams.student_model](model_params[hparams.student_model],
+  student_model = Models[hparams.student_model](student_params,
                                 task=tasks[hparams.task_name],
                                 scope=hparams.student_model+"_student")
-  teacher_model = Models[hparams.teacher_model](model_params[hparams.teacher_model],
+  teacher_model = Models[hparams.teacher_model](teacher_params,
                                         task=tasks[hparams.task_name],
                                         scope=hparams.teacher_model+"_teacher")
 

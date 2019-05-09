@@ -18,14 +18,14 @@ class LSTMSeq2Seq(object):
                       output_dim=hparams.hidden_dim,
                       hidden_keep_prob=hparams.hidden_dropout_keep_prob,
                       attention_mechanism=self.hparams.attention_mechanism,
-                      depth=hparams.depth,
+                      depth=hparams.encoder_depth,
                       sent_rep_mode=self.hparams.sent_rep_mode,
                       scope=scope+"_encoder")
     self.lstm_decoder = model(hidden_dim=hparams.hidden_dim,
                               output_dim=hparams.hidden_dim,
                               hidden_keep_prob=hparams.hidden_dropout_keep_prob,
                               attention_mechanism=self.hparams.attention_mechanism,
-                              depth=hparams.depth,
+                              depth=hparams.decoder_depth,
                               sent_rep_mode=self.hparams.sent_rep_mode,
                               scope=scope+"_decoder")
 
@@ -210,7 +210,8 @@ if __name__ == '__main__':
       self.input_dropout_keep_prob = 0.5
       self.hidden_dropout_keep_prob = 0.5
       self.attention_mechanism = None
-      self.depth = 1
+      self.encoder_depth = 1
+      self.decoder_depth = 1
       self.sent_rep_mode = "all"
       self.scope = "lstm_seq2seq"
       self.train_embeddings=False

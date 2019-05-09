@@ -60,9 +60,9 @@ tf.app.flags.DEFINE_string('teacher_attention_mechanism', None, 'attention_mecha
 tf.app.flags.DEFINE_string('student_attention_mechanism', None, 'attention_mechanism')
 
 
-tf.app.flags.DEFINE_float("teacher_input_dropout_keep_probs", 0.75, "")
+tf.app.flags.DEFINE_float("teacher_input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("teacher_hidden_dropout_keep_prob", 0.5, "")
-tf.app.flags.DEFINE_float("student_input_dropout_keep_probs", 0.75, "")
+tf.app.flags.DEFINE_float("student_input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("student_hidden_dropout_keep_prob", 0.5, "")
 
 

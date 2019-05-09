@@ -51,10 +51,7 @@ class SST(object):
     self.pad = '<pad>'
     self.unk = '<unk>'
     self.pretrained = pretrained
-<<<<<<< HEAD
-=======
     self.fine_grained = True
->>>>>>> 5f043b4a78bbffe3adc186e8d92b9f87b3329532
     self.vocab = Vocab(path=self.vocab_path)
     self.load_vocab()
 
@@ -354,11 +351,7 @@ def build_sst():
 
 def build_full_sst():
   sst_prep = SST(data_path="data/sst/",
-<<<<<<< HEAD
-                 add_subtrees=True,
-=======
                  add_subtrees=False,
->>>>>>> 5f043b4a78bbffe3adc186e8d92b9f87b3329532
                  pretrained=True)
   sst_prep.load_data()
 
@@ -384,11 +377,7 @@ def build_sst_main():
 
 def test_seq2seq():
   sst_prep = SST(data_path="data/sst/",
-<<<<<<< HEAD
-                 add_subtrees=True,
-=======
                  add_subtrees=False,
->>>>>>> 5f043b4a78bbffe3adc186e8d92b9f87b3329532
                  pretrained=True)
 
   batch_size = 10

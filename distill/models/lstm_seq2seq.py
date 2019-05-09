@@ -107,6 +107,7 @@ class LSTMSeq2Seq(object):
           lstm_decoder_output_dic = self.lstm_decoder.apply(inputs=decoder_inputs, inputs_length=targets_length,
                                                             is_train=is_train)
           outputs = lstm_decoder_output_dic['seq_outputs']
+          outputs_lengths = lstm_decoder_output_dic['outputs_lengths']
           tf.logging.info("outputs")
           tf.logging.info(outputs)
 
@@ -124,10 +125,11 @@ class LSTMSeq2Seq(object):
                                                               compute_decoding_step_input_fn=compute_decoding_step_input,
                                                               embedding_layer=self.output_embedding_layer,eos_id=self.eos_id, is_train=is_train)
           outputs = lstm_decoder_output_dic['seq_outputs']
+          outputs_lengths = lstm_decoder_output_dic['outputs_lengths']
           tf.logging.info("outputs")
           tf.logging.info(outputs)
 
-      output_mask = tf.cast(tf.sequence_mask(lstm_decoder_output_dic['outputs_lengths'], tf.shape(outputs)[1]), dtype=tf.int64)
+      output_mask = tf.cast(tf.sequence_mask(outputs_lengths, tf.shape(outputs)[1]), dtype=tf.int64)
 
 
 

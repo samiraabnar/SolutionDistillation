@@ -49,7 +49,9 @@ tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_integer("number_of_heads", 4, "")
 tf.app.flags.DEFINE_integer("ff_filter_size", 512, "")
 tf.app.flags.DEFINE_float("initializer_gain", 1.0, "")
-tf.app.flags.DEFINE_float("label_smoothing", 0.1, "")
+tf.app.flags.DEFINE_float("teacher_label_smoothing", 0.1, "")
+tf.app.flags.DEFINE_float("student_label_smoothing", 0.1, "")
+
 tf.app.flags.DEFINE_boolean('teacher_train_embeddings', True, " False | True")
 tf.app.flags.DEFINE_boolean('student_train_embeddings', True, " False | True")
 

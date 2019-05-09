@@ -102,9 +102,9 @@ if __name__ == '__main__':
                                          hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
                                          vocab_size=hparams.vocab_size,
                                          label_smoothing=hparams.label_smoothing,
-                                         encoder_self_attention_dir = "top_down",
-                                         decoder_self_attention_dir = "top_down",
-                                         decoder_cross_attention_dir = "top_down",
+                                         encoder_self_attention_dir="top_down",
+                                         decoder_self_attention_dir="top_down",
+                                         decoder_cross_attention_dir="top_down",
                                          train_embeddings=hparams.train_embeddings
                                          )
 
@@ -146,7 +146,7 @@ if __name__ == '__main__':
                                               hparams.exp_name]))
 
   model = Models[hparams.model](model_params[hparams.model],
-                                task= tasks[hparams.task_name],
+                                task=tasks[hparams.task_name],
                                 scope=hparams.model)
 
   trainer = Seq2SeqTrainer(hparams, model, tasks[hparams.task_name])

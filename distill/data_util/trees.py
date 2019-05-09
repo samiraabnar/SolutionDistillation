@@ -32,6 +32,7 @@ class Tree:
     # get list of labels as obtained through a post-order traversal
     self.labels = get_labels(self.root)
     self.num_words = len(self.labels)
+    self.tree_string = treeString
 
   def parse(self, tokens, parent=None):
     assert tokens[0] == self.open, "Malformed tree"
@@ -73,6 +74,21 @@ class Tree:
     return words
 
 
+def get_subtrees(node, openChar='(', closeChar=')'):
+  if node.isLeaf:
+    return [Tree(' '.join([openChar, str(node.label), node.word, closeChar]))]
+
+  left_sub_trees = []
+  if node.left is not None:
+    left_sub_trees = get_subtrees(node.left)
+
+  write_sub_trees = []
+  if node.right is not None:
+    write_sub_trees = get_subtrees(node.right)
+
+  return [Tree(get_tree_string(node))] + left_sub_trees + write_sub_trees
+
+
 def leftTraverse(node, nodeFn=None, args=None):
   """
   Recursive function traverses tree
@@ -95,7 +111,23 @@ def getLeaves(node):
     return getLeaves(node.left) + getLeaves(node.right)
 
 
+def get_tree_string(node, openChar='(', closeChar=')'):
+  if node is None:
+    return ''
+  if node.isLeaf:
+    return ' '.join([openChar, str(node.label), node.word, closeChar])
+  else:
+    return ' '.join([openChar, str(node.label), get_tree_string(node.left), get_tree_string(node.right), closeChar])
+
 def get_labels(node):
   if node is None:
     return []
   return get_labels(node.left) + get_labels(node.right) + [node.label]
+
+
+if __name__ == '__main__':
+  tree = Tree('(3 (3 (2 If) (3 (2 you) (3 (2 sometimes) (2 (2 like) (3 (2 to) (3 (3 (2 go) (2 (2 to) (2 (2 the) (2 movies)))) (3 (2 to) (3 (2 have) (4 fun))))))))) (2 (2 ,) (2 (2 Wasabi) (3 (3 (2 is) (2 (2 a) (2 (3 good) (2 (2 place) (2 (2 to) (2 start)))))) (2 .)))))')
+  sub_trees = get_subtrees(tree.root)
+
+  for sub_tree in sub_trees:
+    print(sub_tree.tree_string)

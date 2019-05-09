@@ -4,7 +4,7 @@ import os
 import itertools
 from collections import OrderedDict
 from tqdm import tqdm
-from distill.data_util.trees import Tree, leftTraverse
+from distill.data_util.trees import Tree, leftTraverse, get_subtrees
 from distill.data_util.vocab import Vocab, PretrainedVocab
 
 
@@ -43,16 +43,61 @@ def get_word_embs(word_emb_path, word_emb_size, vocabulary_size=99002):
   return word_emb_matrix, word2id
 
 class SST(object):
-  def __init__(self, data_path, pretrained=True, pretrained_path="/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt", embedding_size=100):
+  def __init__(self, data_path, add_subtrees=False, pretrained=True):
     self.data_path = data_path
-
-    self.vocab_path = os.path.join(data_path, "pretrained_" if pretrained else '' +"vocab")
-
-    if pretrained:
-      self.vocab = PretrainedVocab(self.vocab_path, pretrained_path, embedding_size)
-    else:
-      self.vocab = Vocab(path=self.vocab_path)
+    self.add_subtrees = add_subtrees
+    self.vocab_path = os.path.join(data_path, "vocab")
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+    self.unk = '<unk>'
+    self.pretrained = pretrained
+    self.vocab = Vocab(path=self.vocab_path)
     self.load_vocab()
+
+
+  def get_pretrained_path(self,pretrained_model):
+    return os.path.join(self.data_path, "filtered_pretrained_"+pretrained_model)
+
+  def get_pretrained_mat(self, pretrained_model):
+    return np.load(self.get_pretrained_path(pretrained_model)+".npy")
+
+
+  def prepare_pretrained(self, full_pretrained_path, pretrained_model, embedding_dim):
+    filtered_path = self.get_pretrained_path(pretrained_model)
+    full_embeddings = {}
+    with open(full_pretrained_path, encoding='utf-8') as f:
+      for line in f:
+        line = line.strip()
+        if not line: continue
+        vocab, embed = line.split(u' ', 1)
+        if vocab in self.vocab.index_to_word:
+          full_embeddings[vocab] = embed
+
+    ordered_embeddings = []
+
+    init_tokens = {'<pad>': np.random.uniform(
+      -0.05, 0.05, embedding_dim).astype(np.float32),
+                   '<eos>':np.random.uniform(
+      -0.05, 0.05, embedding_dim).astype(np.float32),
+                   '<unk>':np.random.uniform(
+      -0.05, 0.05, embedding_dim).astype(np.float32)}
+
+    for token in self.vocab.index_to_word:
+      if token in full_embeddings:
+        ordered_embeddings.append(full_embeddings[token].astype(np.float32))
+      elif token in init_tokens:
+        ordered_embeddings.append(init_tokens[token])
+      else:
+        ordered_embeddings.append(init_tokens['<unk>'])
+
+
+    np.save(filtered_path, ordered_embeddings)
+
+  def decode(self, ids):
+    return [self.vocab.index_to_word[i] for i in ids]
+
+  def encode(self, tokens):
+    return [self.vocab.word_to_index[t] for t in tokens]
 
   def load_vocab(self):
     if self.vocab.exists():
@@ -67,8 +112,7 @@ class SST(object):
       self.vocab.build_vocab(all_words)
       self.vocab.save()
 
-  def get_examples(self, mode):
-    example_features = []
+  def generator(self, mode):
     for example_id, tree in enumerate(self.data[mode]):
       words = tree.get_words()
       node = tree.root
@@ -77,7 +121,7 @@ class SST(object):
       node_to_index = OrderedDict()
       for i in range(len(nodes_list)):
         node_to_index[nodes_list[i]] = i
-      example_features.append({
+      example = {
         'example_id': example_id,
         'is_leaf': [int(node.isLeaf) for node in nodes_list],
         'left_children': [0] + [node_to_index[node.left]+1 if
@@ -92,13 +136,13 @@ class SST(object):
         'labels': [node.label for node in nodes_list],
         'binary_labels': [0 if node.label <= 2 else 1 for node in nodes_list],
         'length': len(nodes_list),
-        'word_length': len(words),
-        'word_ids': [self.vocab.encode(word)[0] for word in words],
+        'word_length': len(words) + 1,
+        'word_ids': self.vocab.encode(words + [self.eos]),
         'root_label': [tree.root.label],
         'root_binary_label': [0 if tree.root.label <= 2 else 1]
-      })
+      }
 
-    return example_features
+      yield example
 
   def get_all_tf_features(self, example_feaures):
     """Convert our own representation of an example's features to Features class for TensorFlow dataset.
@@ -140,18 +184,52 @@ class SST(object):
       file = os.path.join(self.data_path, tag + ".txt")
       print("Loading %s trees.." % file)
       with open(file, 'r') as fid:
-        self.data[tag] = [Tree(line) for line in fid.readlines()]
+        self.data[tag] = []
+        for line in fid.readlines():
+          tree = Tree(line)
+          if self.add_subtrees and tag == 'train':
+            sub_trees = get_subtrees(tree.root)
+            self.data[tag].extend(sub_trees)
+          else:
+            self.data[tag].append(tree)
 
   def build_tfrecords(self,tf_feature_fn, mode, feature_type="tree"):
     tf_example_features = []
-    for example in self.get_examples(mode):
-      if example['root_label'] != 2:
-       tf_example_features.append(tf_feature_fn(example))
+    for example in self.generator(mode):
+      tf_example_features.append(tf_feature_fn(example))
 
-    with tf.python_io.TFRecordWriter(os.path.join(self.data_path,feature_type+"_" + mode + ".tfr")) as tf_record_writer:
+    if mode == 'train':
+      subtree_name_token = '_allsubs' if self.add_subtrees else ''
+    else:
+      subtree_name_token = ''
+
+    with tf.python_io.TFRecordWriter(os.path.join(self.data_path,feature_type+"_" + mode + subtree_name_token + ".tfr")) as tf_record_writer:
       for example in tqdm(tf_example_features):
         tf_record = tf.train.Example(features=example)
         tf_record_writer.write(tf_record.SerializeToString())
+
+  @property
+  def eos_id(self):
+    return self.vocab.word_to_index[self.eos]
+
+  @property
+  def vocab_length(self):
+    return len(self.vocab.index_to_word)
+
+  @property
+  def share_input_output_embeddings(self):
+    return False
+
+  @property
+  def target_length(self):
+    return 1
+
+  @property
+  def target_vocab(self, fine_grained=True):
+    if fine_grained:
+      return [0,1,2,3,4]
+    else:
+      return [0, 1]
 
   @staticmethod
   def parse_sst_tree_examples(example):
@@ -218,12 +296,36 @@ class SST(object):
            root_label, root_binary_label, word_length, word_ids
 
   @staticmethod
-  def get_padded_shapes():
-    return [], [], [None], [None], [None], [None], [None], [None], [], [], [], [None]
+  def get_full_padded_shapes():
+    return [None], [None], [], []
 
   @staticmethod
-  def get_tfrecord_path(datapath, mode, feature_type="full"):
-    return os.path.join(datapath, feature_type + "_" + mode + ".tfr")
+  def get_padded_shapes():
+    return [None], [None], [], []
+
+  def get_tfrecord_path(self, mode, feature_type="full", add_subtrees=True):
+
+    if mode == "train":
+      subtree_name_token = '_allsubs' if add_subtrees else ''
+    else:
+      subtree_name_token = ''
+    return os.path.join(self.data_path, feature_type + "_" + mode + subtree_name_token + ".tfr")
+
+  @staticmethod
+  def parse_examples(example):
+    """Load an example from TF record format."""
+    features = {"word_length": tf.FixedLenFeature([], tf.int64),
+                "root_label": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                "word_ids": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+                }
+    parsed_example = tf.parse_single_example(example, features=features)
+
+    inputs_lengths = parsed_example["word_length"]
+    targets_length = tf.ones(inputs_lengths.shape)
+    inputs = parsed_example["word_ids"]
+    labels = parsed_example["root_label"]
+
+    return inputs, labels, inputs_lengths, targets_length
 
 def build_sst():
 
@@ -235,9 +337,8 @@ def build_sst():
 
 def build_full_sst():
   sst_prep = SST(data_path="data/sst/",
-                 pretrained=True,
-                 pretrained_path="/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.100d.txt",
-                 embedding_size=100)
+                 add_subtrees=True,
+                 pretrained=True)
   sst_prep.load_data()
 
   sst_prep.build_tfrecords(sst_prep.get_all_tf_features, mode="train", feature_type="full")
@@ -260,11 +361,37 @@ def build_sst_main():
   with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
     print(sess.run(labels))
 
+def test_seq2seq():
+  sst_prep = SST(data_path="data/sst/",
+                 add_subtrees=True,
+                 pretrained=True)
+
+  batch_size = 10
+  dataset = tf.data.TFRecordDataset(sst_prep.get_tfrecord_path(mode="train", feature_type="full"))
+  dataset = dataset.map(sst_prep.parse_examples)
+  dataset = dataset.padded_batch(batch_size, padded_shapes=sst_prep.get_padded_shapes())
+  iterator = dataset.make_initializable_iterator()
+
+  example = iterator.get_next()
+  inputs, targets, inputs_length, targets_length = example
+
+  global_step = tf.train.get_or_create_global_step()
+  scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
+                                                      iterator.initializer))
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
+    inp, targ, tag_len = \
+      sess.run([inputs, targets, targets_length])
+    print(inp)
+    print(targ)
+    print(tag_len)
+
+
+
 def test():
   batch_size = 10
   dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train", feature_type="full"))
   dataset = dataset.map(SST.parse_full_sst_tree_examples)
-  dataset = dataset.padded_batch(batch_size, padded_shapes=SST.get_padded_shapes())
+  dataset = dataset.padded_batch(batch_size, padded_shapes=SST.get_full_padded_shapes())
   iterator = dataset.make_initializable_iterator()
 
   example = iterator.get_next()
@@ -294,4 +421,15 @@ def test():
 
 if __name__ == '__main__':
   build_full_sst()
-  test()
+  test_seq2seq()
+
+  sst_prep = SST(data_path="data/sst/",
+                 add_subtrees=True,
+                 pretrained=True)
+
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="train", feature_type="full", add_subtrees=True))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="test", feature_type="full", add_subtrees=True))))
+  print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="dev", feature_type="full", add_subtrees=True))))
+
+  sst_prep.prepare_pretrained('data/glove.840B.300d.txt','glove_300', 300)
+

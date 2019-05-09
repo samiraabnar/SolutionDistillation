@@ -29,9 +29,10 @@ class TreeLSTM(object):
       # Build the RNN layers
       with tf.name_scope("LSTM_Cell"):
         lstm = tf.contrib.rnn.BasicLSTMCell(self.hidden_dim)
-        lstm = tf.contrib.rnn.DropoutWrapper(lstm,
+        dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                              output_keep_prob=self.hidden_keep_prob)
         self.multi_lstm_cell = lstm
+        self.drop_multi_lstm_cell = dropout_lstm
 
       with tf.variable_scope('Projection'):
         self.U = tf.get_variable('U', [self.hidden_dim, self.output_dim])
@@ -183,13 +184,15 @@ class TreeLSTM(object):
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(length - 1, dtype=tf.int32), 1)], axis=-1)
 
       root_logits = tf.gather_nd(logits, root_indices)
+      sentence_reps = tf.gather_nd(outputs, root_indices)
 
       return {'outputs': outputs,
               'logits': logits,
               'root_logits': root_logits,
-              'root_indices': root_indices}
+              'root_indices': root_indices,
+              'sents_reps': sentence_reps}
 
-  def combine_children(self, left_tensor, right_tensor, c_state, h_state):
+  def combine_children(self, left_tensor, right_tensor, c_state, h_state, is_train=True):
     state = tf.nn.rnn_cell.LSTMStateTuple(c_state, h_state)
     output, state = self.multi_lstm_cell(
       inputs=tf.nn.relu(tf.matmul(tf.concat([left_tensor, right_tensor], axis=1), self.W1) + self.b1),

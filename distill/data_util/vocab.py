@@ -44,11 +44,11 @@ def get_word_embs(word_emb_path, word_emb_size, predefineds, vocabulary_size=100
 
 
 class Vocab(object):
-  def __init__(self, path):
+  def __init__(self, path, init_tokens=['<pad>', '<eos>','<unk>']):
     self.word_to_index = {}
     self.index_to_word = {}
-    self.unknown = '<unk>'
-    self.add_word(self.unknown, count=0)
+
+    self.build_vocab(init_tokens)
     self.path = path
 
   def add_word(self, word, count=1):
@@ -62,13 +62,13 @@ class Vocab(object):
       self.add_word(word)
     print('{} total unique words'.format(len(self.word_to_index)))
 
-  def encode(self, tokens):
+  def encode(self, tokens, unknown='<unk>'):
     if type(tokens) is str:
       tokens = [tokens]
     ids = []
     for token in tokens:
       if token not in self.word_to_index:
-        token = self.unknown
+        token = unknown
       ids.append(self.word_to_index[token])
 
     return ids
@@ -90,9 +90,12 @@ class Vocab(object):
     np.save(self.path, save_dic)
 
   def load(self):
-    loaded_dic = np.load(self.path + ".npy").item()
+    print("loading vocab from: ",self.path)
+    loaded_dic = np.load(self.path + ".npy", allow_pickle=True).item()
     self.word_to_index = loaded_dic['word_to_index']
     self.index_to_word = loaded_dic['index_to_word']
+
+
 
   def exists(self):
     return os.path.isfile(self.path + ".npy")
@@ -102,11 +105,20 @@ class Vocab(object):
 
 
 class PretrainedVocab(Vocab):
-  def __init__(self, path, pre_training_path, embedding_dim):
+  def __init__(self, path, pre_training_path, embedding_dim,
+               init_tokens={'pad':'<pad>', 'eos':'<eos>', 'unk':'<unk>'}):
     self.word_to_index = {}
     self.index_to_word = {}
-    self.unknown = '<unk>'
-    self.predefineds = {self.unknown: np.zeros(embedding_dim)}
+    self.unknown = init_tokens['unk']
+    self.pad = init_tokens['pad']
+    self.eos = init_tokens['eos']
+    self.predefineds = {self.unknown: np.random.uniform(
+      -0.05, 0.05, embedding_dim).astype(np.float32),
+                        self.pad:np.random.uniform(
+      -0.05, 0.05, embedding_dim).astype(np.float32),
+                        self.eos:np.random.uniform(
+      -0.05, 0.05, embedding_dim).astype(np.float32)}
+
     self.path = path
     self.pre_training_path = pre_training_path
     self.dimension = embedding_dim
@@ -127,13 +139,15 @@ class PretrainedVocab(Vocab):
     save_dic = {
       'word_to_index': self.word_to_index,
       'index_to_word': self.index_to_word,
+      'predefineds': self.predefineds
     }
     np.save(self.path, save_dic)
 
   def load(self):
-    loaded_dic = np.load(self.path + ".npy").item()
+    loaded_dic = np.load(self.path + ".npy", allow_pickle=True).item()
     self.word_to_index = loaded_dic['word_to_index']
     self.index_to_word = loaded_dic['index_to_word']
+    self.predefineds = loaded_dic['predefineds']
 
   def exists(self):
     return os.path.isfile(self.path + ".npy")

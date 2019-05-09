@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#SBATCH --job-name=distill_plan2bidi_logit_standard
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=5:00:00
+#SBATCH --partition=gpu_shared
+#SBATCH --gres=gpu:1
+
+module load eb
+module load Python/3.6.3-foss-2017b
+module load CUDA/9.0.176
+module load cuDNN/7.0.5-CUDA-9.0.176
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:/hpc/eb/Debian/cuDNN/7.0.5-CUDA-9.0.176/lib64:$LD_LIBRARY_PATH
+
+cd /home/samigpu/Codes/SolutionDistillation
+
+HEAD_DIR="/home/samigpu/Codes/SolutionDistillation"
+CODE_DIR=$HEAD_DIR/distill
+DATA_DIR=$HEAD_DIR/data
+LOGS_DIR=$HEAD_DIR/logs
+
+export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
+
+python $CODE_DIR/sst_rep_distiller.py --train_teacher=True --train_student=False --distill_rep=False --distill_logit=True --exp_name _standard_logits_trial_2

@@ -32,7 +32,7 @@ tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
 
 
-tf.app.flags.DEFINE_string("pretrained_embedding_path", "/Users/samiraabnar/Codes/Data/word_embeddings/glove.6B/glove.6B.300d.txt", "pretrained embedding path")
+tf.app.flags.DEFINE_string("pretrained_embedding_path", "data/sst/filtered_glove.txt", "pretrained embedding path")
 tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 
 
@@ -60,8 +60,20 @@ class SSTTrainer(object):
     loss_l2 = tf.add_n([tf.nn.l2_loss(p) for p in params]) * self.config.l2_rate
     loss += loss_l2
 
-    # Learning rate is linear from step 0 to self.FLAGS.lr_warmup. Then it decays as 1/sqrt(timestep).
-    opt = tf.train.AdamOptimizer(learning_rate=0.001)
+    base_learning_rate = 0.001
+    start_learning_rate = 0.0001
+    warmup_steps = 1000
+
+    slope = (base_learning_rate - start_learning_rate) / warmup_steps
+    warmup_rate = slope * tf.cast(self.global_step,
+                                  tf.float32) + start_learning_rate
+
+    decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
+                                                     1000, 0.96, staircase=True)
+    learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
+                             decay_learning_rate)
+
+    opt = tf.train.AdamOptimizer(learning_rate=learning_rate)#(learning_rate=0.001)
     grads_and_vars = opt.compute_gradients(loss, params)
     gradients, variables = zip(*grads_and_vars)
     self.gradient_norm = tf.global_norm(gradients)

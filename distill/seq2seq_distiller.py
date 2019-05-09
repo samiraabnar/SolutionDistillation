@@ -180,8 +180,8 @@ if __name__ == '__main__':
 
   if hparams.save_dir is None:
     hparams.save_dir = os.path.join(hparams.log_dir, hparams.task_name, '_'.join(
-      [hparams.rep_loss_mode, hparams.model_type, 'std_depth' + str(hparams.student_depth),
-       'teacher_depth' + str(hparams.teacher_depth), 'std_hidden_dim' + str(hparams.student_hidden_dim),
+      [hparams.rep_loss_mode, hparams.model_type, 'std_depth' + str(hparams.student_encoder_depth),
+       'teacher_depth' + str(hparams.teacher_encoder_depth), 'std_hidden_dim' + str(hparams.student_hidden_dim),
        'teacher_hidden_dim' + str(hparams.teacher_hidden_dim), hparams.exp_name]))
 
   student_model = Models[hparams.student_model](model_params[hparams.student_model],

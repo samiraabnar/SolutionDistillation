@@ -9,7 +9,8 @@ from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
 from distill.data_util.prep_wsj_parsing import ParseWSJ
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
-from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer
+from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer, \
+  EncodingUniversalTransformer
 from distill.pipelines.seq2seq import Seq2SeqTrainer
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -57,6 +58,9 @@ tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 
 hparams = tf.app.flags.FLAGS
 
+
+
+
 if __name__ == '__main__':
 
 
@@ -64,7 +68,8 @@ if __name__ == '__main__':
             "bilstm": BidiLSTMSeq2Seq,
             "transformer": Transformer,
             "utransformer": UniversalTransformer,
-            "enc_transformer": EncodingTransformer}
+            "enc_transformer": EncodingTransformer,
+            "enc_utransformer": EncodingUniversalTransformer}
 
 
   tasks = {'identity': AlgorithmicIdentityDecimal40('data/alg'),
@@ -128,7 +133,8 @@ if __name__ == '__main__':
                   "utransformer": transformer_params,
                   "lstm": lstm_params,
                   "bilstm": lstm_params,
-                  "enc_transformer":transformer_params}
+                  "enc_transformer":transformer_params,
+                  "enc_utransformer": transformer_params,}
 
 
   if hparams.save_dir is None:

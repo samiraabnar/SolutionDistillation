@@ -694,6 +694,55 @@ class EncodingTransformer(object):
 
       return tf.expand_dims(outputs, axis=1)
 
+
+class EncodingUniversalTransformer(EncodingTransformer):
+  """Transformer model for sequence to sequence data.
+  Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
+  The Transformer model consists of an encoder and decoder. The input is an int
+  sequence (or a batch of sequences). The encoder produces a continous
+  representation, and the decoder uses the encoder output to generate
+  probabilities for the output sequence.
+  """
+
+  def __init__(self, hparams, task, scope="EncUTransformer"):
+    self.hparams = hparams
+    self.vocab_size = hparams.vocab_size
+    self.hidden_dim = hparams.hidden_dim
+    self.number_of_heads = hparams.number_of_heads
+    self.encoder_depth = hparams.encoder_depth
+    self.ff_filter_size = hparams.ff_filter_size
+    self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.initializer_gain = hparams.initializer_gain
+    self.scope = scope
+    self.task = task
+    self.eos_id = self.task.eos_id
+
+  def create_vars(self, reuse=False,pretrained_embeddings=None):
+    self.initializer = tf.variance_scaling_initializer(
+      self.initializer_gain, mode="fan_avg", distribution="uniform")
+
+    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
+
+      self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
+                                                       method="matmul" if tpu else "gather", scope="InputEmbed",
+                                                          pretrained_embeddings=pretrained_embeddings)
+      self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
+      if not self.task.share_input_output_embeddings:
+        self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
+                                       embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")
+        self.output_embedding_layer.create_vars()
+      else:
+        self.output_embedding_layer = self.input_embedding_layer
+
+      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
+                                              self.dropout_keep_prob,
+                                              self_attention_dir=self.hparams.encoder_self_attention_dir,
+                                              scope="UniversalTransformerEncoder")
+
+
+      self.encoder_stack.create_vars(reuse=tf.AUTO_REUSE)
+
+
 if __name__ == '__main__':
   from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40
 

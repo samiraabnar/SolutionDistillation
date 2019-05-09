@@ -37,9 +37,12 @@ tf.app.flags.DEFINE_string("rep_loss_mode", 'dot_product', "representation loss 
 tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer | lstm | bilstm")
 tf.app.flags.DEFINE_string("encoder_attention_dir", "top_down", "top_down | bottom_up")
 
-tf.app.flags.DEFINE_string("hidden_dims", 300, "")
-tf.app.flags.DEFINE_integer("encoder_depths", 2, "")
-tf.app.flags.DEFINE_integer("decoder_depths", 1, "")
+tf.app.flags.DEFINE_integer("teacher_hidden_dim", 300, "")
+tf.app.flags.DEFINE_integer("teacher_encoder_depth", 2, "")
+tf.app.flags.DEFINE_integer("teacher_decoder_depth", 1, "")
+tf.app.flags.DEFINE_integer("student_hidden_dim", 300, "")
+tf.app.flags.DEFINE_integer("student_encoder_depth", 2, "")
+tf.app.flags.DEFINE_integer("student_decoder_depth", 1, "")
 
 tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")

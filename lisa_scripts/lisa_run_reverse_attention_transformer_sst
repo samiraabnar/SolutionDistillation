@@ -25,6 +25,7 @@ export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 python $CODE_DIR/seq2seq_trainer.py --model=transformer --batch_size=64 --hidden_dim=300  \
 --input_dropout_keep_prob=0.5 --hidden_dropout_keep_prob=0.8 --learning_rate=0.001 \
+--train_embeddings=False  --decoder_depth=1 --encoder_depth=3 \
 --decay_learning_rate=True --l2_rate=0.001 \
 --encoder_attention_dir="bottom_up" \
 --task_name=sst --exp_name=_bottomup_attention_run0_

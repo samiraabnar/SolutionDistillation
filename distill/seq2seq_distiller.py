@@ -34,8 +34,6 @@ tf.app.flags.DEFINE_boolean("pretrain_teacher", True, "")
 tf.app.flags.DEFINE_integer("teacher_pretraining_iters", 100, "")
 tf.app.flags.DEFINE_string("rep_loss_mode", 'dot_product', "representation loss type (squared,softmax_cross_ent,sigmoid_cross_ent")
 
-tf.app.flags.DEFINE_string("exp_name", "trial", "")
-tf.app.flags.DEFINE_string("task_name", "sst", "sst | arithmatic | identity_binary| identity | addition| multiplication | sort | reverse")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer | lstm | bilstm")

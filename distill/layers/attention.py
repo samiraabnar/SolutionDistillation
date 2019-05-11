@@ -153,6 +153,8 @@ class MultiHeadScaledDotProductAttention(object):
       tf.transpose(y_presence, [0,2,1]), axis=1), [tf.shape(logits)[0]/tf.shape(y_presence)[0],tf.shape(logits)[1],1,1])
 
     attention_weights = tf.nn.softmax(logits, name="attention_weights")
+    tf.summmary.image("attention_weights", attention_weights,)
+
 
     if is_train:
       attention_weights = tf.nn.dropout(attention_weights, self.attention_dropout_keepprob)
@@ -189,7 +191,7 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
       x = tf.transpose(x, [0, 2, 1, 3])  # --> [batch, length, num_heads, depth]
       return tf.reshape(x, [batch_size, length, self.hidden_dim])
 
-  def apply(self, x, y, bias, x_presence=None, y_presence=None, presence_temp=1, is_train=True, cache=None):
+  def apply(self, x, y, bias, x_presence=None, y_presence=None, presence_temp=1, sparse_attention=True, is_train=True, cache=None):
     """Apply attention mechanism to x and y.
     Args:
       x: a tensor with shape [batch_size, length_x, hidden_size]
@@ -250,9 +252,11 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
     # Pay less attention to the less present nodes.
     logits *= tf.tile(tf.expand_dims(x_presence,1), [1,tf.shape(logits)[1],1,1])
 
+
     # Normalize attention for keys(y nodes) for each head.
     assignment_probs = tf.nn.softmax(logits, axis=-1, name="attention_weights")
     assignment_weights = assignment_probs * tf.tile(tf.expand_dims(y_presence, axis=1), [1,tf.shape(logits)[1],1,1])
+    tf.summmary.image("assignment_weights", assignment_weights)
 
     # Aggregated attention of all heads:
     # [batch_size, num_heads, length y, length x] -> [batch_size, length y, length x]

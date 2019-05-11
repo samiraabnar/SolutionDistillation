@@ -106,7 +106,8 @@ if __name__ == '__main__':
                                          encoder_self_attention_dir=hparams.encoder_attention_dir,
                                          decoder_self_attention_dir="top_down",
                                          decoder_cross_attention_dir="top_down",
-                                         train_embeddings=hparams.train_embeddings
+                                         train_embeddings=hparams.train_embeddings,
+                                         learning_rate=hparams.learning_rate
                                          )
 
   lstm_params = LSTMHparam(input_dim=hparams.input_dim,

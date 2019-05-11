@@ -295,9 +295,9 @@ class Seq2SeqDistiller(Distiller):
     self.trainer = trainer
 
   def apply_model(self, model, train_examples, dev_examples, test_examples, name_tag=""):
-    train_output_dic = model.apply(train_examples, is_train=True)
-    dev_output_dic = model.apply(dev_examples, is_train=False)
-    test_output_dic = model.apply(test_examples, is_train=False)
+    train_output_dic = model.apply(train_examples, target_length=self.trainer.task.target_length, is_train=True)
+    dev_output_dic = model.apply(dev_examples, target_length=self.trainer.task.target_length, is_train=False)
+    test_output_dic = model.apply(test_examples, target_length=self.trainer.task.target_length, is_train=False)
 
     train_loss = self.trainer.compute_loss(train_output_dic['logits'],
                                                    train_output_dic['targets'])

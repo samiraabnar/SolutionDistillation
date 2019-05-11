@@ -161,7 +161,7 @@ if __name__ == '__main__':
                                                       encoder_self_attention_dir=hparams.teacher_encoder_attention_dir,
                                                       decoder_self_attention_dir="top_down",
                                                       decoder_cross_attention_dir="top_down",
-                                                      train_embeddings=hparams.teacher_train_embeddings,
+                                                      train_embeddings=hparams.student_train_embeddings,
                                                       attention_mechanism=None,
                                                       sent_rep_mode=hparams.teacher_sent_rep_mode,
                                                       embedding_dim=300,

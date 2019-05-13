@@ -56,8 +56,6 @@ class Trainer(object):
   def train(self):
 
     update_op, scaffold, train_output_dic, _, _ = self.build_train_graph()
-
-
     with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold,
                                            config=tf.ConfigProto(
                                              allow_soft_placement=True, log_device_placement=True)

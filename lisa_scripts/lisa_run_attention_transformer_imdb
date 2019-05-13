@@ -7,6 +7,7 @@
 #SBATCH --time=5:00:00
 #SBATCH --partition=gpu_shared
 #SBATCH --gres=gpu:1
+#SBATCH --mem=60G
 
 module load eb
 module load Python/3.6.3-foss-2017b

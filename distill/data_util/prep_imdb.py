@@ -35,7 +35,6 @@ class IMDB(object):
   def prepare_pretrained(self, full_pretrained_path, pretrained_model, embedding_dim):
     filtered_path = self.get_pretrained_path(pretrained_model)
     full_embeddings = {}
-    print(self.index_to_word)
 
     with open(full_pretrained_path, encoding='utf-8') as f:
       for line in f:
@@ -43,7 +42,6 @@ class IMDB(object):
         if not line: continue
         vocab, embed = line.split(u' ', 1)
         if vocab.lower() in self.word_to_index:
-          print(vocab)
           full_embeddings[vocab] = np.asarray(embed.split(), dtype=np.float32)
 
     ordered_embeddings = []

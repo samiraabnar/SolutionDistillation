@@ -152,9 +152,9 @@ class MultiHeadScaledDotProductAttention(object):
     logits *= tf.tile(tf.expand_dims(
       tf.transpose(y_presence, [0,2,1]), axis=1), [tf.shape(logits)[0]/tf.shape(y_presence)[0],tf.shape(logits)[1],1,1])
 
-    attention_weights = tf.nn.softmax(logits, name="attention_weights")
-    tf.summary.image("attention_weights", tf.expand_dims(attention_weights[0],axis=-1))
 
+    with tf.name_scope("attention_weights"):
+      attention_weights = tf.nn.softmax(logits, name="attention_weights")
 
     if is_train:
       attention_weights = tf.nn.dropout(attention_weights, self.attention_dropout_keepprob)
@@ -254,15 +254,19 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
 
 
     # Normalize attention for keys(y nodes) for each head.
-    assignment_probs = tf.nn.softmax(logits, axis=-1, name="attention_weights")
-    assignment_weights = assignment_probs * tf.tile(tf.expand_dims(y_presence, axis=1), [1,tf.shape(logits)[1],1,1])
-    tf.summary.image("assignment_weights", tf.expand_dims(assignment_weights[0], axis=-1))
+    with tf.name_scope("assignment_probs"):
+      assignment_probs = tf.nn.softmax(logits, axis=-1, name="attention_weights")
+    with tf.name_scope("assignment_weights"):
+      assignment_weights = assignment_probs * tf.tile(tf.expand_dims(y_presence, axis=1),
+                                                      [1,tf.shape(logits)[1],1,1])
 
     # Aggregated attention of all heads:
     # [batch_size, num_heads, length y, length x] -> [batch_size, length y, length x]
     aggregated_assignment_weights = tf.reduce_sum(assignment_weights, axis=1)
     # [batch_size, length y, length x] -> [batch_size, length x]
-    new_x_presence = tf.nn.softmax(tf.reduce_sum(aggregated_assignment_weights, axis=-2) ,axis=-1)
+
+    with tf.name_scope("presence_probs"):
+      new_x_presence = tf.nn.softmax(tf.reduce_sum(aggregated_assignment_weights, axis=-2) ,axis=-1)
     tf.logging.info('aggregated_assignment_weights')
     tf.logging.info(aggregated_assignment_weights)
 

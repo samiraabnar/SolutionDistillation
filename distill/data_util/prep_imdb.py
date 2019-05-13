@@ -60,7 +60,6 @@ class IMDB(object):
     for key in np.arange(len(self.index_to_word)):
       token = self.index_to_word[key]
       if token in full_embeddings:
-        print("in glove ", token)
         ordered_embeddings.append(full_embeddings[token].astype(np.float32))
       elif token in init_tokens:
         ordered_embeddings.append(init_tokens[token])

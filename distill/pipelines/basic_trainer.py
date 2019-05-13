@@ -56,11 +56,14 @@ class Trainer(object):
   def train(self):
     update_op, scaffold, train_output_dic, _, _ = self.build_train_graph()
 
-    with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
-      tf.logging.info("start training:")
-      tf.logging.info(self.config.training_iterations)
-      for i in np.arange(self.config.training_iterations):
-        sess.run(update_op)
+    strategy = tf.distribute.MirroredStrategy()
+
+    with strategy.scope():
+      with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
+        tf.logging.info("start training:")
+        tf.logging.info(self.config.training_iterations)
+        for i in np.arange(self.config.training_iterations):
+          sess.run(update_op)
 
 
 

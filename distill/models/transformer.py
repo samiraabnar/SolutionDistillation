@@ -634,10 +634,6 @@ class EncodingTransformer(object):
       tf.logging.info('encoder outputs')
       tf.logging.info(encoder_outputs)
 
-
-      if encoder_outputs_presence is not None:
-        tf.summary.image("encoder_output_presence", encoder_outputs_presence)
-
       outputs = self.decode(encoder_outputs=encoder_outputs,
                             encoder_outputs_presence=encoder_outputs_presence,
                             is_train=is_train)

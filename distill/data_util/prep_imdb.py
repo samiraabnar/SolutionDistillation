@@ -82,7 +82,7 @@ class IMDB(object):
     word2index["<pad>"] = 0
     word2index["<start>"] = 1
     word2index["<unk>"] = 2  # unknown
-    word2index["<unused>"] = 3
+    word2index["<eos>"] = 3
 
     index2word = dict([(value, key) for (key, value) in word2index.items()])
 
@@ -132,7 +132,7 @@ class IMDB(object):
 
   @property
   def eos_id(self):
-    return self.vocab.word_to_index[self.eos]
+    return self.word_to_index[self.eos]
 
   @property
   def vocab_length(self):

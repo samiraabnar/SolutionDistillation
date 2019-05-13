@@ -5,6 +5,7 @@ from distill.common.hparams import TransformerHparam, LSTMHparam
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicAdditionDecimal40, \
   AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem, AlgorithmicIdentityBinary40
 from distill.data_util.prep_arithmatic import Arithmatic
+from distill.data_util.prep_imdb import IMDB
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
 from distill.data_util.prep_wsj_parsing import ParseWSJ
@@ -85,7 +86,9 @@ if __name__ == '__main__':
                  add_subtrees=False,
                  pretrained=True),
            'ptb_lm': PTB('data/ptb'),
-           'wsj_parse': ParseWSJ('data/wsj')}
+           'wsj_parse': ParseWSJ('data/wsj'),
+           'imdb': IMDB(data_path="data/imdb",
+                        pretrained=True)}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)

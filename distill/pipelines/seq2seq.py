@@ -69,15 +69,13 @@ class Seq2SeqTrainer(Trainer):
       pretrained_embeddings = self.task.get_pretrained_mat("glove_300")
     self.model.create_vars(reuse=False,pretrained_embeddings=pretrained_embeddings)
 
-    with tf.device('/gpu:0'):
-      train_output_dic = self.model.apply(train_examples, target_length=self.task.target_length, is_train=True)
-      train_loss = self.compute_loss(train_output_dic['logits'], train_output_dic['targets'])
+    train_output_dic = self.model.apply(train_examples, target_length=self.task.target_length, is_train=True)
+    dev_output_dic = self.model.apply(dev_examples, target_length=self.task.target_length, is_train=False)
+    test_output_dic = self.model.apply(test_examples, target_length=self.task.target_length, is_train=False)
 
-    with tf.device('/gpu:1'):
-      dev_output_dic = self.model.apply(dev_examples, target_length=self.task.target_length, is_train=False)
-      test_output_dic = self.model.apply(test_examples, target_length=self.task.target_length, is_train=False)
-      dev_loss = self.compute_loss(dev_output_dic['logits'], dev_output_dic['targets'])
-      test_loss = self.compute_loss(test_output_dic['logits'], test_output_dic['targets'])
+    train_loss = self.compute_loss(train_output_dic['logits'], train_output_dic['targets'])
+    dev_loss = self.compute_loss(dev_output_dic['logits'], dev_output_dic['targets'])
+    test_loss = self.compute_loss(test_output_dic['logits'], test_output_dic['targets'])
 
     train_output_dic['loss'] = train_loss
     tf.summary.scalar("loss", train_loss, family="train")
@@ -115,16 +113,15 @@ class Seq2SeqTrainer(Trainer):
     self.add_metric_summaries(dev_output_dic['logits'], dev_output_dic['targets'], "dev")
     self.add_metric_summaries(test_output_dic['logits'], test_output_dic['targets'], "test")
 
+
     tf.summary.scalar("number_of_training_params",
                       tf.reduce_sum([tf.reduce_prod(v.get_shape().as_list()) for v in tf.trainable_variables()]))
-
-    with tf.device('/gpu:0'):
-       update_op, learning_rate = self.get_train_op(train_loss, train_output_dic["trainable_vars"],
-                                                   start_learning_rate=0.0005,
-                                                   base_learning_rate=self.model.hparams.learning_rate,
-                                                   warmup_steps=self.model.hparams.learning_rate_warmup_steps,
-                                                   clip_gradient_norm=self.model.hparams.clip_grad_norm
-                                                   )
+    update_op, learning_rate = self.get_train_op(train_loss, train_output_dic["trainable_vars"],
+                                                 start_learning_rate=0.0005,
+                                                 base_learning_rate=self.model.hparams.learning_rate,
+                                                 warmup_steps=self.model.hparams.learning_rate_warmup_steps,
+                                                 clip_gradient_norm=self.model.hparams.clip_grad_norm
+                                                 )
     tf.summary.scalar("learning_rate", learning_rate, family="train")
 
     scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),

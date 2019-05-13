@@ -149,9 +149,11 @@ if __name__ == '__main__':
                                               'batch_size'+str(model_params[hparams.model].batch_size),
                                               hparams.exp_name]))
 
-  model = Models[hparams.model](model_params[hparams.model],
-                                task=tasks[hparams.task_name],
-                                scope=hparams.model)
+  strategy = tf.distribute.MirroredStrategy()
+  with strategy.scope():
+    model = Models[hparams.model](model_params[hparams.model],
+                                  task=tasks[hparams.task_name],
+                                  scope=hparams.model)
 
-  trainer = Seq2SeqTrainer(hparams, model, tasks[hparams.task_name])
-  trainer.train()
+    trainer = Seq2SeqTrainer(hparams, model, tasks[hparams.task_name])
+    trainer.train()

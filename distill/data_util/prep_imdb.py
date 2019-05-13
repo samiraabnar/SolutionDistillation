@@ -67,7 +67,7 @@ class IMDB(object):
         ordered_embeddings.append(init_tokens['<unk>'])
 
 
-    np.save(filtered_path, ordered_embeddings)
+    np.save(filtered_path, ordered_embeddings, allow_pickle=True)
 
   def decode(self, ids):
     return [self.index_to_word[i] for i in ids]
@@ -89,7 +89,7 @@ class IMDB(object):
     index2word = dict([(value, key) for (key, value) in word2index.items()])
 
     vocab_dict = {'word_to_id': word2index, 'id_to_word': index2word}
-    np.save(os.path.join(self.data_path, "vocab"), vocab_dict)
+    np.save(os.path.join(self.data_path, "vocab"), vocab_dict, allow_pickle=True)
 
   def load_vocab(self):
     vocab_path = os.path.join(self.data_path, 'vocab.npy')
@@ -177,7 +177,7 @@ class IMDB(object):
 
 
 if __name__ == '__main__':
-  imdb = IMDB('../../data/imdb')
+  imdb = IMDB('data/imdb')
   imdb.load_data()
 
 
@@ -212,4 +212,4 @@ if __name__ == '__main__':
     print(tag_len)
     print(imdb.decode(inp[0]))
 
-  imdb.prepare_pretrained('../../data/glove.840B.300d.txt', 'glove_300', 300)
+  imdb.prepare_pretrained('data/glove.840B.300d.txt', 'glove_300', 300)

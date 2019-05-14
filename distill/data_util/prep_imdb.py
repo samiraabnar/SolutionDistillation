@@ -20,14 +20,12 @@ class IMDB(object):
 
   def load_data(self):
     self.imdb = keras.datasets.imdb
-    max_length = self.max_length
-    if max_length is None:
-      max_length = -1
+
     (train_data, train_labels), (test_data, test_labels) = self.imdb.load_data(num_words=10000)
     self.data = {}
-    self.data['train'] = list(zip(train_data[:,:max_length], train_labels))
-    self.data['dev'] =  list(zip(test_data[:12000,:max_length], test_labels[:12000]))
-    self.data['test'] =  list(zip(test_data[12000:,:max_length], test_labels[12000:]))
+    self.data['train'] = list(zip(train_data, train_labels))
+    self.data['dev'] =  list(zip(test_data[:12000], test_labels[:12000]))
+    self.data['test'] =  list(zip(test_data[12000:], test_labels[12000:]))
 
   def get_pretrained_path(self,pretrained_model):
     return os.path.join(self.data_path, "filtered_pretrained_"+pretrained_model)
@@ -114,12 +112,17 @@ class IMDB(object):
     return features
 
   def generator(self, mode):
+    max_length = self.max_length
+    if max_length is None:
+      max_length = -1
+
     for example_id , (example) in enumerate(self.data[mode]):
+      input_tokens = example[0][:max_length]
       example = {
         'example_id': example_id,
         'labels': [example[1]],
-        'lengths': len(example[0]),
-        'token_ids': example[0],
+        'lengths': len(input_tokens),
+        'token_ids': input_tokens,
       }
 
       yield example

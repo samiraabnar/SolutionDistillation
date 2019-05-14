@@ -24,16 +24,17 @@ LOGS_DIR=$HEAD_DIR/logs
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
-python $CODE_DIR/seq2seq_trainer.py --model=enc_transformer --batch_size=64 --hidden_dim=300  \
+python $CODE_DIR/seq2seq_trainer.py --model=enc_transformer --batch_size=16 --hidden_dim=300  \
 --train_embeddings=False --decoder_depth=1 --encoder_depth=3 \
 --input_dropout_keep_prob=0.8 --hidden_dropout_keep_prob=0.1 --learning_rate=0.001 \
 --decay_learning_rate=True --l2_rate=0.001 \
 --encoder_attention_dir="top_down" \
---task_name=imdb --exp_name=_topdown_attention_run0_ &
+--task_name=imdb --exp_name=_topdown_attention_run1_ &
 
-python $CODE_DIR/seq2seq_trainer.py --model=enc_transformer --batch_size=64 --hidden_dim=300  \
---train_embeddings=False --decoder_depth=1 --encoder_depth=3 \
+
+python $CODE_DIR/seq2seq_trainer.py --model=enc_transformer --batch_size=16 --hidden_dim=300  \
+--train_embeddings=True --decoder_depth=1 --encoder_depth=3 \
 --input_dropout_keep_prob=0.8 --hidden_dropout_keep_prob=0.1 --learning_rate=0.001 \
 --decay_learning_rate=True --l2_rate=0.001 \
 --encoder_attention_dir="top_down" \
---task_name=arithmatic --exp_name=_topdown_attention_run0_
+--task_name=imdb --exp_name=_topdown_attention_trainembs_run1_

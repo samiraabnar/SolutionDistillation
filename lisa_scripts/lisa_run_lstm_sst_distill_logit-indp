@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=lstm_sst
+#SBATCH --job-name=distill
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
@@ -37,4 +37,4 @@ python $CODE_DIR/seq2seq_distiller.py \
 --teacher_encoder_attention_dir="top_down" \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=True \
---task_name=sst --exp_name=_logit-indp0_
+--task_name=sst --exp_name=_logit-indp1_

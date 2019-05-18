@@ -115,6 +115,9 @@ class SST(object):
 
       # Get list of tokenized sentences
       train_sents = [t.get_words() for t in self.data["train"]]
+      train_sents += [t.get_words() for t in self.data["dev"]]
+      train_sents += [t.get_words() for t in self.data["test"]]
+
       # Get list of all words
       all_words = list(map(str.lower,list(itertools.chain.from_iterable(train_sents))))
       self.vocab.build_vocab(all_words)
@@ -142,13 +145,13 @@ class SST(object):
         'node_word_ids': [0] + [self.vocab.encode(node.word)[0] if
                           node.word else 0
                           for node in nodes_list],
-        'labels': [node.label for node in nodes_list],
-        'binary_labels': [0 if node.label <= 2 else 1 for node in nodes_list],
+        'labels': [node.label+1 for node in nodes_list],
+        'binary_labels': [1 if node.label <= 2 else 2 for node in nodes_list],
         'length': len(nodes_list),
         'word_length': len(words) + 1,
         'word_ids': self.vocab.encode(words + [self.eos]),
-        'root_label': [tree.root.label],
-        'root_binary_label': [0 if tree.root.label <= 2 else 1]
+        'root_label': [tree.root.label+1],
+        'root_binary_label': [1 if tree.root.label <= 2 else 2]
       }
 
       yield example
@@ -241,9 +244,9 @@ class SST(object):
   @property
   def target_vocab(self):
     if self.fine_grained:
-      return [0,1,2,3,4]
+      return [0,1,2,3,4,5]
     else:
-      return [0, 1]
+      return [0,1, 2]
 
   @staticmethod
   def parse_sst_tree_examples(example):

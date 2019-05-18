@@ -30,9 +30,9 @@ def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='dot_
   elif mode == 'softmax_cross_ent':
     rsa_score = tf.reduce_mean(sigmoid_cross_entropy_rsa(student_rsm, teacher_rsm))
   elif mode == 'dot_product':
-    rsa_score = tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
   else:
-    rsa_score = tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
 
   return rsa_score
 

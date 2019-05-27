@@ -12,15 +12,21 @@ def minus(x, y):
 def plus(x, y):
   return x + y
 
-
-def binary_math_tree_generator(length, numbers, ops):
+def binary_math_tree_generator(length, numbers, ops, max_value):
   if length == 1:
     return str(np.random.choice(numbers))
   else:
     left_length = np.random.randint(1,length)
     right_length = length - left_length
-    left_child = binary_math_tree_generator(left_length, numbers, ops)
-    right_child = binary_math_tree_generator(right_length, numbers, ops)
+    left_child_val = -1
+    while left_child_val < 0 or left_child_val > max_value:
+      left_child = binary_math_tree_generator(left_length, numbers, ops, max_value)
+      left_child_val = eval(left_child)
+
+    right_child_val = -1
+    while right_child_val < 0 or right_child_val > max_value:
+      right_child = binary_math_tree_generator(right_length, numbers, ops, max_value)
+      right_child_val = eval(right_child)
 
     op = np.random.choice(ops)
 
@@ -141,15 +147,15 @@ class Arithmatic(object):
 
   @property
   def num_of_symbols(self):
-      return 101 #0-100
+      return 1001 #0-100
 
   @property
   def train_length(self):
-    return 40
+    return 20
 
   @property
   def dev_length(self):
-    return 120
+    return 80
 
   def get_tf_example(self, example):
     """Convert our own representation of an example's features to Features class for TensorFlow dataset.
@@ -165,13 +171,24 @@ class Arithmatic(object):
 
   def generator(self, number_of_examples, mode="train"):
     max_length = self.train_length if mode == "train" else self.dev_length
+    budgets = {}
+    max_value = self.num_of_symbols - 1
+    max_output_freq = (number_of_examples / self.num_of_symbols) * 2
+    print("max_output_freq: ", max_output_freq)
     for i in tqdm(np.arange(number_of_examples)):
-      length = np.random.randint(max_length) + 1
       exp = -1
       exp_str = '-1'
       while exp < 0 or exp >= self.num_of_symbols:
-        exp_str = binary_math_tree_generator(length, np.arange(1,self.num_of_symbols), ['-', '+', '*'])
+        length = np.random.randint(max_length) + 1
+        exp_str = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols/10)), ['-','-', '+', '+', '+', '*'], max_value)
         exp = eval(exp_str)
+        if exp not in budgets:
+          budgets[exp] = 1
+        budgets[exp] += 1
+        if budgets[exp] >= max_output_freq:
+          exp = -1
+          exp_str = '-1'
+
       exp_tokens = exp_str.split() + [self.eos]
       output = [str(exp)]
       example = {'inputs': self.encode(exp_tokens),
@@ -220,6 +237,6 @@ class Arithmatic(object):
 if __name__ == '__main__':
   bin_iden = Arithmatic('data/arithmatic')
 
-  bin_iden.build_tfrecords(1000, 'train')
-  bin_iden.build_tfrecords(200, 'dev')
-  bin_iden.build_tfrecords(200, 'test')
+  bin_iden.build_tfrecords(10000, 'train')
+  bin_iden.build_tfrecords(2000, 'dev')
+  bin_iden.build_tfrecords(2000, 'test')

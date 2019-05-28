@@ -67,7 +67,7 @@ class BiLSTM(object):
 
       # concatenation output from forward and backward layers.
       fw_outputs, bw_outputs = tf.unstack(lstm_outputs)
-      lstm_outputs = tf.concat([fw_outputs, bw_outputs], axis=-1)
+      lstm_outputs = fw_outputs + bw_outputs
 
       tf.logging.info("after concat")
       tf.logging.info(lstm_outputs)
@@ -87,8 +87,10 @@ class BiLSTM(object):
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1) / tf.expand_dims(tf.cast(inputs_length, tf.float32), -1)
       elif self.sent_rep_mode == "final":
         fw_sentence_reps = tf.gather_nd(fw_outputs, root_indices)
-        bw_sentence_reps = bw_outputs[:,-1]
-        sentence_reps = tf.concat([fw_sentence_reps,bw_sentence_reps], axis=-1)
+        bw_sentence_reps = bw_outputs[:,0]
+        sentence_reps = fw_sentence_reps + bw_sentence_reps
+        tf.logging.info("sentence reps")
+        tf.logging.info(sentence_reps)
       else:
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
 
@@ -146,7 +148,7 @@ class BiLSTM(object):
           tf.logging.info(state)
           # concatenation output from forward and backward layers.
           fw_outputs, bw_outputs = tf.unstack(lstm_outs)
-          lstm_prediction = tf.concat([fw_outputs[:,-1,:], bw_outputs[:,-1,:]], axis=-1)
+          lstm_prediction = tf.reduce_sum([fw_outputs[:,-1,:], bw_outputs[:,-1,:]], axis=-1)
           tf.logging.info('lstm_prediction')
           tf.logging.info(lstm_prediction)
           all_outputs = all_outputs.write(step, lstm_prediction)

@@ -81,13 +81,18 @@ class LSTMSeq2Seq(object):
             if is_train:
               aggregiated_encoder_output = tf.nn.dropout(aggregiated_encoder_output,
                                                          self.hparams.hidden_dropout_keep_prob)
-            return aggregiated_encoder_output
+            return tf.expand_dims(aggregiated_encoder_output, axis=0)
         else:
           def compute_decoding_step_input(current_decoder_input):
             aggregiated_encoder_output = lstm_encoder_output_dic['sents_reps']
+            tf.logging.info("sents_reps in the func:")
+            tf.logging.info(aggregiated_encoder_output)
             if is_train:
               aggregiated_encoder_output = tf.nn.dropout(aggregiated_encoder_output,
                                                          self.hparams.hidden_dropout_keep_prob)
+
+            tf.logging.info("sents_reps in the func after dropo:")
+            tf.logging.info(aggregiated_encoder_output)
 
             return aggregiated_encoder_output
 
@@ -110,14 +115,18 @@ class LSTMSeq2Seq(object):
           outputs_lengths = lstm_decoder_output_dic['outputs_lengths']
           tf.logging.info("outputs")
           tf.logging.info(outputs)
-
         elif target_length == 1:
           # This means the task is classification.
+          tf.logging.info("embedded_targets")
+          tf.logging.info(embedded_targets)
           transpose_embedded_targets = tf.transpose(embedded_targets, [1, 0, 2])
           decoder_inputs = tf.map_fn(compute_decoding_step_input,
                                      transpose_embedded_targets)  # (Length, batch_size, hidden_dim)
           outputs = tf.transpose(decoder_inputs, [1, 0, 2])
           outputs_lengths = tf.ones(tf.shape(outputs)[0])
+          tf.logging.info("When target length is 1!")
+          tf.logging.info("outputs")
+          tf.logging.info(outputs)
         else:
           #When generating a sequence,
           lstm_decoder_output_dic = self.lstm_decoder.predict(inputs_length=inputs_lengths,
@@ -126,8 +135,9 @@ class LSTMSeq2Seq(object):
                                                               embedding_layer=self.output_embedding_layer,eos_id=self.eos_id, is_train=is_train)
           outputs = lstm_decoder_output_dic['seq_outputs']
           outputs_lengths = lstm_decoder_output_dic['outputs_lengths']
-          tf.logging.info("outputs")
-          tf.logging.info(outputs)
+
+      tf.logging.info("outputs")
+      tf.logging.info(outputs)
 
       output_mask = tf.cast(tf.sequence_mask(outputs_lengths, tf.shape(outputs)[1]), dtype=tf.int64)
 
@@ -214,13 +224,13 @@ if __name__ == '__main__':
       self.attention_mechanism = None
       self.encoder_depth = 1
       self.decoder_depth = 1
-      self.sent_rep_mode = "all"
+      self.sent_rep_mode = "final"
       self.scope = "lstm_seq2seq"
       self.train_embeddings=False
 
 
   print("eos id: ", bin_iden.eos_id)
-  model = LSTMSeq2Seq(Config(), task=bin_iden, scope="Seq2SeqLSTM")
+  model = BidiLSTMSeq2Seq(Config(), task=bin_iden, scope="Seq2SeqLSTM")
   model.create_vars(reuse=False)
 
   input, target,_,_= example

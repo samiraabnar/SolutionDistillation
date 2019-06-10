@@ -33,7 +33,7 @@ def _pad_tensors_to_same_length(x, y):
     y = tf.pad(y, [[0, 0], [0, max_length - y_length]])
     return x, y
 
-def cross_entropy_loss(logits, labels, smoothing, vocab_size):
+def cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_temperature=1.0):
   """Calculate cross entropy loss while ignoring padding.
   Args:
     logits: Tensor of size [batch_size, length_logits, vocab_size]
@@ -53,7 +53,7 @@ def cross_entropy_loss(logits, labels, smoothing, vocab_size):
           tf.cast(labels, tf.int32),
           depth=vocab_size,
           on_value=confidence,
-          off_value=low_confidence)
+          off_value=low_confidence) / softmax_temperature
       xentropy = tf.nn.softmax_cross_entropy_with_logits_v2(
           logits=logits, labels=soft_targets)
 
@@ -67,7 +67,7 @@ def cross_entropy_loss(logits, labels, smoothing, vocab_size):
     weights = tf.to_float(tf.ones_like(labels))
     return xentropy, weights
 
-def padded_cross_entropy_loss(logits, labels, smoothing, vocab_size):
+def padded_cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_temperature=1.0):
   """Calculate cross entropy loss while ignoring padding.
   Args:
     logits: Tensor of size [batch_size, length_logits, vocab_size]
@@ -89,7 +89,7 @@ def padded_cross_entropy_loss(logits, labels, smoothing, vocab_size):
           tf.cast(labels, tf.int32),
           depth=vocab_size,
           on_value=confidence,
-          off_value=low_confidence)
+          off_value=low_confidence) / softmax_temperature
       xentropy = tf.nn.softmax_cross_entropy_with_logits_v2(
           logits=logits, labels=soft_targets)
 

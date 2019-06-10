@@ -32,13 +32,15 @@ class Seq2SeqTrainer(Trainer):
 
     return train_iterator, dev_iterator, test_iterator
 
-  def compute_loss(self,logits, targets):
+  def compute_loss(self,logits, targets, softmax_temperature=1.0):
     if self.task.target_length == 1:
       xentropy, weights = cross_entropy_loss(
-        logits, targets, self.model.hparams.label_smoothing, self.config.output_dim)
+        logits, targets, self.model.hparams.label_smoothing, self.config.output_dim,
+        softmax_temperature=softmax_temperature)
     else:
       xentropy, weights = padded_cross_entropy_loss(
-        logits, targets, self.model.hparams.label_smoothing, self.config.output_dim)
+        logits, targets, self.model.hparams.label_smoothing, self.config.output_dim,
+        softmax_temperature=softmax_temperature)
 
     loss = tf.reduce_sum(xentropy) / tf.reduce_sum(weights)
 

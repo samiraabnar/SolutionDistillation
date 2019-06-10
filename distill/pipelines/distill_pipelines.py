@@ -300,11 +300,11 @@ class Seq2SeqDistiller(Distiller):
     test_output_dic = model.apply(test_examples, target_length=self.trainer.task.target_length, is_train=False)
 
     train_loss = self.trainer.compute_loss(train_output_dic['logits'],
-                                                   train_output_dic['targets'])
+                                                   train_output_dic['targets'], softmax_temperature=1.0)
     dev_loss = self.trainer.compute_loss(dev_output_dic['logits'],
-                                                 dev_output_dic['targets'])
+                                                 dev_output_dic['targets'], softmax_temperature=1.0)
     test_loss = self.trainer.compute_loss(test_output_dic['logits'],
-                                                  test_output_dic['targets'])
+                                                  test_output_dic['targets'], softmax_temperature=1.0)
 
     train_output_dic['loss'] = train_loss
     tf.summary.scalar("loss", train_loss, family=name_tag+"_train")

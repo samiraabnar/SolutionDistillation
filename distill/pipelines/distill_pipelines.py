@@ -318,7 +318,7 @@ class Seq2SeqDistiller(Distiller):
     self.trainer.add_metric_summaries(test_output_dic['logits'],
                                       test_output_dic['targets'], name_tag+"_test")
 
-    return train_output_dic
+    return train_output_dic, dev_output_dic, test_output_dic
 
   def build_train_graph(self):
 
@@ -332,18 +332,33 @@ class Seq2SeqDistiller(Distiller):
     self.teacher.create_vars(reuse=False)
     self.student.create_vars(reuse=False)
 
-    teacher_train_output_dic = self.apply_model(self.teacher, train_examples, dev_examples, test_examples, "teacher")
-    student_train_output_dic = self.apply_model(self.student, train_examples, dev_examples, test_examples, "student")
+    teacher_train_output_dic, teacher_dev_output_dic, teacher_test_output_dic = \
+    self.apply_model(self.teacher, train_examples, dev_examples, test_examples, "teacher")
+    student_train_output_dic, student_dev_output_dic, student_test_output_dic = \
+    self.apply_model(self.student, train_examples, dev_examples, test_examples, "student")
 
     distill_rep_loss = get_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
                                                      teacher_train_output_dic['outputs'],
                                                      mode=self.config.rep_loss_mode)
     distill_logit_loss = get_logit_distill_loss(student_train_output_dic['logits'],
                                                      teacher_train_output_dic['logits'])
+                                                     
+
+                                                     
+                                              
 
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_train")
     tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_train")
-
+    
+    
+    dev_distill_rep_loss = get_single_state_rsa_distill_loss(student_dev_output_dic['outputs'],
+                                                     teacher_dev_output_dic['outputs'],
+                                                     mode=self.config.rep_loss_mode)
+    dev_distill_logit_loss = get_logit_distill_loss(student_dev_output_dic['logits'],
+                                                     teacher_dev_output_dic['logits'])
+                                                     
+    tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_dev")
+    tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_dev")
 
     teacher_update_op, teacher_learning_rate = self.get_train_op(teacher_train_output_dic['loss'],
                                                          teacher_train_output_dic["trainable_vars"],

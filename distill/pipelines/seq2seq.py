@@ -36,11 +36,11 @@ class Seq2SeqTrainer(Trainer):
     if self.task.target_length == 1:
       xentropy, weights = cross_entropy_loss(
         logits, targets, self.model.hparams.label_smoothing, self.config.output_dim,
-        softmax_temperature=softmax_temperature)
+        softmax_temperature=softmax_temperature, gaussian_noise=self.task.if_label_gaussian_noise, gaussian_noise_scale=self.task.guassian_noise_scale)
     else:
       xentropy, weights = padded_cross_entropy_loss(
         logits, targets, self.model.hparams.label_smoothing, self.config.output_dim,
-        softmax_temperature=softmax_temperature)
+        softmax_temperature=softmax_temperature,  gaussian_noise=self.task.if_label_gaussian_noise, gaussian_noise_scale=self.task.guassian_noise_scale)
 
     loss = tf.reduce_sum(xentropy) / tf.reduce_sum(weights)
 

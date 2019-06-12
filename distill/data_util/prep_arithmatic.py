@@ -110,6 +110,14 @@ class Arithmatic(object):
 
 
   @property
+  def if_label_gaussian_noise(self):
+    return True
+  
+  @property
+  def guassian_noise_scale(self):
+    return 0.9
+    
+  @property
   def share_input_output_embeddings(self):
     return True
 

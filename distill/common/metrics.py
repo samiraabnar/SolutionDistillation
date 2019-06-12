@@ -19,7 +19,7 @@ import numpy as np
 import six
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
-
+import tensorflow_probability as tfp
 
 def _pad_tensors_to_same_length(x, y):
   """Pad x and y so that the results have the same length (second dimension)."""
@@ -33,7 +33,7 @@ def _pad_tensors_to_same_length(x, y):
     y = tf.pad(y, [[0, 0], [0, max_length - y_length]])
     return x, y
 
-def cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_temperature=1.0):
+def cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_temperature=1.0, gaussian_noise=False, gaussian_noise_scale=0.9):
   """Calculate cross entropy loss while ignoring padding.
   Args:
     logits: Tensor of size [batch_size, length_logits, vocab_size]
@@ -49,11 +49,27 @@ def cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_temperatur
     with tf.name_scope("smoothing_cross_entropy", values=[logits, labels]):
       confidence = 1.0 - smoothing
       low_confidence = (1.0 - confidence) / tf.to_float(vocab_size - 1)
-      soft_targets = tf.one_hot(
-          tf.cast(labels, tf.int32),
-          depth=vocab_size,
-          on_value=confidence,
-          off_value=low_confidence) / softmax_temperature
+      
+      
+      if gaussian_noise:
+        tfd = tfp.distributions
+        labels = tf.cast(labels, tf.float32)
+        normal_dist = tfp.distributions.Normal(loc=labels, scale=confidence)
+        # Locations to evaluate the probability distributions.
+        soft_targets = normal_dist.prob(
+            tf.cast(tf.range(vocab_size), tf.float32)[:, None, None])
+        # Reordering soft_targets from [vocab_size, batch_size, ?] to match
+        # logits: [batch_size, ?, vocab_size]
+        soft_targets = tf.transpose(soft_targets, perm=[1, 2, 0])
+      else:
+        soft_targets = tf.one_hot(
+            tf.cast(labels, tf.int32),
+            depth=vocab_size,
+            on_value=confidence,
+            off_value=low_confidence)  / softmax_temperature
+              
+      
+      
       xentropy = tf.nn.softmax_cross_entropy_with_logits_v2(
           logits=logits, labels=soft_targets)
 
@@ -67,7 +83,7 @@ def cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_temperatur
     weights = tf.to_float(tf.ones_like(labels))
     return xentropy, weights
 
-def padded_cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_temperature=1.0):
+def padded_cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_temperature=1.0, gaussian_noise=False, gaussian_noise_scale=0.1):
   """Calculate cross entropy loss while ignoring padding.
   Args:
     logits: Tensor of size [batch_size, length_logits, vocab_size]
@@ -92,6 +108,7 @@ def padded_cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_tem
           off_value=low_confidence) / softmax_temperature
       xentropy = tf.nn.softmax_cross_entropy_with_logits_v2(
           logits=logits, labels=soft_targets)
+
 
       # Calculate the best (lowest) possible value of cross entropy, and
       # subtract from the cross entropy loss.

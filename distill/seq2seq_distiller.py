@@ -5,7 +5,7 @@ import os
 
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40, \
   AlgorithmicAdditionDecimal40, AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
-from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple
+from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, ArithmaticSimpleCurriculumLength
 from distill.data_util.prep_imdb import IMDB
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
@@ -109,6 +109,8 @@ if __name__ == '__main__':
            'arithmatic': Arithmatic('data/arithmatic'),
            'arithmatic_simple': ArithmaticSimple('data/arithmatic_simple'),
            'arithmatic_samelength': ArithmaticSameLength('data/arithmatic_samelength'),
+           'arithmatic_simple_curriculum_length': ArithmaticSimpleCurriculumLength('data/arithmatic_simple_curriculum_length'),
+           'arithmatic_simple_samelength': ArithmaticSameLength('data/arithmatic_samelength'),
 
            'sst': SST(data_path="data/sst/",
                  add_subtrees=False,

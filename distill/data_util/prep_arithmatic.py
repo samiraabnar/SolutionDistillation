@@ -326,15 +326,138 @@ class ArithmaticSimple(ArithmaticSameLength):
 
       yield example
 
+class ArithmaticSimpleSameLength(ArithmaticSimple):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple'
+    self.vocab_path = os.path.join(self.data_path,'vocab')
 
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+
+    self.load_vocab()
+    self.pretrained = False
+
+  def load_vocab(self):
+    self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
+
+    print(self.id2word)
+    self.word2id = {}
+    for i in np.arange(len(self.id2word)):
+      print(i, self.id2word[i])
+      self.word2id[self.id2word[i]] = i
+
+  @property
+  def eos_id(self):
+    return self.word2id[self.eos]
+
+  @property
+  def num_of_symbols(self):
+      return 1001 #0-100
+
+  @property
+  def train_length(self):
+    return 40
+
+  @property
+  def dev_length(self):
+    return 40
+  
+class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple'
+    self.vocab_path = os.path.join(self.data_path,'vocab')
+
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+
+    self.load_vocab()
+    self.pretrained = False
+
+  def load_vocab(self):
+    self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
+
+    print(self.id2word)
+    self.word2id = {}
+    for i in np.arange(len(self.id2word)):
+      print(i, self.id2word[i])
+      self.word2id[self.id2word[i]] = i
+
+  @property
+  def eos_id(self):
+    return self.word2id[self.eos]
+
+  @property
+  def num_of_symbols(self):
+      return 1001 #0-100
+
+  @property
+  def train_length(self):
+    return 40
+
+  @property
+  def dev_length(self):
+    return 40
+    
+  @property
+  def forbidden_lengths(self):
+      return [5,10,15,20,29,30,31]
+      
+      
+  def generator(self, number_of_examples, mode="train"):
+    max_length = self.train_length if mode == "train" else self.dev_length
+    budgets = {}
+    max_value = self.num_of_symbols - 1
+    max_output_freq = (number_of_examples / self.num_of_symbols) * 2
+    print("max_output_freq: ", max_output_freq)
+    for i in tqdm(np.arange(number_of_examples)):
+      exp = -1
+      exp_str = '-1'
+      while exp < 0 or exp >= self.num_of_symbols:
+        possible_lengths = list(set(np.arange(1,max_length+1)) - set(self.forbidden_lengths))
+        length_index = np.random.randint(len(possible_lengths))
+        length = possible_lengths[length_index]
+        exp_str = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols/10)), ['-','+'], max_value)
+        exp = eval(exp_str)
+        if exp not in budgets:
+          budgets[exp] = 1
+        budgets[exp] += 1
+        if budgets[exp] >= max_output_freq:
+          exp = -1
+          exp_str = '-1'
+
+      exp_tokens = exp_str.split() + [self.eos]
+      output = [str(exp)]
+      example = {'inputs': self.encode(exp_tokens),
+                 'targets':self.encode(output),
+                 'inputs_length': len(exp_tokens),
+                 'targets_length': len(output)}
+
+      yield example
+
+    
 if __name__ == '__main__':
-  bin_iden = ArithmaticSimple('data/arithmatic_simple')
-
-  bin_iden.build_tfrecords(10000, 'train')
-  bin_iden.build_tfrecords(2000, 'dev')
-  bin_iden.build_tfrecords(2000, 'test')
-
-  bin_iden = ArithmaticSameLength('data/arithmatic_samelength')
+#  bin_iden = ArithmaticSimple('data/arithmatic_simple')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
+#
+#  bin_iden = ArithmaticSameLength('data/arithmatic_samelength')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
+#  
+#  
+#  bin_iden = ArithmaticSimpleSameLength('data/arithmatic_simple_samelength')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
+  
+  bin_iden = ArithmaticSimpleCurriculumLength('data/arithmatic_simple_curriculum_length')
 
   bin_iden.build_tfrecords(10000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')

@@ -155,7 +155,7 @@ class Arithmatic(object):
 
   @property
   def num_of_symbols(self):
-      return 1001 #0-100
+      return 202 #0-100
 
   @property
   def train_length(self):
@@ -287,7 +287,7 @@ class ArithmaticSimple(ArithmaticSameLength):
 
   @property
   def num_of_symbols(self):
-      return 1001 #0-100
+      return 202 #0-100
 
   @property
   def train_length(self):
@@ -353,7 +353,7 @@ class ArithmaticSimpleSameLength(ArithmaticSimple):
 
   @property
   def num_of_symbols(self):
-      return 1001 #0-100
+      return 202 #0-100
 
   @property
   def train_length(self):
@@ -390,7 +390,7 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
 
   @property
   def num_of_symbols(self):
-      return 1001 #0-100
+      return 202 #0-100
 
   @property
   def train_length(self):

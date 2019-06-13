@@ -438,24 +438,24 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
 
     
 if __name__ == '__main__':
-#  bin_iden = ArithmaticSimple('data/arithmatic_simple')
-#
-#  bin_iden.build_tfrecords(10000, 'train')
-#  bin_iden.build_tfrecords(2000, 'dev')
-#  bin_iden.build_tfrecords(2000, 'test')
-#
-#  bin_iden = ArithmaticSameLength('data/arithmatic_samelength')
-#
-#  bin_iden.build_tfrecords(10000, 'train')
-#  bin_iden.build_tfrecords(2000, 'dev')
-#  bin_iden.build_tfrecords(2000, 'test')
-#  
-#  
-#  bin_iden = ArithmaticSimpleSameLength('data/arithmatic_simple_samelength')
-#
-#  bin_iden.build_tfrecords(10000, 'train')
-#  bin_iden.build_tfrecords(2000, 'dev')
-#  bin_iden.build_tfrecords(2000, 'test')
+  bin_iden = ArithmaticSimple('data/arithmatic_simple')
+
+  bin_iden.build_tfrecords(10000, 'train')
+  bin_iden.build_tfrecords(2000, 'dev')
+  bin_iden.build_tfrecords(2000, 'test')
+
+  bin_iden = ArithmaticSameLength('data/arithmatic_samelength')
+
+  bin_iden.build_tfrecords(10000, 'train')
+  bin_iden.build_tfrecords(2000, 'dev')
+  bin_iden.build_tfrecords(2000, 'test')
+  
+  
+  bin_iden = ArithmaticSimpleSameLength('data/arithmatic_simple_samelength')
+
+  bin_iden.build_tfrecords(10000, 'train')
+  bin_iden.build_tfrecords(2000, 'dev')
+  bin_iden.build_tfrecords(2000, 'test')
   
   bin_iden = ArithmaticSimpleCurriculumLength('data/arithmatic_simple_curriculum_length')
 

@@ -111,7 +111,7 @@ class Arithmatic(object):
 
   @property
   def if_label_gaussian_noise(self):
-    return True
+    return False
   
   @property
   def guassian_noise_scale(self):
@@ -140,7 +140,7 @@ class Arithmatic(object):
 
   @property
   def target_vocab(self):
-    return self.id2word
+    return self.id2word #list(np.arange(self.num_of_symbols))
 
   def decode(self, ids):
     return [self.id2word[i] for i in ids]
@@ -188,7 +188,7 @@ class Arithmatic(object):
       exp_str = '-1'
       while exp < 0 or exp >= self.num_of_symbols:
         length = np.random.randint(max_length) + 1
-        exp_str = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols/10)), ['-','-', '+', '+', '+', '*'], max_value)
+        exp_str = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','-', '+', '+', '+', '*'], max_value)
         exp = eval(exp_str)
         if exp not in budgets:
           budgets[exp] = 1
@@ -198,9 +198,9 @@ class Arithmatic(object):
           exp_str = '-1'
 
       exp_tokens = exp_str.split() + [self.eos]
-      output = [str(exp)]
+      output = [exp]
       example = {'inputs': self.encode(exp_tokens),
-                 'targets':self.encode(output),
+                 'targets':output,
                  'inputs_length': len(exp_tokens),
                  'targets_length': len(output)}
 
@@ -308,7 +308,7 @@ class ArithmaticSimple(ArithmaticSameLength):
       exp_str = '-1'
       while exp < 0 or exp >= self.num_of_symbols:
         length = np.random.randint(max_length) + 1
-        exp_str = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols/10)), ['-','+'], max_value)
+        exp_str = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','+'], max_value)
         exp = eval(exp_str)
         if exp not in budgets:
           budgets[exp] = 1
@@ -318,9 +318,9 @@ class ArithmaticSimple(ArithmaticSameLength):
           exp_str = '-1'
 
       exp_tokens = exp_str.split() + [self.eos]
-      output = [str(exp)]
+      output = [exp]
       example = {'inputs': self.encode(exp_tokens),
-                 'targets':self.encode(output),
+                 'targets':output,
                  'inputs_length': len(exp_tokens),
                  'targets_length': len(output)}
 
@@ -428,36 +428,80 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
           exp_str = '-1'
 
       exp_tokens = exp_str.split() + [self.eos]
-      output = [str(exp)]
+      output = [exp]
       example = {'inputs': self.encode(exp_tokens),
-                 'targets':self.encode(output),
+                 'targets':output,
                  'inputs_length': len(exp_tokens),
                  'targets_length': len(output)}
 
       yield example
 
+
+class ArithmaticSimpleSameLength10(ArithmaticSimple):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple'
+    self.vocab_path = os.path.join(self.data_path,'vocab')
+
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+
+    self.load_vocab()
+    self.pretrained = False
+
+  def load_vocab(self):
+    self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
+
+    print(self.id2word)
+    self.word2id = {}
+    for i in np.arange(len(self.id2word)):
+      print(i, self.id2word[i])
+      self.word2id[self.id2word[i]] = i
+
+  @property
+  def eos_id(self):
+    return self.word2id[self.eos]
+
+  @property
+  def num_of_symbols(self):
+      return 10 #0-100
+
+  @property
+  def train_length(self):
+    return 20
+
+  @property
+  def dev_length(self):
+    return 20
+
     
 if __name__ == '__main__':
-  bin_iden = ArithmaticSimple('data/arithmatic_simple')
+#  bin_iden = ArithmaticSimple('data/arithmatic_simple')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
+#
+#  bin_iden = ArithmaticSameLength('data/arithmatic_samelength')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
+#  
+#  
+#  bin_iden = ArithmaticSimpleSameLength('data/arithmatic_simple_samelength')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
+#  
+#  bin_iden = ArithmaticSimpleCurriculumLength('data/arithmatic_simple_curriculum_length')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden.build_tfrecords(10000, 'train')
-  bin_iden.build_tfrecords(2000, 'dev')
-  bin_iden.build_tfrecords(2000, 'test')
-
-  bin_iden = ArithmaticSameLength('data/arithmatic_samelength')
-
-  bin_iden.build_tfrecords(10000, 'train')
-  bin_iden.build_tfrecords(2000, 'dev')
-  bin_iden.build_tfrecords(2000, 'test')
-  
-  
-  bin_iden = ArithmaticSimpleSameLength('data/arithmatic_simple_samelength')
-
-  bin_iden.build_tfrecords(10000, 'train')
-  bin_iden.build_tfrecords(2000, 'dev')
-  bin_iden.build_tfrecords(2000, 'test')
-  
-  bin_iden = ArithmaticSimpleCurriculumLength('data/arithmatic_simple_curriculum_length')
+  bin_iden = ArithmaticSimpleSameLength10('data/arithmatic_simple_samelength10')
 
   bin_iden.build_tfrecords(10000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')

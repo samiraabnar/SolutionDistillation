@@ -187,8 +187,7 @@ class LSTMSeq2Seq(object):
       return logits, cache
 
     return symbols_to_logits_fn
-
-
+    
 
 class BidiLSTMSeq2Seq(LSTMSeq2Seq):
   def __init__(self, hparams, task, scope="Seq2SeqBiLSTM"):

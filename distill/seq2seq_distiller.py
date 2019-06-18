@@ -5,7 +5,7 @@ import os
 
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40, \
   AlgorithmicAdditionDecimal40, AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
-from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, ArithmaticSimpleCurriculumLength
+from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, ArithmaticSimpleCurriculumLength, ArithmaticSimpleSameLength10
 from distill.data_util.prep_imdb import IMDB
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
@@ -53,14 +53,14 @@ tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_integer("number_of_heads", 4, "")
 tf.app.flags.DEFINE_integer("ff_filter_size", 512, "")
 tf.app.flags.DEFINE_float("initializer_gain", 1.0, "")
-tf.app.flags.DEFINE_float("teacher_label_smoothing", 0.1, "")
-tf.app.flags.DEFINE_float("student_label_smoothing", 0.1, "")
+tf.app.flags.DEFINE_float("teacher_label_smoothing", 0.0001, "")
+tf.app.flags.DEFINE_float("student_label_smoothing", 0.0001, "")
 
 tf.app.flags.DEFINE_boolean('teacher_train_embeddings', True, " False | True")
 tf.app.flags.DEFINE_boolean('student_train_embeddings', True, " False | True")
 
-tf.app.flags.DEFINE_string('teacher_sent_rep_mode', "final", "none | final | all")
-tf.app.flags.DEFINE_string('student_sent_rep_mode', "final", "none | final | all")
+tf.app.flags.DEFINE_string('teacher_sent_rep_mode', "all", "none | final | all")
+tf.app.flags.DEFINE_string('student_sent_rep_mode', "all", "none | final | all")
 
 tf.app.flags.DEFINE_string('teacher_attention_mechanism', None, 'attention_mechanism')
 tf.app.flags.DEFINE_string('student_attention_mechanism', None, 'attention_mechanism')
@@ -76,7 +76,7 @@ tf.app.flags.DEFINE_float("teacher_learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("student_learning_rate", 0.001, "")
 
 tf.app.flags.DEFINE_boolean("decay_learning_rate", True, "True | False")
-tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.000, "")
 
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
@@ -111,6 +111,7 @@ if __name__ == '__main__':
            'arithmatic_samelength': ArithmaticSameLength('data/arithmatic_samelength'),
            'arithmatic_simple_curriculum_length': ArithmaticSimpleCurriculumLength('data/arithmatic_simple_curriculum_length'),
            'arithmatic_simple_samelength': ArithmaticSameLength('data/arithmatic_samelength'),
+           'arithmatic_simple_samelength10': ArithmaticSimpleSameLength10('data/arithmatic_simple_samelength10'),
 
            'sst': SST(data_path="data/sst/",
                  add_subtrees=False,
@@ -150,7 +151,7 @@ if __name__ == '__main__':
                                                       train_embeddings=hparams.teacher_train_embeddings,
                                                       attention_mechanism=None,
                                                       sent_rep_mode=hparams.teacher_sent_rep_mode,
-                                                      embedding_dim=300,
+                                                      embedding_dim=hparams.embedding_dim,
                                                       learning_rate=hparams.teacher_learning_rate
                                                       )
 
@@ -173,7 +174,7 @@ if __name__ == '__main__':
                                                       train_embeddings=hparams.student_train_embeddings,
                                                       attention_mechanism=None,
                                                       sent_rep_mode=hparams.teacher_sent_rep_mode,
-                                                      embedding_dim=300,
+                                                      embedding_dim=hparams.embedding_dim,
                                                       learning_rate=hparams.teacher_learning_rate
                                                       )
 

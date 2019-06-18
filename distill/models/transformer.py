@@ -585,7 +585,7 @@ class EncodingTransformer(object):
 
   def create_vars(self, reuse=False,pretrained_embeddings=None):
     self.initializer = tf.variance_scaling_initializer(
-      self.initializer_gain, mode="fan_avg", distribution="uniform")
+      self.initializer_gain, mode="fan_avg", distribution="normal")
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
 
@@ -599,6 +599,19 @@ class EncodingTransformer(object):
         self.output_embedding_layer.create_vars()
       else:
         self.output_embedding_layer = self.input_embedding_layer
+    
+#      self.output_projections_layer = tf.layers.Dense(len(self.task.target_vocab),
+#                                                      activation=None,
+#                                                      use_bias=True,
+#                                                      kernel_initializer=self.initializer,
+#                                                      bias_initializer=tf.zeros_initializer(),
+#                                                      kernel_regularizer=None,
+#                                                      bias_regularizer=None,
+#                                                      activity_regularizer=None,
+#                                                      kernel_constraint=None,
+#                                                      bias_constraint=None,
+#                                                      trainable=True,
+#                                                      name="OutProj")
 
       self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
@@ -638,8 +651,8 @@ class EncodingTransformer(object):
                             encoder_outputs_presence=encoder_outputs_presence,
                             is_train=is_train)
 
-      logits = self.output_embedding_layer.linear(outputs)
-
+#      logits = self.output_projections_layer(outputs)
+      logits =  self.output_embedding_layer.linear(outputs)
       predictions = tf.argmax(logits, axis=-1)
 
       return {'logits': logits,

@@ -22,7 +22,7 @@ class Trainer(object):
 
       if self.config.decay_learning_rate:
         decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
-                                                       100, 0.98, staircase=False)
+                                                       1000, 0.96, staircase=False)
       else:
         decay_learning_rate = base_learning_rate
 
@@ -48,7 +48,7 @@ class Trainer(object):
       ema = tf.train.ExponentialMovingAverage(decay=0.9999)
 
       with tf.control_dependencies([updates]+update_ops):
-        training_op = ema.apply(tf.trainable_variables())
+        training_op = ema.apply(params)
 
     return training_op, learning_rate
 

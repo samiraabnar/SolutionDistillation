@@ -28,7 +28,7 @@ class Distiller(object):
       if self.config.distill_rep:
         ops.append(distill_rep_op)
       if self.config.distill_logit:
-        ops.appen(distill_logit_op)
+        ops.append(distill_logit_op)
         
       with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
         for _ in np.arange(self.config.training_iterations):
@@ -149,16 +149,18 @@ class SSTDistiller(Distiller):
 
     update_op, teacher_learning_rate = self.get_train_op(teacher_train_output_dic[self.config.loss_type],
                                                  teacher_train_output_dic["trainable_vars"],
-                                                 start_learning_rate=0.0005,
-                                                 base_learning_rate=0.001, warmup_steps=1000,
+                                                 start_learning_rate=self.teacher.hparams.learning_rate/20,
+                                                 base_learning_rate=self.teacher.hparams.learning_rate,#0.001, 
+                                                 warmup_steps=1000,
                                                  scope="main")
 
     distill_loss = get_logit_distill_loss(student_train_output_dic['logits'],teacher_train_output_dic['logits'])
     tf.summary.scalar("distill loss", distill_loss, family="student_train")
 
     distill_op, distill_learning_rate = self.get_train_op(distill_loss, student_train_output_dic["trainable_vars"],
-                                                  start_learning_rate=0.0001,
-                                                  base_learning_rate=0.001, warmup_steps=10000,
+                                                  start_learning_rate=self.student.hparams.learning_rate/20,
+                                                  base_learning_rate=self.student.hparams.learning_rate,#0.001, 
+                                                  warmup_steps=10000,
                                                   scope="distill")
 
     tf.summary.scalar("learning_rate", teacher_learning_rate, family="teacher_train")
@@ -335,7 +337,7 @@ class Seq2SeqDistiller(Distiller):
     teacher_update_op, teacher_learning_rate = self.trainer.get_train_op(teacher_train_output_dic['loss'],
                                                          teacher_train_output_dic["trainable_vars"],
                                                          start_learning_rate=0.00001,
-                                                         base_learning_rate=0.0005, warmup_steps=1000,
+                                                         base_learning_rate=self.teacher.hparams.learning_rate, warmup_steps=1000,
                                                          scope="teacher")
 
     distill_rep_op, distill_rep_learning_rate = self.trainer.get_train_op(distill_rep_loss, student_train_output_dic["trainable_vars"],
@@ -351,7 +353,7 @@ class Seq2SeqDistiller(Distiller):
 
     student_update_op, student_learning_rate = self.trainer.get_train_op(student_train_output_dic['loss'], student_train_output_dic["trainable_vars"],
                                                           start_learning_rate=0.00001,
-                                                          base_learning_rate=0.0005, warmup_steps=10000,
+                                                          base_learning_rate=self.student.hparams.learning_rate, warmup_steps=10000,
                                                           scope="student")
 
 

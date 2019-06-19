@@ -198,9 +198,9 @@ class Arithmatic(object):
           exp_str = '-1'
 
       exp_tokens = exp_str.split() + [self.eos]
-      output = [exp]
+      output = [str(exp)]
       example = {'inputs': self.encode(exp_tokens),
-                 'targets':output,
+                 'targets':self.encode(output),
                  'inputs_length': len(exp_tokens),
                  'targets_length': len(output)}
 
@@ -318,9 +318,9 @@ class ArithmaticSimple(ArithmaticSameLength):
           exp_str = '-1'
 
       exp_tokens = exp_str.split() + [self.eos]
-      output = [exp]
+      output = [str(exp)]
       example = {'inputs': self.encode(exp_tokens),
-                 'targets':output,
+                 'targets':self.encode(output),
                  'inputs_length': len(exp_tokens),
                  'targets_length': len(output)}
 
@@ -428,9 +428,9 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
           exp_str = '-1'
 
       exp_tokens = exp_str.split() + [self.eos]
-      output = [exp]
+      output = [str(exp)]
       example = {'inputs': self.encode(exp_tokens),
-                 'targets':output,
+                 'targets':self.encode(output),
                  'inputs_length': len(exp_tokens),
                  'targets_length': len(output)}
 

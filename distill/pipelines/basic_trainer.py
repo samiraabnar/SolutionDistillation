@@ -7,7 +7,7 @@ class Trainer(object):
     self.model = model_obj
 
   def get_train_op(self, loss, params, start_learning_rate, base_learning_rate, warmup_steps,
-                   clip_gradient_norm=0,  scope=""):
+                   clip_gradient_norm=5,  scope=""):
     # add training op
     with tf.variable_scope(scope):
       self.global_step = tf.train.get_or_create_global_step()
@@ -22,7 +22,7 @@ class Trainer(object):
 
       if self.config.decay_learning_rate:
         decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
-                                                       1000, 0.96, staircase=False)
+                                                       1000, 0.98, staircase=False)
       else:
         decay_learning_rate = base_learning_rate
 

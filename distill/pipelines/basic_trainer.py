@@ -37,7 +37,7 @@ class Trainer(object):
       grads_and_vars = opt.compute_gradients(loss, params)
       gradients, variables = zip(*grads_and_vars)
       if clip_gradient_norm > 0:
-        gradient_norm, _ = tf.clip_by_global_norm(gradients, clip_gradient_norm)
+        gradients, _ = tf.clip_by_global_norm(gradients, clip_gradient_norm)
       self.param_norm = tf.global_norm(params)
 
       # Include batch norm mean and variance in gradient descent updates

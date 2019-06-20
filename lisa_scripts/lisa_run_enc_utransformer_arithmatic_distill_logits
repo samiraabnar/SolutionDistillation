@@ -16,7 +16,7 @@ export LD_LIBRARY_PATH=$CUDA_HOME/lib64:/hpc/eb/Debian/cuDNN/7.3.1-CUDA-10.0.130
 
 cd /home/samigpu/Codes/SolutionDistillation
 
-HEAD_DIR="/Users/samiraabnar/Codes/SolutionDistillation"
+HEAD_DIR="/home/samigpu/Codes/SolutionDistillation"
 CODE_DIR=$HEAD_DIR/distill
 DATA_DIR=$HEAD_DIR/data
 LOGS_DIR=$HEAD_DIR/logs
@@ -24,17 +24,17 @@ LOGS_DIR=$HEAD_DIR/logs
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 python $CODE_DIR/seq2seq_distiller.py \
- --batch_size=64 --teacher_hidden_dim=300 --student_hidden_dim=300 \
---teacher_model=bilstm --student_model=bilstm \
+ --batch_size=64 --teacher_hidden_dim=128 --student_hidden_dim=128 \
+--teacher_model=enc_utransformer --student_model=enc_utransformer \
 --teacher_train_embeddings=True --student_train_embeddings=True \
---student_decoder_depth=1 --student_encoder_depth=2 --teacher_decoder_depth=1 --teacher_encoder_depth=2 \
---student_input_dropout_keep_prob=0.75 --student_hidden_dropout_keep_prob=0.5 \
---teacher_input_dropout_keep_prob=0.75 --teacher_hidden_dropout_keep_prob=0.5 \
---student_learning_rate=0.001 \
---teacher_learning_rate=0.001 \
---decay_learning_rate=True --l2_rate=0.001 \
+--student_decoder_depth=1 --student_encoder_depth=6 --teacher_decoder_depth=1 --teacher_encoder_depth=6 \
+--student_input_dropout_keep_prob=1.0 --student_hidden_dropout_keep_prob=0.9 \
+--teacher_input_dropout_keep_prob=1.0 --teacher_hidden_dropout_keep_prob=0.9 \
+--student_learning_rate=0.0001 \
+--teacher_learning_rate=0.0001 \
+--decay_learning_rate=True --l2_rate=0.0001 \
 --student_encoder_attention_dir="top_down" \
 --teacher_encoder_attention_dir="top_down" \
---train_student=True --train_teacher=True \
---distill_rep=False distill_logit=False \
---task_name=arithmatic --exp_name=_indp0_
+--train_student=False --train_teacher=True \
+--distill_rep=False distill_logit=True \
+--task_name=arithmatic_simple_samelength10 --exp_name=_indep0_

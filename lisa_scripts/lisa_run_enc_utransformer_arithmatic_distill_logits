@@ -37,4 +37,4 @@ python $CODE_DIR/seq2seq_distiller.py \
 --teacher_encoder_attention_dir="top_down" \
 --train_student=False --train_teacher=True \
 --distill_rep=False distill_logit=True \
---task_name=arithmatic_simple_samelength10 --exp_name=_indep0_
+--task_name=arithmatic_simple_samelength10 --exp_name=_distill_logit0_

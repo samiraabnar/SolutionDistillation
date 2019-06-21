@@ -74,9 +74,13 @@ tf.app.flags.DEFINE_float("student_hidden_dropout_keep_prob", 0.1, "")
 
 tf.app.flags.DEFINE_float("teacher_learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("student_learning_rate", 0.001, "")
+tf.app.flags.DEFINE_float("distill_temp", 10, "")
+tf.app.flags.DEFINE_boolean("learn_to_teach", False, "")
+
+
 
 tf.app.flags.DEFINE_boolean("decay_learning_rate", True, "True | False")
-tf.app.flags.DEFINE_float("l2_rate", 0.000, "")
+tf.app.flags.DEFINE_float("l2_rate", 0.0001, "")
 
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
@@ -155,27 +159,27 @@ if __name__ == '__main__':
                                                       learning_rate=hparams.teacher_learning_rate
                                                       )
 
-  student_params = PARAM_TYPES[hparams.teacher_model](input_dim=hparams.input_dim,
+  student_params = PARAM_TYPES[hparams.student_model](input_dim=hparams.input_dim,
                                                       output_dim=hparams.output_dim,
-                                                      hidden_dim=hparams.teacher_hidden_dim,
-                                                      encoder_depth=hparams.teacher_encoder_depth,
-                                                      decoder_depth=hparams.teacher_decoder_depth,
+                                                      hidden_dim=hparams.student_hidden_dim,
+                                                      encoder_depth=hparams.student_encoder_depth,
+                                                      decoder_depth=hparams.student_decoder_depth,
                                                       number_of_heads=2,
                                                       ff_filter_size=512,
                                                       initializer_gain=hparams.initializer_gain,
                                                       batch_size=hparams.batch_size,
-                                                      input_dropout_keep_prob=hparams.teacher_input_dropout_keep_prob,
-                                                      hidden_dropout_keep_prob=hparams.teacher_hidden_dropout_keep_prob,
+                                                      input_dropout_keep_prob=hparams.student_input_dropout_keep_prob,
+                                                      hidden_dropout_keep_prob=hparams.student_hidden_dropout_keep_prob,
                                                       vocab_size=hparams.vocab_size,
-                                                      label_smoothing=hparams.teacher_label_smoothing,
-                                                      encoder_self_attention_dir=hparams.teacher_encoder_attention_dir,
+                                                      label_smoothing=hparams.student_label_smoothing,
+                                                      encoder_self_attention_dir=hparams.student_encoder_attention_dir,
                                                       decoder_self_attention_dir="top_down",
                                                       decoder_cross_attention_dir="top_down",
                                                       train_embeddings=hparams.student_train_embeddings,
                                                       attention_mechanism=None,
-                                                      sent_rep_mode=hparams.teacher_sent_rep_mode,
+                                                      sent_rep_mode=hparams.student_sent_rep_mode,
                                                       embedding_dim=hparams.embedding_dim,
-                                                      learning_rate=hparams.teacher_learning_rate
+                                                      learning_rate=hparams.student_learning_rate
                                                       )
 
 

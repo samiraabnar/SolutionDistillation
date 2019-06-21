@@ -155,7 +155,7 @@ if __name__ == '__main__':
                                                       train_embeddings=hparams.teacher_train_embeddings,
                                                       attention_mechanism=None,
                                                       sent_rep_mode=hparams.teacher_sent_rep_mode,
-                                                      embedding_dim=hparams.embedding_dim,
+                                                      embedding_dim=hparams.teacher_hidden_dim,
                                                       learning_rate=hparams.teacher_learning_rate
                                                       )
 
@@ -178,7 +178,7 @@ if __name__ == '__main__':
                                                       train_embeddings=hparams.student_train_embeddings,
                                                       attention_mechanism=None,
                                                       sent_rep_mode=hparams.student_sent_rep_mode,
-                                                      embedding_dim=hparams.embedding_dim,
+                                                      embedding_dim=hparams.student_hidden_dim,
                                                       learning_rate=hparams.student_learning_rate
                                                       )
 

@@ -6,94 +6,34 @@ from tqdm import tqdm
 
 from distill.data_util.trees import Tree
 
-def minus(x, y):
-  return x - y
-
-def plus(x, y):
-  return x + y
-
-def binary_math_tree_generator(length, numbers, ops, max_value):
+def binary_math_tree_generator(length, numbers, ops, max_value, depth=0, max_depth=6):
   if length == 1:
-    return str(np.random.choice(numbers))
+    return str(np.random.choice(numbers)), 0
   else:
     left_length = np.random.randint(1,length)
     right_length = length - left_length
     left_child_val = -1
     while left_child_val < 0 or left_child_val > max_value:
-      left_child = binary_math_tree_generator(left_length, numbers, ops, max_value)
+      left_child, depth_left = binary_math_tree_generator(left_length, numbers, ops, max_value, depth, max_depth)
       left_child_val = eval(left_child)
 
     right_child_val = -1
     while right_child_val < 0 or right_child_val > max_value:
-      right_child = binary_math_tree_generator(right_length, numbers, ops, max_value)
+      right_child, depth_right = binary_math_tree_generator(right_length, numbers, ops, max_value, depth, max_depth)
       right_child_val = eval(right_child)
 
     op = np.random.choice(ops)
 
-    exp = ' '.join(['(',left_child,op,right_child,')'])
+    depth = max([depth_left, depth_right])
+    add_paranthesis = np.random.choice([True, False])
+    if add_paranthesis == True and depth < max_depth:
+      exp = ' '.join(['(',left_child,op,right_child,')'])
+      depth += 1
+    else:
+      exp = ' '.join([left_child, op, right_child])
+
     #print(exp, '= ', eval(exp))
-    return exp
-
-
-def first_draft():
-    max_length = 10
-    min_length = 2
-
-    numbers = [1,2,3,4,5,6,7,8,9,10]
-    numbers_ids = [0,1,2,3,4,5,6,7,8,9]
-    input_probs = [0.1]*10
-    operations = [minus, plus]
-    operations_codes = ['-','+']
-    operations_ids = [0, 1]
-    operation_probs = [0.5]*2
-
-    length = randint(min_length, max_length)
-    print("Length:", length)
-    print("Random input:", choices(numbers, input_probs))
-    print("Probability of adding open param: ", uniform(0,1))
-    print("Random operation", choices(operations_codes, operation_probs))
-
-    number_of_examples = 2000
-    examples = []
-    labels = []
-    trees = []
-    while len(examples) < number_of_examples:
-      example = []
-      open_params = 0
-      length = randint(min_length, max_length)
-      numb_ids = np.random.choice(numbers_ids, length, replace=True)
-      op_ids = np.random.choice(operations_ids, length-1, replace=True)
-      ops_codes = np.asarray(operations_codes)[op_ids]
-      ops = np.asarray(operations)[op_ids]
-      numbs = np.asarray(numbers)[numb_ids]
-      for i in np.arange(length-1):
-        opened = False
-        if uniform(0,1) > 0.5: #open para?
-          example.append('(')
-          open_params +=1
-          opened = True
-
-        answer = 0
-        example.append(str(numbs[i]))
-        if not opened:
-          while open_params > 0 and uniform(0,1) > 0.5: #close para?
-            example.append(')')
-            open_params -= 1
-
-        example.append(ops_codes[i])
-
-      example.append(str(numbs[length-1]))
-
-      while open_params > 0:  # close all remaining open paras
-        example.append(')')
-        open_params -= 1
-
-
-      if example not in examples:
-        examples.append(example)
-        labels.append(eval(' '.join(example)))
-        trees.append(Tree(' '.join(example)))
-        print(examples[-1], labels[-1], trees[-1].get_words())
+    return exp, depth
 
 
 class Arithmatic(object):
@@ -188,7 +128,7 @@ class Arithmatic(object):
       exp_str = '-1'
       while exp < 0 or exp >= self.num_of_symbols:
         length = np.random.randint(max_length) + 1
-        exp_str = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','-', '+', '+', '+', '*'], max_value)
+        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','-', '+', '+', '+', '*'], max_value)
         exp = eval(exp_str)
         if exp not in budgets:
           budgets[exp] = 1
@@ -308,7 +248,7 @@ class ArithmaticSimple(ArithmaticSameLength):
       exp_str = '-1'
       while exp < 0 or exp >= self.num_of_symbols:
         length = np.random.randint(max_length) + 1
-        exp_str = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','+'], max_value)
+        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','+'], max_value)
         exp = eval(exp_str)
         if exp not in budgets:
           budgets[exp] = 1
@@ -418,7 +358,7 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
         possible_lengths = list(set(np.arange(1,max_length+1)) - set(self.forbidden_lengths))
         length_index = np.random.randint(len(possible_lengths))
         length = possible_lengths[length_index]
-        exp_str = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols/10)), ['-','+'], max_value)
+        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols/10)), ['-','+'], max_value)
         exp = eval(exp_str)
         if exp not in budgets:
           budgets[exp] = 1
@@ -474,6 +414,19 @@ class ArithmaticSimpleSameLength10(ArithmaticSimple):
   def dev_length(self):
     return 20
 
+class ArithmaticSimpleSameLength10Depth6(ArithmaticSimpleSameLength10):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple_samelength10_depth6'
+    self.vocab_path = os.path.join(self.data_path,'vocab')
+
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+
+    self.load_vocab()
+    self.pretrained = False
+
+
     
 if __name__ == '__main__':
 #  bin_iden = ArithmaticSimple('data/arithmatic_simple')
@@ -501,7 +454,7 @@ if __name__ == '__main__':
 #  bin_iden.build_tfrecords(2000, 'dev')
 #  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden = ArithmaticSimpleSameLength10('data/arithmatic_simple_samelength10')
+  bin_iden = ArithmaticSimpleSameLength10Depth6('data/arithmatic_simple_samelength10_depth6')
 
   bin_iden.build_tfrecords(10000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')

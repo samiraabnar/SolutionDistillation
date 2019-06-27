@@ -5,7 +5,8 @@ import os
 
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40, \
   AlgorithmicAdditionDecimal40, AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
-from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, ArithmaticSimpleCurriculumLength, ArithmaticSimpleSameLength10
+from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, ArithmaticSimpleCurriculumLength,\
+ArithmaticSimpleSameLength10, ArithmaticSimpleSameLength10Depth6, ArithmaticSimpleSameLength10Depth2
 from distill.data_util.prep_imdb import IMDB
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
@@ -74,6 +75,7 @@ tf.app.flags.DEFINE_float("student_hidden_dropout_keep_prob", 0.1, "")
 
 tf.app.flags.DEFINE_float("teacher_learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("student_learning_rate", 0.001, "")
+tf.app.flags.DEFINE_float("distill_learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("distill_temp", 10, "")
 tf.app.flags.DEFINE_boolean("learn_to_teach", False, "")
 
@@ -116,7 +118,8 @@ if __name__ == '__main__':
            'arithmatic_simple_curriculum_length': ArithmaticSimpleCurriculumLength('data/arithmatic_simple_curriculum_length'),
            'arithmatic_simple_samelength': ArithmaticSameLength('data/arithmatic_samelength'),
            'arithmatic_simple_samelength10': ArithmaticSimpleSameLength10('data/arithmatic_simple_samelength10'),
-
+           'arithmatic_simple_samelength10_depth6': ArithmaticSimpleSameLength10Depth6('data/arithmatic_simple_samelength10_depth6'),
+           'arithmatic_simple_samelength10_depth2': ArithmaticSimpleSameLength10Depth2('data/arithmatic_simple_samelength10_depth2'),
            'sst': SST(data_path="data/sst/",
                  add_subtrees=False,
                  pretrained=True),

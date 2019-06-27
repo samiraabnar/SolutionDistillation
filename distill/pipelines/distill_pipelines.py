@@ -339,19 +339,24 @@ class Seq2SeqDistiller(Distiller):
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_dev")
     tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_dev")
 
+    distill_params = student_train_output_dic["trainable_vars"]
+    if self.config.learn_to_teach:
+        distill_params + teacher_train_output_dic["trainable_vars"]
+        
     teacher_update_op, teacher_learning_rate = self.trainer.get_train_op(teacher_train_output_dic['loss'],
                                                          teacher_train_output_dic["trainable_vars"],
                                                          start_learning_rate=0.000,
                                                          base_learning_rate=self.teacher.hparams.learning_rate, warmup_steps=1000,
                                                          scope="teacher")
 
-    distill_rep_op, distill_rep_learning_rate = self.trainer.get_train_op(distill_rep_loss, student_train_output_dic["trainable_vars"],
+    distill_rep_op, distill_rep_learning_rate = self.trainer.get_train_op(distill_rep_loss, 
+                                                          distill_params,
                                                           start_learning_rate=0.0,
                                                           base_learning_rate=self.student.hparams.learning_rate, warmup_steps=10000,
                                                           scope="distill_rep")
 
     distill_logit_op, distill_logit_learning_rate = self.trainer.get_train_op(distill_logit_loss,
-                                                                  student_train_output_dic["trainable_vars"],
+                                                                  distill_params,
                                                                   start_learning_rate=0.00,
                                                                   base_learning_rate=self.student.hparams.learning_rate, warmup_steps=10000,
                                                                   scope="distill_logit")

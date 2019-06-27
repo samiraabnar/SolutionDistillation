@@ -6,7 +6,9 @@ from tqdm import tqdm
 
 from distill.data_util.trees import Tree
 
-def binary_math_tree_generator(length, numbers, ops, max_value, depth=0, max_depth=6):
+def binary_math_tree_generator(length, numbers, ops, max_value, depth=0, max_depth=None):
+  if max_depth == None:
+      max_depth = length
   if length == 1:
     return str(np.random.choice(numbers)), 0
   else:
@@ -52,7 +54,7 @@ class Arithmatic(object):
   @property
   def if_label_gaussian_noise(self):
     return False
-  
+
   @property
   def guassian_noise_scale(self):
     return 0.9
@@ -128,7 +130,7 @@ class Arithmatic(object):
       exp_str = '-1'
       while exp < 0 or exp >= self.num_of_symbols:
         length = np.random.randint(max_length) + 1
-        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','-', '+', '+', '+', '*'], max_value)
+        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','-', '+', '+', '+', '*'], max_value, 0, self.max_depth)
         exp = eval(exp_str)
         if exp not in budgets:
           budgets[exp] = 1
@@ -191,6 +193,10 @@ class ArithmaticSameLength(Arithmatic):
     self.load_vocab()
     self.pretrained = False
 
+  @property 
+  def max_depth():
+    return 40
+
   @property
   def train_length(self):
     return 40
@@ -229,6 +235,10 @@ class ArithmaticSimple(ArithmaticSameLength):
   def num_of_symbols(self):
       return 202 #0-100
 
+  @property 
+  def max_depth(self):
+    return 80
+
   @property
   def train_length(self):
     return 20
@@ -248,7 +258,7 @@ class ArithmaticSimple(ArithmaticSameLength):
       exp_str = '-1'
       while exp < 0 or exp >= self.num_of_symbols:
         length = np.random.randint(max_length) + 1
-        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','+'], max_value)
+        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','+'], max_value, 0, self.max_depth)
         exp = eval(exp_str)
         if exp not in budgets:
           budgets[exp] = 1
@@ -295,6 +305,10 @@ class ArithmaticSimpleSameLength(ArithmaticSimple):
   def num_of_symbols(self):
       return 202 #0-100
 
+  @property 
+  def max_depth(self):
+    return 40
+    
   @property
   def train_length(self):
     return 40
@@ -332,6 +346,10 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
   def num_of_symbols(self):
       return 202 #0-100
 
+  @property 
+  def max_depth(self):
+    return 40
+    
   @property
   def train_length(self):
     return 40
@@ -358,7 +376,7 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
         possible_lengths = list(set(np.arange(1,max_length+1)) - set(self.forbidden_lengths))
         length_index = np.random.randint(len(possible_lengths))
         length = possible_lengths[length_index]
-        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols/10)), ['-','+'], max_value)
+        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols/10)), ['-','+'], max_value, 0, self.max_depth)
         exp = eval(exp_str)
         if exp not in budgets:
           budgets[exp] = 1
@@ -389,6 +407,10 @@ class ArithmaticSimpleSameLength10(ArithmaticSimple):
     self.load_vocab()
     self.pretrained = False
 
+  @property 
+  def max_depth(self):
+    return 20
+    
   def load_vocab(self):
     self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
 
@@ -426,7 +448,43 @@ class ArithmaticSimpleSameLength10Depth6(ArithmaticSimpleSameLength10):
     self.load_vocab()
     self.pretrained = False
 
+  @property 
+  def max_depth(self):
+    return 6
+    
+    
+class ArithmaticSimpleSameLength10Depth4(ArithmaticSimpleSameLength10):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple_samelength10_depth6'
+    self.vocab_path = os.path.join(self.data_path,'vocab')
 
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+
+    self.load_vocab()
+    self.pretrained = False
+
+  @property 
+  def max_depth(self):
+    return 4
+
+
+class ArithmaticSimpleSameLength10Depth2(ArithmaticSimpleSameLength10):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple_samelength10_depth2'
+    self.vocab_path = os.path.join(self.data_path,'vocab')
+
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+
+    self.load_vocab()
+    self.pretrained = False
+
+  @property 
+  def max_depth(self):
+    return 2
     
 if __name__ == '__main__':
 #  bin_iden = ArithmaticSimple('data/arithmatic_simple')
@@ -454,6 +512,18 @@ if __name__ == '__main__':
 #  bin_iden.build_tfrecords(2000, 'dev')
 #  bin_iden.build_tfrecords(2000, 'test')
 
+  bin_iden = ArithmaticSimpleSameLength10Depth2('data/arithmatic_simple_samelength10_depth2')
+
+  bin_iden.build_tfrecords(10000, 'train')
+  bin_iden.build_tfrecords(2000, 'dev')
+  bin_iden.build_tfrecords(2000, 'test')
+
+  bin_iden = ArithmaticSimpleSameLength10Depth4('data/arithmatic_simple_samelength10_depth4')
+
+  bin_iden.build_tfrecords(10000, 'train')
+  bin_iden.build_tfrecords(2000, 'dev')
+  bin_iden.build_tfrecords(2000, 'test')
+  
   bin_iden = ArithmaticSimpleSameLength10Depth6('data/arithmatic_simple_samelength10_depth6')
 
   bin_iden.build_tfrecords(10000, 'train')

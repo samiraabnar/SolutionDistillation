@@ -32,6 +32,8 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --student_learning_rate=0.001 \
 --teacher_learning_rate=0.001 \
 --distill_learning_rate=0.001 \
+--data_weight=1.0 \
+--distill_logits_weight=0.0 \
 --decay_learning_rate=True --l2_rate=0.0001 \
 --student_encoder_attention_dir="top_down" \
 --teacher_encoder_attention_dir="top_down" \
@@ -50,6 +52,8 @@ CUDA_VISIBLE_DEVICES=1 python $CODE_DIR/seq2seq_distiller.py \
 --student_learning_rate=0.001 \
 --teacher_learning_rate=0.001 \
 --distill_learning_rate=0.001 \
+--data_weight=1.0 \
+--distill_logits_weight=0.0 \
 --decay_learning_rate=True --l2_rate=0.0001 \
 --student_encoder_attention_dir="top_down" \
 --teacher_encoder_attention_dir="top_down" \
@@ -68,6 +72,8 @@ CUDA_VISIBLE_DEVICES=2 python $CODE_DIR/seq2seq_distiller.py \
 --student_learning_rate=0.001 \
 --teacher_learning_rate=0.001 \
 --distill_learning_rate=0.00 \
+--data_weight=1.0 \
+--distill_logits_weight=0.0 \
 --decay_learning_rate=True --l2_rate=0.0001 \
 --student_encoder_attention_dir="top_down" \
 --teacher_encoder_attention_dir="top_down" \
@@ -86,6 +92,8 @@ CUDA_VISIBLE_DEVICES=3 python $CODE_DIR/seq2seq_distiller.py \
 --student_learning_rate=0.001 \
 --teacher_learning_rate=0.001 \
 --distill_learning_rate=0.00 \
+--data_weight=1.0 \
+--distill_logits_weight=0.0 \
 --decay_learning_rate=True --l2_rate=0.0001 \
 --student_encoder_attention_dir="top_down" \
 --teacher_encoder_attention_dir="top_down" \

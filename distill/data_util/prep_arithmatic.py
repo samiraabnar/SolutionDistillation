@@ -456,7 +456,7 @@ class ArithmaticSimpleSameLength10Depth6(ArithmaticSimpleSameLength10):
 class ArithmaticSimpleSameLength10Depth4(ArithmaticSimpleSameLength10):
   def __init__(self, data_path):
     self.data_path = data_path
-    self.task_name = 'arithmatic_simple_samelength10_depth6'
+    self.task_name = 'arithmatic_simple_samelength10_depth4'
     self.vocab_path = os.path.join(self.data_path,'vocab')
 
     self.eos = '<eos>'

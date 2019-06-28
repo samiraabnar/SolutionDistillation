@@ -25,10 +25,10 @@ class Distiller(object):
         ops.append(update_op)
       if self.config.train_student:
         ops.append(student_update_op)
-      if self.config.distill_rep:
-        ops.append(distill_rep_op)
-      if self.config.distill_logit:
-        ops.append(distill_logit_op)
+#      if self.config.distill_rep:
+#        ops.append(distill_rep_op)
+#      if self.config.distill_logit:
+#        ops.append(distill_logit_op)
         
       with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
         for _ in np.arange(self.config.training_iterations):
@@ -347,23 +347,28 @@ class Seq2SeqDistiller(Distiller):
                                                          teacher_train_output_dic["trainable_vars"],
                                                          start_learning_rate=0.000,
                                                          base_learning_rate=self.teacher.hparams.learning_rate, warmup_steps=1000,
+                                                         l2_rate=self.trainer.config.l2_rate,
                                                          scope="teacher")
 
-    distill_rep_op, distill_rep_learning_rate = self.trainer.get_train_op(distill_rep_loss, 
-                                                          distill_params,
-                                                          start_learning_rate=0.0,
-                                                          base_learning_rate=self.student.hparams.learning_rate, warmup_steps=10000,
-                                                          scope="distill_rep")
+#    distill_rep_op, distill_rep_learning_rate = self.trainer.get_train_op(distill_rep_loss, 
+#                                                          distill_params,
+#                                                          start_learning_rate=0.0,
+#                                                          base_learning_rate=self.config.distill_learning_rate, warmup_steps=10000,
+#                                                          l2_rate=0.0,
+#                                                          scope="distill_rep")
 
-    distill_logit_op, distill_logit_learning_rate = self.trainer.get_train_op(distill_logit_loss,
-                                                                  distill_params,
-                                                                  start_learning_rate=0.00,
-                                                                  base_learning_rate=self.student.hparams.learning_rate, warmup_steps=10000,
-                                                                  scope="distill_logit")
+#    distill_logit_op, distill_logit_learning_rate = self.trainer.get_train_op(distill_logit_loss,
+#                                                                  distill_params,
+#                                                                  start_learning_rate=0.00,
+#                                                                  base_learning_rate=self.config.distill_learning_rate, warmup_steps=10000,
+#                                                                  l2_rate=0.0,
+#                                                                  scope="distill_logit")
 
-    student_update_op, student_learning_rate = self.trainer.get_train_op(student_train_output_dic['loss'], student_train_output_dic["trainable_vars"],
+    student_loss = self.config.data_weight * student_train_output_dic['loss'] + self.config.distill_logits_weight * distill_logit_loss
+    student_update_op, student_learning_rate = self.trainer.get_train_op(student_loss, student_train_output_dic["trainable_vars"],
                                                           start_learning_rate=0.000,
                                                           base_learning_rate=self.student.hparams.learning_rate, warmup_steps=10000,
+                                                          l2_rate=self.trainer.config.l2_rate,
                                                           scope="student")
 
 
@@ -381,7 +386,7 @@ class Seq2SeqDistiller(Distiller):
                                                         dev_iterator.initializer,
                                                         test_iterator.initializer))
 
-    return teacher_update_op, distill_logit_op, distill_rep_op, student_update_op, scaffold
+    return teacher_update_op, None, None, student_update_op, scaffold
 
   def get_train_data_itaratoes(self):
     dataset = tf.data.TFRecordDataset(self.trainer.task.get_tfrecord_path(mode="train"))

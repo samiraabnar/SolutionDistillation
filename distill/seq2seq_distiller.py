@@ -76,6 +76,9 @@ tf.app.flags.DEFINE_float("student_hidden_dropout_keep_prob", 0.1, "")
 tf.app.flags.DEFINE_float("teacher_learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("student_learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("distill_learning_rate", 0.001, "")
+tf.app.flags.DEFINE_float("data_weight", 0.01, "")
+tf.app.flags.DEFINE_float("distill_logits_weight", 0.99, "")
+
 tf.app.flags.DEFINE_float("distill_temp", 10, "")
 tf.app.flags.DEFINE_boolean("learn_to_teach", False, "")
 

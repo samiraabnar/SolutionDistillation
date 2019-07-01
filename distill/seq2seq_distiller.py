@@ -22,6 +22,8 @@ tf.logging.set_verbosity(tf.logging.INFO)
 tf.app.flags.DEFINE_string("exp_name", "distill", "")
 tf.app.flags.DEFINE_string("task_name", "identity_binary", "")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
+tf.app.flags.DEFINE_string("data_dir", "data", "")
+
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
 tf.app.flags.DEFINE_string("model_type", "transformer2transformer", "")
@@ -109,26 +111,27 @@ if __name__ == '__main__':
             "enc_utransformer": EncodingUniversalTransformer}
 
 
-  tasks = {'identity': AlgorithmicIdentityDecimal40('data/alg'),
-           'identity_binary': AlgorithmicIdentityBinary40('data/alg'),
-           'addition': AlgorithmicAdditionDecimal40('data/alg'),
-           'multiplication': AlgorithmicMultiplicationDecimal40('data/alg'),
-           'sort': AlgorithmicSortProblem('data/alg'),
-           'reverse': AlgorithmicReverseProblem('data/alg'),
-           'arithmatic': Arithmatic('data/arithmatic'),
-           'arithmatic_simple': ArithmaticSimple('data/arithmatic_simple'),
-           'arithmatic_samelength': ArithmaticSameLength('data/arithmatic_samelength'),
-           'arithmatic_simple_curriculum_length': ArithmaticSimpleCurriculumLength('data/arithmatic_simple_curriculum_length'),
-           'arithmatic_simple_samelength': ArithmaticSameLength('data/arithmatic_samelength'),
-           'arithmatic_simple_samelength10': ArithmaticSimpleSameLength10('data/arithmatic_simple_samelength10'),
-           'arithmatic_simple_samelength10_depth6': ArithmaticSimpleSameLength10Depth6('data/arithmatic_simple_samelength10_depth6'),
-           'arithmatic_simple_samelength10_depth2': ArithmaticSimpleSameLength10Depth2('data/arithmatic_simple_samelength10_depth2'),
-           'sst': SST(data_path="data/sst/",
+  tasks = {'identity': AlgorithmicIdentityDecimal40(os.path.join(hparams.data_dir,'alg')),
+           'identity_binary': AlgorithmicIdentityBinary40(os.path.join(hparams.data_dir,'alg')),
+           'addition': AlgorithmicAdditionDecimal40(os.path.join(hparams.data_dir,'alg')),
+           'multiplication': AlgorithmicMultiplicationDecimal40(os.path.join(hparams.data_dir,'alg')),
+           'sort': AlgorithmicSortProblem(os.path.join(hparams.data_dir,'alg')),
+           'reverse': AlgorithmicReverseProblem(os.path.join(hparams.data_dir,'alg')),
+           'arithmatic': Arithmatic(os.path.join(hparams.data_dir,'arithmatic')),
+           'arithmatic_simple': ArithmaticSimple(os.path.join(hparams.data_dir,'arithmatic_simple')),
+           'arithmatic_samelength': ArithmaticSameLength(os.path.join(hparams.data_dir,'arithmatic_samelength')),
+           'arithmatic_simple_curriculum_length': ArithmaticSimpleCurriculumLength(os.path.join(hparams.data_dir,'arithmatic_simple_curriculum_length')),
+           'arithmatic_simple_samelength': ArithmaticSameLength(os.path.join(hparams.data_dir,'arithmatic_samelength')),
+           'arithmatic_simple_samelength10': ArithmaticSimpleSameLength10(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10')),
+           'arithmatic_simple_samelength10_depth6': ArithmaticSimpleSameLength10Depth6(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth6')),
+           'arithmatic_simple_samelength10_depth4': ArithmaticSimpleSameLength10Depth2(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth4')),
+           'arithmatic_simple_samelength10_depth2': ArithmaticSimpleSameLength10Depth2(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth2')),
+           'sst': SST(data_path=os.path.join(hparams.data_dir,"sst/"),
                  add_subtrees=False,
                  pretrained=True),
-           'ptb_lm': PTB('data/ptb'),
-           'wsj_parse': ParseWSJ('data/wsj'),
-           'imdb': IMDB(data_path="data/imdb",
+           'ptb_lm': PTB(os.path.join(hparams.data_dir,'ptb')),
+           'wsj_parse': ParseWSJ(os.path.join(hparams.data_dir,'wsj')),
+           'imdb': IMDB(data_path=os.path.join(hparams.data_dir,"imdb"),
                         pretrained=True)
            }
 

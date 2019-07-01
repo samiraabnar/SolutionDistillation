@@ -20,6 +20,13 @@ CODE_DIR=$HEAD_DIR/distill
 DATA_DIR=$HEAD_DIR/data
 LOGS_DIR=$HEAD_DIR/logs
 
+TMP_DATA_DIR=$TMPDIR/data
+TMPLOGS_DIR=$TMPDIR/logs
+
+#Copy input file to scratch
+cp -r $DATA_DIR $TMP_DATA_DIR
+cp -r $LOGS_DIR $TMPLOGS_DIR
+
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \

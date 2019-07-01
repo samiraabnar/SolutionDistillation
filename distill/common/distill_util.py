@@ -41,6 +41,31 @@ def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='dot_
   return rsa_score
 
 
+def get_single_state_uniform_rsa_loss(student_states, mode='dot_product'):
+
+
+  tf.logging.info('state shapes')
+  tf.logging.info(student_states)
+
+  student_rsm = dot_product_sim(student_states, student_states)
+  teacher_rsm = tf.ones_like(student_rsm)
+
+  tf.logging.info('dist shapes')
+  tf.logging.info(teacher_rsm)
+  tf.logging.info(student_rsm)
+
+
+  if mode == 'squared':
+    rsa_score = tf.reduce_mean(squared_dist_rsm(student_rsm,teacher_rsm))
+  elif mode == 'softmax_cross_ent':
+    rsa_score = tf.reduce_mean(sigmoid_cross_entropy_rsa(student_rsm, teacher_rsm))
+  elif mode == 'dot_product':
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
+  else:
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
+
+  return rsa_score
+
 
 def sigmoid_cross_entropy_rsa(d_a, d_b):
   rsa = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(

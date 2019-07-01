@@ -20,6 +20,7 @@ CODE_DIR=$HEAD_DIR/distill
 DATA_DIR=$HEAD_DIR/data
 LOGS_DIR=$HEAD_DIR/logs
 
+mkdir $TMPDIR/samigpu
 TMP_DATA_DIR=$TMPDIR/samigpu/data
 TMPLOGS_DIR=$TMPDIR/samigpu/logs
 

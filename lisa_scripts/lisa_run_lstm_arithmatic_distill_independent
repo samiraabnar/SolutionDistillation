@@ -27,8 +27,8 @@ mkdir $TMP_DATA_DIR
 mkdir $TMPLOGS_DIR
 
 #Copy input file to scratch
-cp -r $DATA_DIR/* $TMP_DATA_DIR
-cp -r $LOGS_DIR/* $TMPLOGS_DIR
+cp -r $DATA_DIR/* $TMP_DATA_DIR/
+cp -r $LOGS_DIR/* $TMPLOGS_DIR/
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 

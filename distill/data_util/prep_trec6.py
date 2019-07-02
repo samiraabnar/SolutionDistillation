@@ -134,7 +134,7 @@ class Trec6(object):
     """
     features = tf.train.Features(feature={
       "inputs": tf.train.Feature(int64_list=tf.train.Int64List(value=example['token_ids'])),
-      "targets": tf.train.Feature(int64_list=tf.train.Int64List(value=example['label'])),
+      "targets": tf.train.Feature(int64_list=tf.train.Int64List(value=[example['label']])),
       "inputs_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example['length']])),
       "targets_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[1]))
     })

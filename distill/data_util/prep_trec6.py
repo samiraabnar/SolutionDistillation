@@ -117,7 +117,7 @@ class Trec6(object):
     """ Loads Trec6 data.
     """
 
-    if mode == "dev":
+    if mode == 'dev':
       model = "test"
       
     data_full_path = os.path.join(data_path, "TREC."+mode+".all.txt")

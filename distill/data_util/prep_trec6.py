@@ -117,6 +117,9 @@ class Trec6(object):
     """ Loads Trec6 data.
     """
 
+    if mode == "dev":
+      model = "test"
+      
     data_full_path = os.path.join(data_path, "TREC."+mode+".all.txt")
 
     sentences, labels = self.read_sentences(data_full_path)
@@ -211,6 +214,7 @@ if __name__ == '__main__':
 
 
   train_data = chartrec6.read_trec6('../../data/char_trec6', "train")
+  test_data = chartrec6.read_trec6('../../data/char_trec6', "dev")
   test_data = chartrec6.read_trec6('../../data/char_trec6', "test")
 
   print("Length of train: ", len(train_data[0]))

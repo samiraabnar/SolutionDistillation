@@ -155,7 +155,7 @@ class Trec6(object):
       features = {"inputs_length": tf.FixedLenFeature([], tf.int64),
                   "targets_length": tf.FixedLenFeature([], tf.int64),
                   "inputs": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
-                  "targets": tf.FixedLenSequenceFeature([], tf.int64),
+                  "targets": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
                   }
       parsed_example = tf.parse_single_example(example, features=features)
 

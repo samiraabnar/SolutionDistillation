@@ -132,7 +132,8 @@ if __name__ == '__main__':
            'ptb_lm': PTB(os.path.join(hparams.data_dir,'ptb')),
            'wsj_parse': ParseWSJ(os.path.join(hparams.data_dir,'wsj')),
            'imdb': IMDB(data_path=os.path.join(hparams.data_dir,"imdb"),
-                        pretrained=True)
+                        pretrained=True),
+            'char_trec': CharTrec6(os.path.join(hparams.data_dir,"char_trec6"), build_vocab=False)
            }
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length

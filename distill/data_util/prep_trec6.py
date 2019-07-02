@@ -167,7 +167,7 @@ class Trec6(object):
       return inputs, targets, inputs_length, targets_lengths
 
   def get_padded_shapes(self,):
-    return [None], [], [], []
+    return [None], [None], [], []
 
   def get_tfrecord_path(self, mode):
     return os.path.join(self.data_path, mode + ".tfr")

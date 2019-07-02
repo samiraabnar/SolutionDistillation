@@ -22,19 +22,20 @@ LOGS_DIR=$HEAD_DIR/logs
 
 mkdir "$TMPDIR"/samigpu
 TMP_DATA_DIR="$TMPDIR"/samigpu/data
-TMPLOGS_DIR="$TMPDIR"/samigpu/logs
+TMP_LOGS_DIR="$TMPDIR"/samigpu/logs
 
 mkdir $TMP_DATA_DIR
-mkdir $TMPLOGS_DIR
+mkdir $TMP_LOGS_DIR
 
 #Copy input file to scratch
 cp -r "$DATA_DIR"/* "$TMP_DATA_DIR"/
-cp -r "$LOGS_DIR"/* "$TMPLOGS_DIR"/
+cp -r "$LOGS_DIR"/* "$TMP_LOGS_DIR"/
 
+echo "$TMP_LOGS_DIR"
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
---log_dir="$TMPLOGS_DIR" --data_dir="$TMP_DATA_DIR" \
+--log_dir="$TMP_LOGS_DIR" --data_dir="$TMP_DATA_DIR" \
 --batch_size=64 --teacher_hidden_dim=128 --student_hidden_dim=128 \
 --teacher_model=lstm --student_model=lstm \
 --teacher_train_embeddings=True --student_train_embeddings=True \
@@ -55,7 +56,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --task_name=arithmatic_simple_samelength10_depth2 --exp_name=_indp_bothnoreg &
 
 CUDA_VISIBLE_DEVICES=1 python $CODE_DIR/seq2seq_distiller.py \
---log_dir="$TMPLOGS_DIR" --data_dir="$TMP_DATA_DIR" \
+--log_dir="$TMP_LOGS_DIR" --data_dir="$TMP_DATA_DIR" \
 --batch_size=64 --teacher_hidden_dim=128 --student_hidden_dim=128 \
 --teacher_model=lstm --student_model=lstm \
 --teacher_train_embeddings=True --student_train_embeddings=True \
@@ -76,7 +77,7 @@ CUDA_VISIBLE_DEVICES=1 python $CODE_DIR/seq2seq_distiller.py \
 --task_name=arithmatic_simple_samelength10_depth2 --exp_name=_indp_bothreg &
 
 CUDA_VISIBLE_DEVICES=2 python $CODE_DIR/seq2seq_distiller.py \
---log_dir="$TMPLOGS_DIR" --data_dir="$TMP_DATA_DIR" \
+--log_dir="$TMP_LOGS_DIR" --data_dir="$TMP_DATA_DIR" \
 --batch_size=64 --teacher_hidden_dim=128 --student_hidden_dim=128 \
 --teacher_model=lstm --student_model=lstm \
 --teacher_train_embeddings=True --student_train_embeddings=True \

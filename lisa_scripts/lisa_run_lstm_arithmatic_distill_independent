@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=10:00:00
+#SBATCH --time=24:00:00
 #SBATCH --partition=gpu
 
 module load eb
@@ -20,16 +20,16 @@ CODE_DIR=$HEAD_DIR/distill
 DATA_DIR=$HEAD_DIR/data
 LOGS_DIR=$HEAD_DIR/logs
 
-mkdir $TMPDIR/samigpu
-TMP_DATA_DIR=$TMPDIR/samigpu/data
-TMPLOGS_DIR=$TMPDIR/samigpu/logs
+mkdir "$TMPDIR"/samigpu
+TMP_DATA_DIR="$TMPDIR"/samigpu/data
+TMPLOGS_DIR="$TMPDIR"/samigpu/logs
 
 mkdir $TMP_DATA_DIR
 mkdir $TMPLOGS_DIR
 
 #Copy input file to scratch
-cp -r $DATA_DIR/* $TMP_DATA_DIR/
-cp -r $LOGS_DIR/* $TMPLOGS_DIR/
+cp -r "$DATA_DIR"/* "$TMP_DATA_DIR"/
+cp -r "$LOGS_DIR"/* "$TMPLOGS_DIR"/
 
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
@@ -120,6 +120,6 @@ CUDA_VISIBLE_DEVICES=3 python $CODE_DIR/seq2seq_distiller.py \
 wait
 
 #Copy input file to scratch
-cp -r  $TMP_DATA_DIR/* $DATA_DIR/
-cp -r  $TMPLOGS_DIR/* $LOGS_DIR/
+cp -r  "$TMP_DATA_DIR"/* "$DATA_DIR"/
+cp -r  "$TMP_LOGS_DIR"/* "$LOGS_DIR"/
 

@@ -134,7 +134,7 @@ class Trec6(object):
     """
     features = tf.train.Features(feature={
       "inputs": tf.train.Feature(int64_list=tf.train.Int64List(value=example['token_ids'])),
-      "targets": tf.train.Feature(int64_list=tf.train.Int64List(value=[example['label']])),
+      "targets": tf.train.Feature(int64_list=tf.train.Int64List(value=example['label'])),
       "inputs_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[example['length']])),
       "targets_length": tf.train.Feature(int64_list=tf.train.Int64List(value=[1]))
     })
@@ -155,7 +155,7 @@ class Trec6(object):
       features = {"inputs_length": tf.FixedLenFeature([], tf.int64),
                   "targets_length": tf.FixedLenFeature([], tf.int64),
                   "inputs": tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
-                  "targets": tf.FixedLenFeature([], tf.int64),
+                  "targets": tf.FixedLenSequenceFeature([], tf.int64),
                   }
       parsed_example = tf.parse_single_example(example, features=features)
 

@@ -116,10 +116,6 @@ class Trec6(object):
   def read_trec6(self, data_path=None, mode='train'):
     """ Loads Trec6 data.
     """
-
-    if mode == 'dev':
-      model = "test"
-      
     data_full_path = os.path.join(data_path, "TREC."+mode+".all.txt")
 
     sentences, labels = self.read_sentences(data_full_path)

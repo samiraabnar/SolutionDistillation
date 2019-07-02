@@ -28,7 +28,7 @@ class Trec6(object):
     return False
       
   @property
-  def guassian_noise_scale(self)
+  def guassian_noise_scale(self):
     return 0.0
   
   @property

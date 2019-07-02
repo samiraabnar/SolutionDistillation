@@ -218,6 +218,8 @@ if __name__ == '__main__':
 
   chartrec6.build_tfrecords(train_data, "train")
   chartrec6.build_tfrecords(test_data, "test")
+  chartrec6.build_tfrecords(test_data, "dev")
+
 
   dataset = tf.data.TFRecordDataset(chartrec6.get_tfrecord_path(mode="test"))
   dataset = dataset.map(chartrec6.parse_examples)

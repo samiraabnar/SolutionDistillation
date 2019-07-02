@@ -25,7 +25,11 @@ class Trec6(object):
 
   @property
   def if_label_gaussian_noise(self):
-      return False
+    return False
+      
+  @property
+  def guassian_noise_scale(self)
+    return 0.0
   
   @property
   def share_input_output_embeddings(self):

@@ -10,6 +10,7 @@ ArithmaticSimpleSameLength10, ArithmaticSimpleSameLength10Depth6, ArithmaticSimp
 from distill.data_util.prep_imdb import IMDB
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
+from distill.data_util.prep_trec import CharTrec6, Trec6
 from distill.data_util.prep_wsj_parsing import ParseWSJ
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer, \

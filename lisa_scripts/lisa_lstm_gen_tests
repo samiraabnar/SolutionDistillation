@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=distill
+#SBATCH --job-name=distill2
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
@@ -45,7 +45,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --teacher_train_embeddings=True --student_train_embeddings=True \
 --student_decoder_depth=1 --student_encoder_depth=1 --teacher_decoder_depth=1 --teacher_encoder_depth=2 \
 --student_input_dropout_keep_prob=1.0 --student_hidden_dropout_keep_prob=1.0 \
---teacher_input_dropout_keep_prob=1.0 --teacher_hidden_dropout_keep_prob=1.0 \
+--teacher_input_dropout_keep_prob=0.8 --teacher_hidden_dropout_keep_prob=0.5 \
 --student_learning_rate=0.001 \
 --teacher_learning_rate=0.001 \
 --distill_learning_rate=0.001 \
@@ -57,7 +57,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=False \
 --distill_temp=1.0 --teacher_temp=1.0 --student_temp=1.0 \
---task_name=arithmatic_simple_samelength10_depth2 --exp_name=_indp_bothnoreg
+--task_name=arithmatic_simple_samelength10_depth2 --exp_name=_indp_drop1-1_drop05-08
 
 
 #Copy input file to scratch

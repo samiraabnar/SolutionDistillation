@@ -6,6 +6,7 @@ from distill.common.beam_search import sequence_beam_search
 from distill.common.layer_utils import get_decoder_self_attention_bias, get_position_encoding, get_padding_bias, get_padding
 from distill.data_util.prep_arithmatic import Arithmatic
 from distill.data_util.prep_sst import SST
+from distill.data_util.prep_trec6 import CharTrec6
 from distill.layers.attention import MultiHeadScaledDotProductAttention, ReversedMultiHeadScaledDotProductAttention
 from distill.layers.embedding import EmbeddingSharedWeights
 from distill.layers.ffn_layer import FeedFowardNetwork
@@ -781,9 +782,7 @@ if __name__ == '__main__':
 
   #bin_iden = AlgorithmicIdentityBinary40('data/alg')
   #bin_iden = Arithmatic('data/arithmatic')
-  bin_iden = SST(data_path="data/sst/",
-      add_subtrees=False,
-      pretrained=True)
+  bin_iden = CharTrec6(data_path="data/char_trec6/")
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
@@ -854,6 +853,6 @@ if __name__ == '__main__':
       inp, targ, pred = sess.run([inputs, targets, predictions])
 
       print(inp)
-      print(bin_iden.decode(inp[0]))
-      print(bin_iden.decode(pred[0]))
-      print(bin_iden.decode(targ[0]))
+      print(bin_iden.decode(inp[0],bin_iden.id2token))
+      print(bin_iden.decode(pred[0],bin_iden.id2token))
+      print(bin_iden.decode(targ[0],bin_iden.id2token))

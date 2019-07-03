@@ -84,30 +84,31 @@ class SSTDistiller(Distiller):
     return updates, learning_rate
 
   def get_data_itaratoes(self):
-    dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))
-    dataset = dataset.map(SST.parse_full_sst_tree_examples)
-    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=SST.get_padded_shapes(), drop_remainder=True)
-    dataset = dataset.shuffle(buffer_size=1000)
-    dataset = dataset.repeat()
-    iterator = dataset.make_initializable_iterator()
-
-    dev_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="dev"))
-    dev_dataset = dev_dataset.map(SST.parse_full_sst_tree_examples)
-    dev_dataset = dev_dataset.shuffle(buffer_size=1101)
-    dev_dataset = dev_dataset.repeat()
-    dev_dataset = dev_dataset.padded_batch(1101, padded_shapes=SST.get_padded_shapes(),
-                                           drop_remainder=True)
-    dev_iterator = dev_dataset.make_initializable_iterator()
-
-    test_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="test"))
-    test_dataset = test_dataset.map(SST.parse_full_sst_tree_examples)
-    test_dataset = test_dataset.shuffle(buffer_size=2210)
-    test_dataset = test_dataset.repeat()
-    test_dataset = test_dataset.padded_batch(2210, padded_shapes=SST.get_padded_shapes(),
-                                             drop_remainder=True)
-    test_iterator = test_dataset.make_initializable_iterator()
-
-    return iterator, dev_iterator, test_iterator
+    with tf.device('/cpu:0'):
+      dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="train"))
+      dataset = dataset.map(SST.parse_full_sst_tree_examples)
+      dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=SST.get_padded_shapes(), drop_remainder=True)
+      dataset = dataset.shuffle(buffer_size=1000)
+      dataset = dataset.repeat()
+      iterator = dataset.make_initializable_iterator()
+    
+      dev_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="dev"))
+      dev_dataset = dev_dataset.map(SST.parse_full_sst_tree_examples)
+      dev_dataset = dev_dataset.shuffle(buffer_size=1101)
+      dev_dataset = dev_dataset.repeat()
+      dev_dataset = dev_dataset.padded_batch(1101, padded_shapes=SST.get_padded_shapes(),
+                                               drop_remainder=True)
+      dev_iterator = dev_dataset.make_initializable_iterator()
+    
+      test_dataset = tf.data.TFRecordDataset(SST.get_tfrecord_path("data/sst", mode="test"))
+      test_dataset = test_dataset.map(SST.parse_full_sst_tree_examples)
+      test_dataset = test_dataset.shuffle(buffer_size=2210)
+      test_dataset = test_dataset.repeat()
+      test_dataset = test_dataset.padded_batch(2210, padded_shapes=SST.get_padded_shapes(),
+                                                 drop_remainder=True)
+      test_iterator = test_dataset.make_initializable_iterator()
+    
+      return iterator, dev_iterator, test_iterator
 
   def build_train_graph(self):
     self.student.build_graph(self.pretrained_word_embeddings)
@@ -307,9 +308,9 @@ class Seq2SeqDistiller(Distiller):
     self.student.create_vars(reuse=False)
 
     teacher_train_output_dic, teacher_dev_output_dic, teacher_test_output_dic = \
-    self.apply_model(self.teacher, teacher_train_examples, teacher_dev_examples, teacher_test_examples, "teacher", softmax_temperature=self.config.distill_temp)
+    self.apply_model(self.teacher, teacher_train_examples, teacher_dev_examples, teacher_test_examples, "teacher", softmax_temperature=1.0)
     student_train_output_dic, student_dev_output_dic, student_test_output_dic = \
-    self.apply_model(self.student, student_train_examples, student_dev_examples, student_test_examples, "student")
+    self.apply_model(self.student, student_train_examples, student_dev_examples, student_test_examples, "student", softmax_temperature=1.0)
 
     # Compute mean distance between representations
     distill_rep_loss = get_single_state_rsa_distill_loss(student_train_output_dic['outputs'],

@@ -30,7 +30,7 @@ class Distiller(object):
 #      if self.config.distill_logit:
 #        ops.append(distill_logit_op)
         
-      with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold) as sess:
+      with tf.train.MonitoredTrainingSession(checkpoint_dir=self.config.save_dir, scaffold=scaffold, save_summaries_steps=1000, log_step_count_steps=500) as sess:
         for _ in np.arange(self.config.training_iterations):
             sess.run(ops)
             
@@ -271,46 +271,45 @@ class Seq2SeqDistiller(Distiller):
   def apply_model(self, model, train_examples, dev_examples, test_examples, name_tag="", softmax_temperature=1.0):
     train_output_dic = model.apply(train_examples, target_length=self.trainer.task.target_length, is_train=True)
     dev_output_dic = model.apply(dev_examples, target_length=self.trainer.task.target_length, is_train=False)
-    test_output_dic = model.apply(test_examples, target_length=self.trainer.task.target_length, is_train=False)
+    #test_output_dic = model.apply(test_examples, target_length=self.trainer.task.target_length, is_train=False)
 
     train_loss = self.trainer.compute_loss(train_output_dic['logits'],
                                                    train_output_dic['targets'], softmax_temperature=softmax_temperature)
     dev_loss = self.trainer.compute_loss(dev_output_dic['logits'],
                                                  dev_output_dic['targets'], softmax_temperature=softmax_temperature)
-    test_loss = self.trainer.compute_loss(test_output_dic['logits'],
-                                                  test_output_dic['targets'], softmax_temperature=softmax_temperature)
+    #test_loss = self.trainer.compute_loss(test_output_dic['logits'],
+    #                                              test_output_dic['targets'], softmax_temperature=softmax_temperature)
 
     train_output_dic['loss'] = train_loss
     tf.summary.scalar("loss", train_loss, family=name_tag+"_train")
     tf.summary.scalar("loss", dev_loss, family=name_tag+"_dev")
-    tf.summary.scalar("loss", test_loss, family=name_tag+"_test")
+    #tf.summary.scalar("loss", test_loss, family=name_tag+"_test")
 
     self.trainer.add_metric_summaries(train_output_dic['logits'],
                                       train_output_dic['targets'], name_tag+"_train")
     self.trainer.add_metric_summaries(dev_output_dic['logits'],
                                       dev_output_dic['targets'], name_tag+"_dev")
-    self.trainer.add_metric_summaries(test_output_dic['logits'],
-                                      test_output_dic['targets'], name_tag+"_test")
+    #self.trainer.add_metric_summaries(test_output_dic['logits'],
+    #                                  test_output_dic['targets'], name_tag+"_test")
 
-    return train_output_dic, dev_output_dic, test_output_dic
+    return train_output_dic, dev_output_dic, None
 
   def build_train_graph(self):
 
 
     train_iterator, dev_iterator, test_iterator = self.get_train_data_itaratoes()
-
     teacher_train_examples, student_train_examples = train_iterator.get_next()
     teacher_dev_examples, student_dev_examples = dev_iterator.get_next()
-    teacher_test_examples, student_test_examples = test_iterator.get_next()
+    #teacher_test_examples, student_test_examples = test_iterator.get_next()
 
 
     self.teacher.create_vars(reuse=False)
     self.student.create_vars(reuse=False)
 
     teacher_train_output_dic, teacher_dev_output_dic, teacher_test_output_dic = \
-    self.apply_model(self.teacher, teacher_train_examples, teacher_dev_examples, teacher_test_examples, "teacher", softmax_temperature=1.0)
+    self.apply_model(self.teacher, teacher_train_examples, teacher_dev_examples, None, "teacher", softmax_temperature=self.config.teacher_temp)
     student_train_output_dic, student_dev_output_dic, student_test_output_dic = \
-    self.apply_model(self.student, student_train_examples, student_dev_examples, student_test_examples, "student", softmax_temperature=1.0)
+    self.apply_model(self.student, student_train_examples, student_dev_examples, None, "student", softmax_temperature=self.config.student_temp)
 
     # Compute mean distance between representations
     distill_rep_loss = get_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
@@ -349,7 +348,6 @@ class Seq2SeqDistiller(Distiller):
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_dev")
     tf.summary.scalar("dev_uniform_rep_loss", dev_uniform_rep_loss, family="student_dev")
     tf.summary.scalar("uniform_rep_loss", teacher_dev_uniform_rep_loss, family="teacher_dev")
-
     tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_dev")
 
     distill_params = student_train_output_dic["trainable_vars"]

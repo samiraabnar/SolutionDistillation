@@ -66,12 +66,12 @@ def cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_temperatur
             tf.cast(labels, tf.int32),
             depth=vocab_size,
             on_value=confidence,
-            off_value=low_confidence)  / softmax_temperature
+            off_value=low_confidence)
               
       
       
-      xentropy = tf.nn.softmax_cross_entropy_with_logits_v2(
-          logits=logits, labels=soft_targets)
+      xentropy = tf.square(softmax_temperature)  * tf.nn.softmax_cross_entropy_with_logits_v2(
+          logits=logits/softmax_temperature, labels=soft_targets)
 
       # Calculate the best (lowest) possible value of cross entropy, and
       # subtract from the cross entropy loss.
@@ -105,9 +105,9 @@ def padded_cross_entropy_loss(logits, labels, smoothing, vocab_size, softmax_tem
           tf.cast(labels, tf.int32),
           depth=vocab_size,
           on_value=confidence,
-          off_value=low_confidence) / softmax_temperature
-      xentropy = tf.nn.softmax_cross_entropy_with_logits_v2(
-          logits=logits, labels=soft_targets)
+          off_value=low_confidence)
+      xentropy = tf.square(softmax_temperature)  * tf.nn.softmax_cross_entropy_with_logits_v2(
+          logits=logits/softmax_temperature, labels=soft_targets)
 
 
       # Calculate the best (lowest) possible value of cross entropy, and

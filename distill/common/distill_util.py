@@ -6,7 +6,7 @@ def get_logit_distill_loss(student_logits, teacher_logits, softmax_temperature=1
   else:
     teacher_logits_copy = teacher_logits
     
-  loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+  loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
                                 logits=student_logits / softmax_temperature, labels=tf.nn.softmax(teacher_logits_copy / softmax_temperature)))
 
   loss = tf.square(softmax_temperature) * loss

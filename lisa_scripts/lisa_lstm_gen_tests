@@ -29,8 +29,6 @@ TMP_LOGS_DIR="$TMPDIR"/samigpu/logs
 mkdir $TMP_DATA_DIR
 mkdir $TMP_LOGS_DIR
 
-rm -r "$TMPDIR"/samigpu/logs/*
-
 #Copy input file to scratch
 cp -r "$DATA_DIR"/* "$TMP_DATA_DIR"/
 cp -r "$LOGS_DIR"/* "$TMP_LOGS_DIR"/

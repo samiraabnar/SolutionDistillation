@@ -20,16 +20,16 @@ CODE_DIR=$HEAD_DIR/distill
 DATA_DIR=$HEAD_DIR/data
 LOGS_DIR=$HEAD_DIR/logs
 
-mkdir "$TMPDIR"/samigpu
-TMP_DATA_DIR="$TMPDIR"/samigpu/data
+#mkdir "$TMPDIR"/samigpu
+#TMP_DATA_DIR="$TMPDIR"/samigpu/data
 TMP_LOGS_DIR="$TMPDIR"/samigpu/logs
 
-mkdir $TMP_DATA_DIR
-mkdir $TMP_LOGS_DIR
+#mkdir $TMP_DATA_DIR
+#mkdir $TMP_LOGS_DIR
 
 #Copy input file to scratch
-cp -r "$DATA_DIR"/* "$TMP_DATA_DIR"/
-cp -r "$LOGS_DIR"/* "$TMP_LOGS_DIR"/
+#cp -r "$DATA_DIR"/* "$TMP_DATA_DIR"/
+#cp -r "$LOGS_DIR"/* "$TMP_LOGS_DIR"/
 
 echo "$TMP_LOGS_DIR"
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR

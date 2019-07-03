@@ -323,16 +323,16 @@ class Seq2SeqDistiller(Distiller):
                                                      stop_grad_for_teacher=not self.config.learn_to_teach)
                                                      
     # Compute uniform rep loss
+    teacher_uniform_rep_loss = get_single_state_uniform_rsa_loss(teacher_train_output_dic['outputs'],
+                                                         mode=self.config.rep_loss_mode)         
     uniform_rep_loss = get_single_state_uniform_rsa_loss(student_train_output_dic['outputs'],
                                                          mode=self.config.rep_loss_mode)                                                 
                                                      
-
-                                                     
-                                              
-
+                                                                                                                                            
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_train")
-    tf.summary.scalar("uniform_rep_loss", uniform_rep_loss, family="student_dev")
     tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_train")
+    tf.summary.scalar("uniform_rep_loss", uniform_rep_loss, family="student_train")
+    tf.summary.scalar("uniform_rep_loss", teacher_uniform_rep_loss, family="teacher_train")
     
     
     dev_distill_rep_loss = get_single_state_rsa_distill_loss(student_dev_output_dic['outputs'],
@@ -341,10 +341,14 @@ class Seq2SeqDistiller(Distiller):
     dev_distill_logit_loss = get_logit_distill_loss(student_dev_output_dic['logits'],
                                                      teacher_dev_output_dic['logits'], softmax_temperature=self.config.distill_temp)
     dev_uniform_rep_loss = get_single_state_uniform_rsa_loss(student_dev_output_dic['outputs'],
-                                                         mode=self.config.rep_loss_mode)   
+                                                         mode=self.config.rep_loss_mode) 
+    teacher_dev_uniform_rep_loss = get_single_state_uniform_rsa_loss(teacher_dev_output_dic['outputs'],
+                                                         mode=self.config.rep_loss_mode)                                                      
                                                      
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_dev")
     tf.summary.scalar("dev_uniform_rep_loss", dev_uniform_rep_loss, family="student_dev")
+    tf.summary.scalar("uniform_rep_loss", teacher_dev_uniform_rep_loss, family="teacher_dev")
+
     tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_dev")
 
     distill_params = student_train_output_dic["trainable_vars"]

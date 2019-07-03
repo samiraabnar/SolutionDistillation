@@ -21,7 +21,7 @@ CODE_DIR=$HEAD_DIR/distill
 DATA_DIR=$HEAD_DIR/data
 LOGS_DIR=$HEAD_DIR/logs
 
-mkdir "$TMPDIR"/samigpu
+#mkdir "$TMPDIR"/samigpu/logs
 TMP_DATA_DIR="$TMPDIR"/samigpu/data
 TMP_LOGS_DIR="$TMPDIR"/samigpu/logs
 
@@ -30,7 +30,7 @@ mkdir $TMP_LOGS_DIR
 
 #Copy input file to scratch
 cp -r "$DATA_DIR"/* "$TMP_DATA_DIR"/
-cp -r "$LOGS_DIR"/* "$TMP_LOGS_DIR"/
+#cp -r "$LOGS_DIR"/* "$TMP_LOGS_DIR"/
 
 echo "$TMP_LOGS_DIR"
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
@@ -59,6 +59,6 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 
 
 #Copy input file to scratch
-cp -r  "$TMP_DATA_DIR"/* "$DATA_DIR"/
+#cp -r  "$TMP_DATA_DIR"/* "$DATA_DIR"/
 cp -r  "$TMP_LOGS_DIR"/* "$LOGS_DIR"/
 

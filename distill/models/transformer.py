@@ -600,18 +600,24 @@ class EncodingTransformer(object):
       else:
         self.output_embedding_layer = self.input_embedding_layer
     
-#      self.output_projections_layer = tf.layers.Dense(len(self.task.target_vocab),
-#                                                      activation=None,
-#                                                      use_bias=True,
-#                                                      kernel_initializer=self.initializer,
-#                                                      bias_initializer=tf.zeros_initializer(),
-#                                                      kernel_regularizer=None,
-#                                                      bias_regularizer=None,
-#                                                      activity_regularizer=None,
-#                                                      kernel_constraint=None,
-#                                                      bias_constraint=None,
-#                                                      trainable=True,
-#                                                      name="OutProj")
+      self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
+                                                      activation=None,
+                                                      use_bias=True,
+                                                      kernel_initializer=self.initializer,
+                                                      bias_initializer=tf.zeros_initializer(),
+                                                      kernel_regularizer=None,
+                                                      bias_regularizer=None,
+                                                      activity_regularizer=None,
+                                                      kernel_constraint=None,
+                                                      bias_constraint=None,
+                                                      trainable=True,
+                                                      name="OutProj")
+#      self.output_projections_layer = FeedFowardNetwork(hidden_size=self.hidden_dim,
+#                                                 filter_size=1,
+#                                                 relu_dropout_keepprob=self.dropout_keep_prob,
+#                                                 allow_pad=True,
+#                                                 scope="OutputFF")
+        
 
       self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
@@ -650,7 +656,8 @@ class EncodingTransformer(object):
       outputs = self.decode(encoder_outputs=encoder_outputs,
                             encoder_outputs_presence=encoder_outputs_presence,
                             is_train=is_train)
-
+                            
+      outputs  = self.output_projections_layer.apply(outputs)
       logits =  self.output_embedding_layer.linear(outputs)
       predictions = tf.argmax(logits, axis=-1)
 
@@ -745,6 +752,19 @@ class EncodingUniversalTransformer(EncodingTransformer):
       else:
         self.output_embedding_layer = self.input_embedding_layer
 
+      self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
+                                              activation=None,
+                                              use_bias=True,
+                                              kernel_initializer=self.initializer,
+                                              bias_initializer=tf.zeros_initializer(),
+                                              kernel_regularizer=None,
+                                              bias_regularizer=None,
+                                              activity_regularizer=None,
+                                              kernel_constraint=None,
+                                              bias_constraint=None,
+                                              trainable=True,
+                                              name="OutProj")
+        
       self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
                                               self_attention_dir=self.hparams.encoder_self_attention_dir,

@@ -54,8 +54,8 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --student_encoder_attention_dir="top_down" \
 --teacher_encoder_attention_dir="top_down" \
 --train_student=True --train_teacher=True \
---distill_rep=False distill_logit=True \
---distill_temp=1.0 --teacher_temp=1.0\
+--distill_rep=False distill_logit=False \
+--distill_temp=1.0 --teacher_temp=1.0 \
 --task_name=char_trec --exp_name=_indp_drop1-1_drop05-08_L2 
 
 

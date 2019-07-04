@@ -27,12 +27,12 @@ tf.app.flags.DEFINE_string("data_dir", "data", "")
 
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
-tf.app.flags.DEFINE_string("model_type", "transformer2transformer", "")
-tf.app.flags.DEFINE_string("teacher_model", "transformer", "")
-tf.app.flags.DEFINE_string("student_model", "transformer", "")
+tf.app.flags.DEFINE_string("model_type", "lstm2transformer", "")
+tf.app.flags.DEFINE_string("teacher_model", "lstm", "")
+tf.app.flags.DEFINE_string("student_model", "enc_utransformer", "")
 
 tf.app.flags.DEFINE_boolean("train_teacher", True, "")
-tf.app.flags.DEFINE_boolean("train_student", False, "")
+tf.app.flags.DEFINE_boolean("train_student", True, "")
 tf.app.flags.DEFINE_boolean("distill_rep", False, "")
 tf.app.flags.DEFINE_boolean("distill_logit", True, "")
 
@@ -40,16 +40,16 @@ tf.app.flags.DEFINE_boolean("pretrain_teacher", True, "")
 tf.app.flags.DEFINE_integer("teacher_pretraining_iters", 100, "")
 tf.app.flags.DEFINE_string("rep_loss_mode", 'dot_product', "representation loss type (squared,softmax_cross_ent,sigmoid_cross_ent")
 
-tf.app.flags.DEFINE_string("model", "transformer", "transformer | utransformer | lstm | bilstm")
+tf.app.flags.DEFINE_string("model", "enc_utransformer", "transformer | utransformer | lstm | bilstm")
 tf.app.flags.DEFINE_string("teacher_encoder_attention_dir", "top_down", "top_down | bottom_up")
 tf.app.flags.DEFINE_string("student_encoder_attention_dir", "top_down", "top_down | bottom_up")
 
 
-tf.app.flags.DEFINE_integer("teacher_hidden_dim", 300, "")
-tf.app.flags.DEFINE_integer("teacher_encoder_depth", 2, "")
+tf.app.flags.DEFINE_integer("teacher_hidden_dim", 256, "")
+tf.app.flags.DEFINE_integer("teacher_encoder_depth", 1, "")
 tf.app.flags.DEFINE_integer("teacher_decoder_depth", 1, "")
-tf.app.flags.DEFINE_integer("student_hidden_dim", 300, "")
-tf.app.flags.DEFINE_integer("student_encoder_depth", 2, "")
+tf.app.flags.DEFINE_integer("student_hidden_dim", 128, "")
+tf.app.flags.DEFINE_integer("student_encoder_depth", 4, "")
 tf.app.flags.DEFINE_integer("student_decoder_depth", 1, "")
 
 tf.app.flags.DEFINE_integer("input_dim", None, "")
@@ -70,19 +70,19 @@ tf.app.flags.DEFINE_string('teacher_attention_mechanism', None, 'attention_mecha
 tf.app.flags.DEFINE_string('student_attention_mechanism', None, 'attention_mechanism')
 
 
-tf.app.flags.DEFINE_float("teacher_input_dropout_keep_prob", 0.75, "")
-tf.app.flags.DEFINE_float("teacher_hidden_dropout_keep_prob", 0.1, "")
+tf.app.flags.DEFINE_float("teacher_input_dropout_keep_prob", 0.8, "")
+tf.app.flags.DEFINE_float("teacher_hidden_dropout_keep_prob", 0.9, "")
 tf.app.flags.DEFINE_float("student_input_dropout_keep_prob", 0.75, "")
-tf.app.flags.DEFINE_float("student_hidden_dropout_keep_prob", 0.1, "")
+tf.app.flags.DEFINE_float("student_hidden_dropout_keep_prob", 0.5, "")
 
 
 tf.app.flags.DEFINE_float("teacher_learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("student_learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("distill_learning_rate", 0.001, "")
-tf.app.flags.DEFINE_float("data_weight", 0.01, "")
-tf.app.flags.DEFINE_float("distill_logits_weight", 0.99, "")
+tf.app.flags.DEFINE_float("data_weight", 0.00, "")
+tf.app.flags.DEFINE_float("distill_logits_weight", 1.00, "")
 
-tf.app.flags.DEFINE_float("distill_temp", 10, "")
+tf.app.flags.DEFINE_float("distill_temp", 1, "")
 tf.app.flags.DEFINE_float("teacher_temp", 1, "")
 tf.app.flags.DEFINE_float("student_temp", 1, "")
 tf.app.flags.DEFINE_boolean("learn_to_teach", False, "")
@@ -97,9 +97,9 @@ tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 300000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 3, "")
-tf.app.flags.DEFINE_integer("embedding_dim", 300, "embeddings dim")
+tf.app.flags.DEFINE_integer("embedding_dim", 128, "embeddings dim")
 
-tf.app.flags.DEFINE_string("data_path", "./data", "data path")
+tf.app.flags.DEFINE_string("data_path", "../data", "data path")
 
 hparams = tf.app.flags.FLAGS
 

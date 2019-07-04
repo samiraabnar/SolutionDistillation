@@ -28,9 +28,6 @@ class FeedforwardSelfAttention(object):
       #  tf.matmul(tf.transpose(input_keys, perm=[0, 2, 1]), attention_score),axis=-1)
 
       attention_out = tf.multiply(input_keys, attention_score)
-      tf.logging.info("attention output")
-      tf.logging.info(attention_out)
-
     return attention_out
 
 
@@ -92,7 +89,7 @@ class MultiHeadScaledDotProductAttention(object):
       x = tf.transpose(x, [0, 2, 1, 3])  # --> [batch, length, num_heads, depth]
       return tf.reshape(x, [batch_size, length, self.hidden_dim])
 
-  def apply(self, x, y, bias, is_train=True, cache=None, x_presence=None, y_presence=None):
+  def apply(self, x, y, bias, layer_id, is_train=True, cache=None, x_presence=None, y_presence=None, dic_to_save_weights=None):
     """Apply attention mechanism to x and y.
     Args:
       x: a tensor with shape [batch_size, length_x, hidden_size]
@@ -110,62 +107,61 @@ class MultiHeadScaledDotProductAttention(object):
     # learned projections. This is in preparation of splitting them into
     # multiple heads. Multi-head attention uses multiple queries, keys, and
     # values rather than regular attention (which uses a single q, k, v).
-    tf.logging.info("attention x:")
-    tf.logging.info(x)
-    tf.logging.info("attention y:")
-    tf.logging.info(y)
-    tf.logging.info("attention bias:")
-    tf.logging.info(bias)
 
-    q = self.q_dense_layer(x)
-    k = self.k_dense_layer(y)
-    v = self.v_dense_layer(y)
-
-    if x_presence is None:
-      x_presence = tf.ones((tf.shape(x)[0],tf.shape(x)[1],1))
-
-    if y_presence is None:
-      y_presence = tf.ones((tf.shape(y)[0],tf.shape(y)[1],1))
-
-    if cache is not None:
-      # Combine cached keys and values with new keys and values.
-      k = tf.concat([cache["k"], k], axis=1)
-      v = tf.concat([cache["v"], v], axis=1)
-
-      # Update cache
-      cache["k"] = k
-      cache["v"] = v
-
-    # Split q, k, v into heads.
-    q = self.split_heads(q)
-    k = self.split_heads(k)
-    v = self.split_heads(v)
-
-    # Scale q to prevent the dot product between q and k from growing too large.
-    depth = (self.hidden_dim // self.num_heads)
-    q *= depth ** -0.5
-
-    # Calculate dot product attention
-    logits = tf.matmul(q, k, transpose_b=True) #[batch size, heads, length_x, length_y]
-    logits += bias
-    # Pay less attention to the less present nodes.
-    logits *= tf.tile(tf.expand_dims(
-      tf.transpose(y_presence, [0,2,1]), axis=1), [tf.shape(logits)[0]/tf.shape(y_presence)[0],tf.shape(logits)[1],1,1])
-
-
-    with tf.name_scope("attention_weights"):
-      attention_weights = tf.nn.softmax(logits, name="attention_weights")
-
-    if is_train:
-      attention_weights = tf.nn.dropout(attention_weights, self.attention_dropout_keepprob)
-    attention_output = tf.matmul(attention_weights, v)
-
-    # Recombine heads --> [batch_size, length, hidden_size]
-    attention_output = self.combine_heads(attention_output)
-
-    # Run the combined outputs through another linear projection layer.
-    attention_output = self.output_dense_layer(attention_output)
-    return attention_output
+    with tf.name_scope("attention") as scope:
+        q = self.q_dense_layer(x)
+        k = self.k_dense_layer(y)
+        v = self.v_dense_layer(y)
+    
+        if x_presence is None:
+          x_presence = tf.ones((tf.shape(x)[0],tf.shape(x)[1],1))
+    
+        if y_presence is None:
+          y_presence = tf.ones((tf.shape(y)[0],tf.shape(y)[1],1))
+    
+        if cache is not None:
+          # Combine cached keys and values with new keys and values.
+          k = tf.concat([cache["k"], k], axis=1)
+          v = tf.concat([cache["v"], v], axis=1)
+    
+          # Update cache
+          cache["k"] = k
+          cache["v"] = v
+    
+        # Split q, k, v into heads.
+        q = self.split_heads(q)
+        k = self.split_heads(k)
+        v = self.split_heads(v)
+    
+        # Scale q to prevent the dot product between q and k from growing too large.
+        depth = (self.hidden_dim // self.num_heads)
+        q *= depth ** -0.5
+    
+        # Calculate dot product attention
+        logits = tf.matmul(q, k, transpose_b=True) #[batch size, heads, length_x, length_y]
+        logits += bias
+        
+        if dic_to_save_weights is not None:
+            dic_to_save_weights[scope+"_"+str(layer_id)+"_attention_logits"] = logits
+            dic_to_save_weights[scope+"_"+str(layer_id)+"_attention_bias"] = bias
+        # Pay less attention to the less present nodes.
+        #logits *= tf.tile(tf.expand_dims(
+        #  tf.transpose(y_presence, [0,2,1]), axis=1), [tf.shape(logits)[0]/tf.shape(y_presence)[0],tf.shape(logits)[1],1,1])
+    
+    
+        with tf.name_scope("attention_weights"):
+          attention_weights = tf.nn.softmax(logits, name="attention_weights")
+    
+        if is_train:
+          attention_weights = tf.nn.dropout(attention_weights, self.attention_dropout_keepprob)
+        attention_output = tf.matmul(attention_weights, v)
+    
+        # Recombine heads --> [batch_size, length, hidden_size]
+        attention_output = self.combine_heads(attention_output)
+    
+        # Run the combined outputs through another linear projection layer.
+        attention_output = self.output_dense_layer(attention_output)
+        return attention_output
 
 
 class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttention):
@@ -210,12 +206,6 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
     # multiple heads. Multi-head attention uses multiple queries, keys, and
     # values rather than regular attention (which uses a single q, k, v).
 
-    tf.logging.info("attention x:")
-    tf.logging.info(x)
-    tf.logging.info("attention y:")
-    tf.logging.info(y)
-    tf.logging.info("attention bias:")
-    tf.logging.info(bias)
 
     q = self.q_dense_layer(x)
     k = self.k_dense_layer(y)
@@ -267,18 +257,13 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
 
     with tf.name_scope("presence_probs"):
       new_x_presence = tf.nn.softmax(tf.reduce_sum(aggregated_assignment_weights, axis=-2) ,axis=-1)
-    tf.logging.info('aggregated_assignment_weights')
-    tf.logging.info(aggregated_assignment_weights)
+
 
     if is_train:
       assignment_weights = tf.nn.dropout(assignment_weights, self.attention_dropout_keepprob)
 
-    tf.logging.info('assignment_weights')
-    tf.logging.info(assignment_weights)
-    tf.logging.info(v)
     attention_output = tf.matmul(assignment_weights, v)
-    tf.logging.info('attention_output')
-    tf.logging.info(attention_output)
+
 
 
     # Recombine heads --> [batch_size, length, hidden_size]

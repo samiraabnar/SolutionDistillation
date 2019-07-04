@@ -17,16 +17,16 @@ def get_logit_distill_loss(student_logits, teacher_logits, softmax_temperature=1
 def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='dot_product'):
   teacher_states = tf.stop_gradient(teacher_states)
 
-  tf.logging.info('state shapes')
-  tf.logging.info(teacher_states)
-  tf.logging.info(student_states)
+  #tf.logging.info('state shapes')
+  #tf.logging.info(teacher_states)
+  #tf.logging.info(student_states)
 
   teacher_rsm = dot_product_sim(teacher_states,teacher_states)
   student_rsm = dot_product_sim(student_states, student_states)
 
-  tf.logging.info('dist shapes')
-  tf.logging.info(teacher_rsm)
-  tf.logging.info(student_rsm)
+  #tf.logging.info('dist shapes')
+  #tf.logging.info(teacher_rsm)
+  #tf.logging.info(student_rsm)
 
 
   if mode == 'squared':
@@ -44,15 +44,15 @@ def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='dot_
 def get_single_state_uniform_rsa_loss(student_states, mode='dot_product'):
 
 
-  tf.logging.info('state shapes')
-  tf.logging.info(student_states)
+  #tf.logging.info('state shapes')
+  #tf.logging.info(student_states)
 
   student_rsm = dot_product_sim(student_states, student_states)
   teacher_rsm = tf.ones_like(student_rsm)
 
-  tf.logging.info('dist shapes')
-  tf.logging.info(teacher_rsm)
-  tf.logging.info(student_rsm)
+  #tf.logging.info('dist shapes')
+  #tf.logging.info(teacher_rsm)
+  #tf.logging.info(student_rsm)
 
 
   if mode == 'squared':

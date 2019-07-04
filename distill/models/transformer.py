@@ -63,7 +63,7 @@ class TransformerEncoder(object):
       self.output_normalization = LayerNormalization(self.hidden_dim)
       self.output_normalization.create_vars()
 
-  def apply(self, inputs, attention_bias, inputs_padding, is_train=True, encoder_inputs_presence=None, reuse=tf.AUTO_REUSE):
+  def apply(self, inputs, attention_bias, inputs_padding, is_train=True, encoder_inputs_presence=None, reuse=tf.AUTO_REUSE,dic_to_save_weights=None):
 
     encoder_inputs = inputs
     with tf.variable_scope(self.scope, reuse=reuse):
@@ -78,7 +78,10 @@ class TransformerEncoder(object):
         encoder_inputs, encoder_inputs_presence = self_attention_layer.apply(x=encoder_inputs, y=encoder_inputs,
                                                                              x_presence=encoder_inputs_presence,
                                                                              y_presence=encoder_inputs_presence,
-                                                                             is_train=is_train, bias=attention_bias)
+                                                                             layer_id=n,
+                                                                             is_train=is_train, bias=attention_bias,
+                                                                             dic_to_save_weights=dic_to_save_weights
+                                                                             )
         encoder_inputs, _ = feed_forward_network.apply(x=encoder_inputs, is_train=is_train,
                                                     padding=inputs_padding)
 
@@ -148,7 +151,7 @@ class TransformerDecoder(object):
 
   def apply(self, inputs, encoder_outputs, decoder_self_attention_bias, attention_bias, encoder_outputs_presence=None,
             cache=None, is_train=True,  reuse=tf.AUTO_REUSE,
-            target_length=None):
+            target_length=None, dic_to_save_weights=None):
     decoder_inputs = inputs
     with tf.variable_scope(self.scope, reuse=reuse):
       for n, layer in enumerate(self.layers):
@@ -160,11 +163,13 @@ class TransformerDecoder(object):
         enc_dec_attention = layer[1]
         feed_forward_network = layer[2]
 
-        decoder_inputs, _ = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, is_train=is_train,
-                                                      bias=decoder_self_attention_bias, cache=layer_cache)
-        decoder_inputs, _ = enc_dec_attention.apply(x=decoder_inputs, y=encoder_outputs, is_train=is_train,
+        decoder_inputs, _ = self_attention_layer.apply(x=decoder_inputs, y=decoder_inputs, layer_id=n, is_train=is_train,
+                                                      bias=decoder_self_attention_bias, cache=layer_cache,
+                                                      dic_to_save_weights=dic_to_save_weights)
+        decoder_inputs, _ = enc_dec_attention.apply(x=decoder_inputs, y=encoder_outputs, layer_id=n, is_train=is_train,
                                                        y_presence=encoder_outputs_presence,
-                                                       bias=attention_bias)
+                                                       bias=attention_bias,
+                                                       dic_to_save_weights=dic_to_save_weights)
         decoder_inputs,_ = feed_forward_network.apply(x=decoder_inputs, is_train=is_train)
 
     return self.output_normalization.apply(decoder_inputs, is_train)
@@ -628,7 +633,7 @@ class EncodingTransformer(object):
 
       self.encoder_stack.create_vars(reuse=False)
 
-  def apply(self, examples, target_length=None, reuse=tf.AUTO_REUSE, is_train=True):
+  def apply(self, examples, target_length=None, reuse=tf.AUTO_REUSE, is_train=True, dic_to_save_weights=None):
     """Calculate target logits or inferred target sequences.
     Args:
       inputs: int tensor with shape [batch_size, input_length].
@@ -650,13 +655,13 @@ class EncodingTransformer(object):
 
       # Run the inputs through the encoder layer to map the symbol
       # representations to continuous representations.
-      encoder_outputs, encoder_outputs_presence = self.encode(inputs, attention_bias, is_train)
+      encoder_outputs, encoder_outputs_presence = self.encode(inputs, attention_bias, is_train, dic_to_save_weights=dic_to_save_weights)
       tf.logging.info('encoder outputs')
       tf.logging.info(encoder_outputs)
 
       outputs = self.decode(encoder_outputs=encoder_outputs,
                             encoder_outputs_presence=encoder_outputs_presence,
-                            is_train=is_train)
+                            is_train=is_train, dic_to_save_weights=dic_to_save_weights)
                             
       outputs  = self.output_projections_layer.apply(outputs)
       logits =  self.output_embedding_layer.linear(outputs)
@@ -669,7 +674,7 @@ class EncodingTransformer(object):
               'trainable_vars': tf.trainable_variables(scope=self.scope),
               }
 
-  def encode(self, inputs, attention_bias, is_train=True):
+  def encode(self, inputs, attention_bias, is_train=True, dic_to_save_weights=None):
     """Generate continuous representation for inputs.
     Args:
       inputs: int tensor with shape [batch_size, input_length].
@@ -691,9 +696,9 @@ class EncodingTransformer(object):
         encoder_inputs = tf.nn.dropout(
             encoder_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
 
-      return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train)
+      return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train, dic_to_save_weights=dic_to_save_weights)
 
-  def decode(self,encoder_outputs, encoder_outputs_presence=None, is_train=True):
+  def decode(self,encoder_outputs, encoder_outputs_presence=None, is_train=True, dic_to_save_weights=None):
     """Generate logits for each value in the target sequence.
     Args:
       targets: target values for the output sequence.

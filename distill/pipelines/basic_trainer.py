@@ -60,8 +60,8 @@ class Trainer(object):
                                            config=tf.ConfigProto(
                                              allow_soft_placement=True, log_device_placement=True)
                                            ) as sess:
-      tf.logging.info("start training:")
-      tf.logging.info(self.config.training_iterations)
+      #tf.logging.info("start training:")
+      #tf.logging.info(self.config.training_iterations)
       for i in np.arange(self.config.training_iterations):
         sess.run(update_op)
 

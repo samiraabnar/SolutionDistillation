@@ -70,10 +70,8 @@ class Arithmatic(object):
   def load_vocab(self):
     self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','*','+','-']
 
-    print(self.id2word)
     self.word2id = {}
     for i in np.arange(len(self.id2word)):
-      print(i, self.id2word[i])
       self.word2id[self.id2word[i]] = i
 
   @property
@@ -124,7 +122,6 @@ class Arithmatic(object):
     budgets = {}
     max_value = self.num_of_symbols - 1
     max_output_freq = (number_of_examples / self.num_of_symbols) * 2
-    print("max_output_freq: ", max_output_freq)
     for i in tqdm(np.arange(number_of_examples)):
       exp = -1
       exp_str = '-1'
@@ -221,10 +218,8 @@ class ArithmaticSimple(ArithmaticSameLength):
   def load_vocab(self):
     self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
 
-    print(self.id2word)
     self.word2id = {}
     for i in np.arange(len(self.id2word)):
-      print(i, self.id2word[i])
       self.word2id[self.id2word[i]] = i
 
   @property
@@ -252,7 +247,6 @@ class ArithmaticSimple(ArithmaticSameLength):
     budgets = {}
     max_value = self.num_of_symbols - 1
     max_output_freq = (number_of_examples / self.num_of_symbols) * 2
-    print("max_output_freq: ", max_output_freq)
     for i in tqdm(np.arange(number_of_examples)):
       exp = -1
       exp_str = '-1'
@@ -291,10 +285,8 @@ class ArithmaticSimpleSameLength(ArithmaticSimple):
   def load_vocab(self):
     self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
 
-    print(self.id2word)
     self.word2id = {}
     for i in np.arange(len(self.id2word)):
-      print(i, self.id2word[i])
       self.word2id[self.id2word[i]] = i
 
   @property
@@ -332,10 +324,8 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
   def load_vocab(self):
     self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
 
-    print(self.id2word)
     self.word2id = {}
     for i in np.arange(len(self.id2word)):
-      print(i, self.id2word[i])
       self.word2id[self.id2word[i]] = i
 
   @property
@@ -414,10 +404,8 @@ class ArithmaticSimpleSameLength10(ArithmaticSimple):
   def load_vocab(self):
     self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
 
-    print(self.id2word)
     self.word2id = {}
     for i in np.arange(len(self.id2word)):
-      print(i, self.id2word[i])
       self.word2id[self.id2word[i]] = i
 
   @property

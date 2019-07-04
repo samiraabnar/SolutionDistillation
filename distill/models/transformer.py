@@ -603,7 +603,7 @@ class EncodingTransformer(object):
     
       self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
                                                       activation=None,
-                                                      use_bias=True,
+                                                      use_bias=False,
                                                       kernel_initializer=self.initializer,
                                                       bias_initializer=tf.zeros_initializer(),
                                                       kernel_regularizer=None,

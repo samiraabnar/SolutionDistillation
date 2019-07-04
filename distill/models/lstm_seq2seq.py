@@ -128,10 +128,10 @@ class LSTMSeq2Seq(object):
           decoder_inputs = tf.map_fn(compute_decoding_step_input,
                                      transpose_embedded_targets)  # (Length, batch_size, hidden_dim)
           outputs = tf.transpose(decoder_inputs, [1, 0, 2])
-          o_shape = tf.shape(outputs)
-          batch_size, length, dim = o_shape[0], o_shape[1], o_shape[2]
-          outputs = self.output_projections_layer.apply(tf.reshape(outputs,[batch_size*length,  self.hparams.hidden_dim]))
-          outputs= tf.reshape(outputs, [batch_size, length, -1])
+          #o_shape = tf.shape(outputs)
+          #batch_size, length, dim = o_shape[0], o_shape[1], o_shape[2]
+          #outputs = self.output_projections_layer.apply(tf.reshape(outputs,[batch_size*length,  self.hparams.hidden_dim]))
+          #outputs= tf.reshape(outputs, [batch_size, length, -1])
           outputs_lengths = tf.ones(tf.shape(outputs)[0])
         else:
           #When generating a sequence,

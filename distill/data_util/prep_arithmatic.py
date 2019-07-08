@@ -3,6 +3,8 @@ import tensorflow as tf
 from random import choices, uniform, randint, sample
 import os
 from tqdm import tqdm
+import scipy.stats as stats
+
 
 from distill.data_util.trees import Tree
 
@@ -474,6 +476,88 @@ class ArithmaticSimpleSameLength10Depth2(ArithmaticSimpleSameLength10):
   def max_depth(self):
     return 2
     
+    
+class ArithmaticSimpleSameLength10Depth2Zipfian(ArithmaticSimpleSameLength10Depth2):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple_samelength10_depth2_zipfian'
+    self.vocab_path = os.path.join(self.data_path,'vocab')
+
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+
+    self.load_vocab()
+    self.pretrained = False
+    
+  @property
+  def forbidden_lengths(self):
+      return []
+      
+  def generator(self, number_of_examples, mode="train"):
+    max_length = self.train_length if mode == "train" else self.dev_length
+    possible_lengths = list(set(np.arange(1,max_length+1)) - set(self.forbidden_lengths))
+
+    N = len(possible_lengths)
+    x = np.arange(1, N+1)
+    a = 0.6
+    weights = x ** (-a)
+    weights /= weights.sum()
+    bounded_zipf = stats.rv_discrete(name='bounded_zipf', values=(x, weights))
+    
+    budgets = {}
+    max_value = self.num_of_symbols - 1
+    max_output_freq = (number_of_examples / self.num_of_symbols) * 2
+    print("max_output_freq: ", max_output_freq)
+    for i in tqdm(np.arange(number_of_examples)):
+      exp = -1
+      exp_str = '-1'
+      while exp < 0 or exp >= self.num_of_symbols:
+        
+        if mode == "train":
+          length_index = bounded_zipf.rvs(size=1)[0]-1
+        else:
+          length_index = np.random.randint(len(possible_lengths))
+        
+        length = possible_lengths[length_index]  
+        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','+'], max_value, 0, self.max_depth)
+        exp = eval(exp_str)
+        if exp not in budgets:
+          budgets[exp] = 1
+        budgets[exp] += 1
+        if budgets[exp] >= max_output_freq:
+          exp = -1
+          exp_str = '-1'
+
+      exp_tokens = exp_str.split() + [self.eos]
+      output = [str(exp)]
+      example = {'inputs': self.encode(exp_tokens),
+                 'targets':self.encode(output),
+                 'inputs_length': len(exp_tokens),
+                 'targets_length': len(output)}
+
+      yield example
+
+class ArithmaticSimpleSameLength100Depth2Zipfian(ArithmaticSimpleSameLength10Depth2Zipfian):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple_samelength10_depth2_zipfian'
+    self.vocab_path = os.path.join(self.data_path,'vocab')
+
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+
+    self.load_vocab()
+    self.pretrained = False
+    
+  @property
+  def forbidden_lengths(self):
+      return []
+      
+  @property
+  def num_of_symbols(self):
+      return 100
+
+    
 if __name__ == '__main__':
 #  bin_iden = ArithmaticSimple('data/arithmatic_simple')
 #
@@ -500,20 +584,26 @@ if __name__ == '__main__':
 #  bin_iden.build_tfrecords(2000, 'dev')
 #  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden = ArithmaticSimpleSameLength10Depth2('data/arithmatic_simple_samelength10_depth2')
+#  bin_iden = ArithmaticSimpleSameLength10Depth2('data/arithmatic_simple_samelength10_depth2')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
+#
+#  bin_iden = ArithmaticSimpleSameLength10Depth4('data/arithmatic_simple_samelength10_depth4')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
+#  
+#  bin_iden = ArithmaticSimpleSameLength10Depth6('data/arithmatic_simple_samelength10_depth6')
+#
+#  bin_iden.build_tfrecords(10000, 'train')
+#  bin_iden.build_tfrecords(2000, 'dev')
+#  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden.build_tfrecords(10000, 'train')
-  bin_iden.build_tfrecords(2000, 'dev')
-  bin_iden.build_tfrecords(2000, 'test')
+  bin_iden = ArithmaticSimpleSameLength100Depth2Zipfian('data/arithmatic_simple_samelength100_depth2_zipfian')
 
-  bin_iden = ArithmaticSimpleSameLength10Depth4('data/arithmatic_simple_samelength10_depth4')
-
-  bin_iden.build_tfrecords(10000, 'train')
-  bin_iden.build_tfrecords(2000, 'dev')
-  bin_iden.build_tfrecords(2000, 'test')
-  
-  bin_iden = ArithmaticSimpleSameLength10Depth6('data/arithmatic_simple_samelength10_depth6')
-
-  bin_iden.build_tfrecords(10000, 'train')
+  bin_iden.build_tfrecords(50000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')
   bin_iden.build_tfrecords(2000, 'test')

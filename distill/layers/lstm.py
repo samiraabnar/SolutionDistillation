@@ -50,8 +50,8 @@ class LSTM(object):
     self.batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       #embedded_input = tf_layers.layer_norm(embedded_input)
-      tf.logging.info("embedded_input")
-      tf.logging.info(inputs)
+      #tf.logging.info("embedded_input")
+      #tf.logging.info(inputs)
 
       #embedded_input = tf_layers.layer_norm(embedded_input)
 
@@ -79,17 +79,17 @@ class LSTM(object):
           initial_state=init_state)
         # lstm_outputs = tf_layers.layer_norm(lstm_outputs)
 
-        tf.logging.info("seq_outputs"),
-        tf.logging.info(lstm_outputs)
+        #tf.logging.info("seq_outputs"),
+        #tf.logging.info(lstm_outputs)
 
       if self.attention_mechanism is not None:
         with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
           lstm_outputs = self.attention.apply(lstm_outputs, inputs_length, is_train)
 
 
-      tf.logging.info("LSTM output before projection")
-      tf.logging.info(lstm_outputs)
-      tf.logging.info(inputs_length)
+      #tf.logging.info("LSTM output before projection")
+      #tf.logging.info(lstm_outputs)
+      #tf.logging.info(inputs_length)
 
       bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
@@ -104,8 +104,8 @@ class LSTM(object):
       else:
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
 
-      tf.logging.info("final output:")
-      tf.logging.info(sentence_reps)
+      #tf.logging.info("final output:")
+      #tf.logging.info(sentence_reps)
 
 
 
@@ -142,8 +142,8 @@ class LSTM(object):
 
           last_lstm_prediction_logits = tf.expand_dims(last_lstm_prediction, 1)
           last_lstm_prediction_logits = embedding_layer.linear(last_lstm_prediction_logits)
-          tf.logging.info('last lstm prediction')
-          tf.logging.info(last_lstm_prediction)
+          #tf.logging.info('last lstm prediction')
+          #tf.logging.info(last_lstm_prediction)
 
           prediction = tf.argmax(last_lstm_prediction_logits, axis=-1)
           embedded_prediction = embedding_layer.apply(prediction)
@@ -187,9 +187,9 @@ class LSTM(object):
           lstm_outputs = self.attention.apply(lstm_outputs, inputs_length, is_train)
 
 
-      tf.logging.info("LSTM output before projection")
-      tf.logging.info(lstm_outputs)
-      tf.logging.info(inputs_length)
+      #tf.logging.info("LSTM output before projection")
+      #tf.logging.info(lstm_outputs)
+      #tf.logging.info(inputs_length)
 
       bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
@@ -204,8 +204,8 @@ class LSTM(object):
       else:
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
 
-      tf.logging.info("final output:")
-      tf.logging.info(sentence_reps)
+      #tf.logging.info("final output:")
+      # tf.logging.info(sentence_reps)
 
 
 

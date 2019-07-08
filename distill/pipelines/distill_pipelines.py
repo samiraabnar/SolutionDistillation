@@ -2,7 +2,8 @@ import tensorflow as tf
 import numpy as np
 from distill.data_util.prep_sst import SST
 from distill.data_util.vocab import PretrainedVocab
-from distill.common.distill_util import get_single_state_rsa_distill_loss, get_logit_distill_loss, get_single_state_uniform_rsa_loss
+from distill.common.distill_util import get_single_state_rsa_distill_loss, get_logit_distill_loss, \
+  get_single_state_uniform_rsa_loss, get_biased_single_state_rsa_distill_loss
 from distill.pipelines.seq2seq import Seq2SeqTrainer
 
 
@@ -315,6 +316,14 @@ class Seq2SeqDistiller(Distiller):
     distill_rep_loss = get_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
                                                      teacher_train_output_dic['outputs'],
                                                      mode=self.config.rep_loss_mode)
+
+    # Compute mean distance between representations
+    general_bias_distill_rep_loss = get_biased_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
+                                                         teacher_train_output_dic['outputs'],
+                                                         mode=self.config.rep_loss_mode, bias="general")
+    local_bias_distill_rep_loss = get_biased_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
+                                                                             teacher_train_output_dic['outputs'],
+                                                                             mode=self.config.rep_loss_mode, bias="local")
                                                      
     # Compute logit distill loss
     distill_logit_loss = get_logit_distill_loss(student_train_output_dic['logits'],
@@ -331,6 +340,8 @@ class Seq2SeqDistiller(Distiller):
                                                                                                                                             
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_train")
     tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_train")
+    tf.summary.scalar("general_bias_distill_rep_loss", general_bias_distill_rep_loss, family="student_train")
+    tf.summary.scalar("local_bias_distill_rep_loss", local_bias_distill_rep_loss, family="student_train")
     tf.summary.scalar("uniform_rep_loss", uniform_rep_loss, family="student_train")
     tf.summary.scalar("uniform_rep_loss", teacher_uniform_rep_loss, family="teacher_train")
     
@@ -345,10 +356,10 @@ class Seq2SeqDistiller(Distiller):
     teacher_dev_uniform_rep_loss = get_single_state_uniform_rsa_loss(teacher_dev_output_dic['outputs'],
                                                          mode=self.config.rep_loss_mode)                                                      
                                                      
-    tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_dev")
+    tf.summary.scalar("distill_rep_loss", dev_distill_rep_loss, family="student_dev")
     tf.summary.scalar("dev_uniform_rep_loss", dev_uniform_rep_loss, family="student_dev")
     tf.summary.scalar("uniform_rep_loss", teacher_dev_uniform_rep_loss, family="teacher_dev")
-    tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_dev")
+    tf.summary.scalar("distill_logit_loss", dev_distill_logit_loss, family="student_dev")
 
     distill_params = student_train_output_dic["trainable_vars"]
     if self.config.learn_to_teach:

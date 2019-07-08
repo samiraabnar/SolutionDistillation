@@ -663,7 +663,7 @@ class EncodingTransformer(object):
                             encoder_outputs_presence=encoder_outputs_presence,
                             is_train=is_train, dic_to_save_weights=dic_to_save_weights)
                             
-      outputs  = self.output_projections_layer.apply(outputs)
+      #outputs  = self.output_projections_layer.apply(outputs)
       logits =  self.output_embedding_layer.linear(outputs)
       predictions = tf.argmax(logits, axis=-1)
 

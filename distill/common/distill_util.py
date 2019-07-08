@@ -102,9 +102,7 @@ def dot_product_sim(a, b):
   b_norm = tf.expand_dims(tf.norm(b, axis=-1), -1)
   b = b / (b_norm+0.000000001)
 
-  sim_mat = tf.matmul(a, b,
-                     transpose_b=True  # transpose second matrix
-                     )
+  sim_mat = tf.reduce_sum(tf.multiply(a, b), axis=-1)
 
   return sim_mat
 

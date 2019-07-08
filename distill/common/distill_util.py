@@ -14,15 +14,16 @@ def get_logit_distill_loss(student_logits, teacher_logits, softmax_temperature=1
   return loss
 
 
-def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='dot_product'):
-  teacher_states = tf.stop_gradient(teacher_states)
+def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='dot_product', train_teacher=False):
+  if not train_teacher:
+    teacher_states = tf.stop_gradient(teacher_states)
 
   #tf.logging.info('state shapes')
   #tf.logging.info(teacher_states)
   #tf.logging.info(student_states)
 
-  teacher_rsm = dot_product_sim(teacher_states,teacher_states)
-  student_rsm = dot_product_sim(student_states, student_states)
+  teacher_rsm = dot_product_sim(teacher_states,teacher_states, pair_wise=True)
+  student_rsm = dot_product_sim(student_states, student_states, pair_wise=True)
 
   #tf.logging.info('dist shapes')
   #tf.logging.info(teacher_rsm)
@@ -34,9 +35,9 @@ def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='dot_
   elif mode == 'softmax_cross_ent':
     rsa_score = tf.reduce_mean(sigmoid_cross_entropy_rsa(student_rsm, teacher_rsm))
   elif mode == 'dot_product':
-    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm, pair_wise=False))
   else:
-    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm, pair_wise=False))
 
   return rsa_score
 
@@ -47,7 +48,7 @@ def get_single_state_uniform_rsa_loss(student_states, mode='dot_product'):
   #tf.logging.info('state shapes')
   #tf.logging.info(student_states)
 
-  student_rsm = dot_product_sim(student_states, student_states)
+  student_rsm = dot_product_sim(student_states, student_states,pair_wise=True)
   teacher_rsm = tf.ones_like(student_rsm)
 
   #tf.logging.info('dist shapes')
@@ -60,11 +61,28 @@ def get_single_state_uniform_rsa_loss(student_states, mode='dot_product'):
   elif mode == 'softmax_cross_ent':
     rsa_score = tf.reduce_mean(sigmoid_cross_entropy_rsa(student_rsm, teacher_rsm))
   elif mode == 'dot_product':
-    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm, pair_wise=False))
   else:
-    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm))
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(student_rsm, teacher_rsm, pair_wise=False))
 
   return rsa_score
+
+def get_biased_single_state_rsa_distill_loss(student_states, teacher_states, mode='dot_product', bias="general"):
+
+  teacher_rsm = dot_product_sim(teacher_states, teacher_states, pair_wise=True)
+  student_rsm = dot_product_sim(student_states, student_states, pair_wise=True)
+
+  if mode == 'squared':
+    rsa_score = tf.reduce_mean(squared_dist_rsm(student_rsm,teacher_rsm))
+  elif mode == 'softmax_cross_ent':
+    rsa_score = tf.reduce_mean(sigmoid_cross_entropy_rsa(student_rsm, teacher_rsm))
+  elif mode == 'dot_product':
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(reweight(student_rsm, bias), reweight(teacher_rsm, bias), pair_wise=False))
+  else:
+    rsa_score = 1.0 - tf.reduce_mean(dot_product_sim(reweight(student_rsm, bias), reweight(teacher_rsm, bias), pair_wise=False))
+
+  return rsa_score
+
 
 
 def sigmoid_cross_entropy_rsa(d_a, d_b):
@@ -92,7 +110,7 @@ def squared_dist_rsm(a, b):
   return row_norms_A - 2 * tf.matmul(a, tf.transpose(b)) + row_norms_B
 
 
-def dot_product_sim(a, b):
+def dot_product_sim(a, b, pair_wise=True):
   a = tf.reshape(a, [-1, tf.shape(a)[-1]])
   b = tf.reshape(b, [-1, tf.shape(b)[-1]])
 
@@ -102,15 +120,27 @@ def dot_product_sim(a, b):
   b_norm = tf.expand_dims(tf.norm(b, axis=-1), -1)
   b = b / (b_norm+0.000000001)
 
-  sim_mat = tf.reduce_sum(tf.multiply(a, b), axis=-1)
+
+  if pair_wise:
+    sim_mat = tf.matmul(a, b, transpose_b=True)
+  else:
+    sim_mat = tf.reduce_sum(tf.multiply(a, b), axis=-1)
 
   return sim_mat
+
+def reweight(dists, direction="general"):
+  # It should be applied before normalizing!
+  if direction == "general":
+    return 1.0 / tf.math.pow(dists+ 0.000000001, 2)
+  else: #local
+    return tf.math.pow(dists, 2)
+
 
 if __name__ == '__main__':
     a = tf.constant([[[1,1],[2,7],[4,3]],[[5,1],[2,20],[13,3]]], dtype=tf.float32)
     b = tf.constant([[[1, 2, 3], [2, 3, 1], [3, 0, 5]],[[3, 2, 3], [2, 3, 4], [3, 4, 5]]], dtype=tf.float32)
 
-    rsa_1 = get_single_state_rsa_distill_loss(a,a)
+    rsa_1 = get_biased_single_state_rsa_distill_loss(a,a)
     rsa_2 = get_single_state_rsa_distill_loss(a,b)
     rsa_3 = get_single_state_rsa_distill_loss(a,a, mode='squared')
     rsa_4 = get_single_state_rsa_distill_loss(a,b, mode='squared')

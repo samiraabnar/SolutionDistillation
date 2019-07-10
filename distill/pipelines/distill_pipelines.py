@@ -357,8 +357,8 @@ class Seq2SeqDistiller(Distiller):
                                                          mode=self.config.rep_loss_mode)                                                      
                                                      
     tf.summary.scalar("distill_rep_loss", dev_distill_rep_loss, family="student_dev")
-    tf.summary.scalar("uniform_rep_loss", dev_uniform_rep_loss, family="student_dev")
     tf.summary.scalar("distill_logit_loss", dev_distill_logit_loss, family="student_dev")
+    tf.summary.scalar("uniform_rep_loss", dev_uniform_rep_loss, family="student_dev")
     tf.summary.scalar("uniform_rep_loss", teacher_dev_uniform_rep_loss, family="teacher_dev")
 
 

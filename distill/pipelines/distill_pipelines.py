@@ -335,9 +335,12 @@ class Seq2SeqDistiller(Distiller):
     teacher_uniform_rep_loss = get_single_state_uniform_rsa_loss(teacher_train_output_dic['outputs'],
                                                          mode=self.config.rep_loss_mode)         
     student_uniform_rep_loss = get_single_state_uniform_rsa_loss(student_train_output_dic['outputs'],
-                                                         mode=self.config.rep_loss_mode)                                                 
-                                                     
-                                                                                                                                            
+                                                         mode=self.config.rep_loss_mode)
+    embedding_rep_loss = get_single_state_rsa_distill_loss(self.student.input_embedding_layer.shared_weights,
+                                                       self.teacher.input_embedding_layer.shared_weights,
+                                                       mode=self.config.rep_loss_mode)
+
+    tf.summary.scalar("embedding_rep_loss", embedding_rep_loss, family="student_train")
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_train")
     tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_train")
     tf.summary.scalar("general_bias_distill_rep_loss", general_bias_distill_rep_loss, family="student_train")
@@ -349,6 +352,8 @@ class Seq2SeqDistiller(Distiller):
     dev_distill_rep_loss = get_single_state_rsa_distill_loss(student_dev_output_dic['outputs'],
                                                      teacher_dev_output_dic['outputs'],
                                                      mode=self.config.rep_loss_mode)
+
+
     dev_distill_logit_loss = get_logit_distill_loss(student_dev_output_dic['logits'],
                                                      teacher_dev_output_dic['logits'], softmax_temperature=self.config.distill_temp)
     dev_uniform_rep_loss = get_single_state_uniform_rsa_loss(student_dev_output_dic['outputs'],

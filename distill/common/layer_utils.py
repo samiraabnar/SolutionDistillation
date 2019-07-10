@@ -1,6 +1,8 @@
 import tensorflow as tf
 import math
 
+from tensor2tensor.layers import common_layers
+
 _NEG_INF = -1e9
 
 
@@ -76,3 +78,26 @@ def get_padding_bias(x):
     attention_bias = tf.expand_dims(
         tf.expand_dims(attention_bias, axis=1), axis=1)
   return attention_bias
+
+
+def attention_bias_local(length, max_backward, max_forward):
+  """Create an bias tensor to be added to attention logits.
+  A position may attend to positions at most max_distance from it,
+  forward and backwards.
+  This does not actually save any computation.
+  Args:
+    length: int
+    max_backward: int, maximum distance backward to attend. Negative values
+      indicate unlimited.
+    max_forward: int, maximum distance forward to attend. Negative values
+      indicate unlimited.
+  Returns:
+    a `Tensor` with shape [1, 1, length, length].
+  """
+  band = common_layers.ones_matrix_band_part(
+      length,
+      length,
+      max_backward,
+      max_forward,
+      out_shape=[1, 1, length, length])
+  return -1e9 * (1.0 - band)

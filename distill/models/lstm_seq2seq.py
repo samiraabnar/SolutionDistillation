@@ -69,7 +69,6 @@ class LSTMSeq2Seq(object):
   def apply(self, examples, target_length=None, is_train=True, reuse=tf.AUTO_REUSE):
 
     inputs, targets, inputs_lengths, targets_length = examples
-    #tf.logging.info(inputs)
 
     with tf.variable_scope(self.scope, reuse=reuse):
       embedded_inputs = self.input_embedding_layer.apply(inputs)

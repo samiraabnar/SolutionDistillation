@@ -568,12 +568,12 @@ class UniversalTransformer(Transformer):
       self.decoder_stack.create_vars(reuse=tf.AUTO_REUSE)
 
 class EncodingTransformer(object):
-  """Transformer model for sequence to sequence data.
+  """Transformer model for sequence classification.
   Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
   The Transformer model consists of an encoder and decoder. The input is an int
   sequence (or a batch of sequences). The encoder produces a continous
   representation, and the decoder uses the encoder output to generate
-  probabilities for the output sequence.
+  probabilities for the output classes.
   """
 
   def __init__(self, hparams, task, scope="Transformer"):
@@ -656,9 +656,6 @@ class EncodingTransformer(object):
       # Run the inputs through the encoder layer to map the symbol
       # representations to continuous representations.
       encoder_outputs, encoder_outputs_presence = self.encode(inputs, attention_bias, is_train, dic_to_save_weights=dic_to_save_weights)
-      tf.logging.info('encoder outputs')
-      tf.logging.info(encoder_outputs)
-
       outputs = self.decode(encoder_outputs=encoder_outputs,
                             encoder_outputs_presence=encoder_outputs_presence,
                             is_train=is_train, dic_to_save_weights=dic_to_save_weights)
@@ -758,18 +755,18 @@ class EncodingUniversalTransformer(EncodingTransformer):
       else:
         self.output_embedding_layer = self.input_embedding_layer
 
-      self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
-                                              activation=None,
-                                              use_bias=True,
-                                              kernel_initializer=self.initializer,
-                                              bias_initializer=tf.zeros_initializer(),
-                                              kernel_regularizer=None,
-                                              bias_regularizer=None,
-                                              activity_regularizer=None,
-                                              kernel_constraint=None,
-                                              bias_constraint=None,
-                                              trainable=True,
-                                              name="OutProj")
+      # self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
+      #                                         activation=None,
+      #                                         use_bias=True,
+      #                                         kernel_initializer=self.initializer,
+      #                                         bias_initializer=tf.zeros_initializer(),
+      #                                         kernel_regularizer=None,
+      #                                         bias_regularizer=None,
+      #                                         activity_regularizer=None,
+      #                                         kernel_constraint=None,
+      #                                         bias_constraint=None,
+      #                                         trainable=True,
+      #                                         name="OutProj")
         
       self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
                                               self.dropout_keep_prob,
@@ -779,6 +776,28 @@ class EncodingUniversalTransformer(EncodingTransformer):
 
       self.encoder_stack.create_vars(reuse=tf.AUTO_REUSE)
 
+
+class EncodingUniversalTransformerWithLocalBias(EncodingUniversalTransformer):
+  """Transformer model for sequence to sequence data.
+  Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
+  The Transformer model consists of an encoder and decoder. The input is an int
+  sequence (or a batch of sequences). The encoder produces a continous
+  representation, and the decoder uses the encoder output to generate
+  probabilities for the output sequence.
+  """
+
+  def __init__(self, hparams, task, scope="EncUTransformer"):
+    self.hparams = hparams
+    self.vocab_size = hparams.vocab_size
+    self.hidden_dim = hparams.hidden_dim
+    self.number_of_heads = hparams.number_of_heads
+    self.encoder_depth = hparams.encoder_depth
+    self.ff_filter_size = hparams.ff_filter_size
+    self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.initializer_gain = hparams.initializer_gain
+    self.scope = scope
+    self.task = task
+    self.eos_id = self.task.eos_id
 
 if __name__ == '__main__':
   from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40

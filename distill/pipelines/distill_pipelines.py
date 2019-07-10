@@ -334,7 +334,7 @@ class Seq2SeqDistiller(Distiller):
     # Compute uniform rep loss
     teacher_uniform_rep_loss = get_single_state_uniform_rsa_loss(teacher_train_output_dic['outputs'],
                                                          mode=self.config.rep_loss_mode)         
-    uniform_rep_loss = get_single_state_uniform_rsa_loss(student_train_output_dic['outputs'],
+    student_uniform_rep_loss = get_single_state_uniform_rsa_loss(student_train_output_dic['outputs'],
                                                          mode=self.config.rep_loss_mode)                                                 
                                                      
                                                                                                                                             
@@ -342,7 +342,7 @@ class Seq2SeqDistiller(Distiller):
     tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_train")
     tf.summary.scalar("general_bias_distill_rep_loss", general_bias_distill_rep_loss, family="student_train")
     tf.summary.scalar("local_bias_distill_rep_loss", local_bias_distill_rep_loss, family="student_train")
-    tf.summary.scalar("uniform_rep_loss", uniform_rep_loss, family="student_train")
+    tf.summary.scalar("uniform_rep_loss", student_uniform_rep_loss, family="student_train")
     tf.summary.scalar("uniform_rep_loss", teacher_uniform_rep_loss, family="teacher_train")
     
     

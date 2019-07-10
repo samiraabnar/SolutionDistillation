@@ -114,10 +114,10 @@ def dot_product_sim(a, b, pair_wise=True):
   a = tf.reshape(a, [-1, tf.shape(a)[-1]])
   b = tf.reshape(b, [-1, tf.shape(b)[-1]])
 
-  a_norm = tf.expand_dims(tf.norm(a, axis=-1), -1)
+  a_norm = tf.expand_dims(tf.norm(a, axis=-1, ord=1), -1)
   a = a / (a_norm+0.000000001)
 
-  b_norm = tf.expand_dims(tf.norm(b, axis=-1), -1)
+  b_norm = tf.expand_dims(tf.norm(b, axis=-1, ord=1), -1)
   b = b / (b_norm+0.000000001)
 
 

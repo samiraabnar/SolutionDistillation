@@ -4,17 +4,19 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=10:00:00
+#SBATCH --time=20:00:00
 #SBATCH --partition=gpu_shared
 #SBATCH --gres=gpu:1
 
-module load eb
-module load Python/3.6.3-foss-2017b
+module load surf-devel
+module load 2019
+module load Python/3.6.6-intel-2018b
 module load CUDA/10.0.130
 module load cuDNN/7.3.1-CUDA-10.0.130
-export LD_LIBRARY_PATH=$CUDA_HOME/lib64:/hpc/eb/Debian/cuDNN/7.3.1-CUDA-10.0.130/lib64:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=$CUDA_HOME/lib64:/hpc/eb/Debian/cuDNN/7.3.1-CUDA-10.0.130/lib64:$LD_LIBRARY_PATH
 
 #cd /home/samigpu/Codes/SolutionDistillation
+source /home/samigpu/my_env/bin/activate
 
 HEAD_DIR="/home/samigpu/Codes/SolutionDistillation"
 CODE_DIR=$HEAD_DIR/distill
@@ -44,8 +46,8 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --teacher_model=lstm --student_model=lstm \
 --teacher_train_embeddings=True --student_train_embeddings=True \
 --student_decoder_depth=1 --student_encoder_depth=1 --teacher_decoder_depth=1 --teacher_encoder_depth=1 \
---student_input_dropout_keep_prob=0.8 --student_hidden_dropout_keep_prob=0.25 \
---teacher_input_dropout_keep_prob=0.8 --teacher_hidden_dropout_keep_prob=0.25 \
+--student_input_dropout_keep_prob=0.75 --student_hidden_dropout_keep_prob=0.3 \
+--teacher_input_dropout_keep_prob=0.75 --teacher_hidden_dropout_keep_prob=0.3 \
 --student_learning_rate=0.001 \
 --teacher_learning_rate=0.001 \
 --distill_learning_rate=0.001 \
@@ -57,7 +59,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=False \
 --distill_temp=1.0 --teacher_temp=1.0 --student_temp=1.0 \
---task_name=arithmatic_simple_samelength10_depth4 --exp_name=_indp_drop8-25_drop8-25_L2
+--task_name=arithmatic_simple_samelength10_depth4 --exp_name=_indp_drop75-30_drop75-30_L2
 
 
 #Copy input file to scratch

@@ -15,6 +15,7 @@ module load CUDA/10.0.130
 module load cuDNN/7.3.1-CUDA-10.0.130
 
 #cd /home/samigpu/Codes/SolutionDistillation
+source /home/samigpu/my_env/bin/activate
 
 HEAD_DIR="/home/samigpu/Codes/SolutionDistillation"
 CODE_DIR=$HEAD_DIR/distill

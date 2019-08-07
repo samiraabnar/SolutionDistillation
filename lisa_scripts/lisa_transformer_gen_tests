@@ -44,7 +44,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --batch_size=128 --teacher_hidden_dim=512 --student_hidden_dim=512 \
 --teacher_model=enc_utransformer --student_model=enc_utransformer \
 --teacher_train_embeddings=True --student_train_embeddings=True \
---student_decoder_depth=1 --student_encoder_depth=2 --teacher_decoder_depth=1 --teacher_encoder_depth=2 \
+--student_decoder_depth=1 --student_encoder_depth=4 --teacher_decoder_depth=1 --teacher_encoder_depth=4 \
 --student_input_dropout_keep_prob=0.7 --student_hidden_dropout_keep_prob=0.8 \
 --teacher_input_dropout_keep_prob=0.7 --teacher_hidden_dropout_keep_prob=0.8 \
 --student_learning_rate=0.0001 \

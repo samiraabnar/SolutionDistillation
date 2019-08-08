@@ -395,7 +395,7 @@ class Seq2SeqDistiller(Distiller):
     student_loss = self.config.data_weight * student_train_output_dic['loss'] + self.config.distill_logits_weight * distill_logit_loss
     student_update_op, student_learning_rate = self.trainer.get_train_op(student_loss, student_train_output_dic["trainable_vars"],
                                                           start_learning_rate=0.000,
-                                                          base_learning_rate=self.student.hparams.learning_rate, warmup_steps=1000,
+                                                          base_learning_rate=self.student.hparams.learning_rate, warmup_steps=10000,
                                                           l2_rate=self.trainer.config.l2_rate,
                                                           scope="student")
 

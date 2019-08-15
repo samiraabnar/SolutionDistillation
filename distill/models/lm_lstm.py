@@ -9,16 +9,16 @@ from distill.layers.bilstm import BiLSTM
 
 class LmLSTM(object):
   def __init__(self, config, task, model=LSTM, scope="LMLSTM"):
-    self.config = config
+    self.hparams = config
     self.scope=scope
     self.task = task
     self.eos_id = self.task.eos_id
     self.lstm = model(hidden_dim=config.hidden_dim,
                       output_dim=config.vocab_size,
                       hidden_keep_prob=config.input_dropout_keep_prob,
-                      attention_mechanism=self.config.attention_mechanism,
+                      attention_mechanism=self.hparams.attention_mechanism,
                       depth=config.encoder_depth,
-                      sent_rep_mode=self.config.sent_rep_mode,
+                      sent_rep_mode=self.hparams.sent_rep_mode,
                       scope=scope)
 
 
@@ -42,11 +42,11 @@ class LmLSTM(object):
 
       # Output embedding
       self.output_embedding_mat = tf.get_variable("output_embedding_mat",
-                                                  [self.config.vocab_size, self.config.hidden_dim],
+                                                  [self.hparams.vocab_size, self.hparams.hidden_dim],
                                                   dtype=tf.float32)
 
       self.output_embedding_bias = tf.get_variable("output_embedding_bias",
-                                                   [self.config.vocab_size],
+                                                   [self.hparams.vocab_size],
                                                    dtype=tf.float32)
 
 
@@ -87,7 +87,7 @@ class LmLSTM(object):
           weights=self.output_embedding_layer.shared_weights,
           labels=tf.reshape(labels, [-1, 1]),
           inputs=tf.reshape(seq_states, [-1, 128]),
-          num_classes=self.config.vocab_size,
+          num_classes=self.hparams.vocab_size,
           num_sampled=1000,
           partition_strategy="div")
       else:

@@ -9,7 +9,7 @@ class LMTrainer(Trainer):
     self.task = task
 
   def build_train_graph(self):
-    self.lm_lstm.build_graph()
+    self.model.build_graph()
 
     train_iterator, dev_iterator, test_iterator = self.get_data_itaratoes()
     train_output_dic = self.model.apply(train_iterator.get_next())

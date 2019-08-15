@@ -22,12 +22,21 @@ class LmLSTM(object):
                       scope=scope)
 
 
-  def build_graph(self):
-    with tf.variable_scope(self.scope):
-      self.embedding_layer = Embedding(vocab_size=self.config.vocab_size,
-                                       tuned_embedding_dim=self.config.embedding_dim,
-                                       keep_prob=self.config.input_dropout_keep_prob)
-      self.embedding_layer.create_vars()
+  def build_graph(self, reuse=tf.AUTO_REUSE):
+    with tf.variable_scope(self.scope, reuse=reuse):
+      self.embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
+                                                          embedding_dim=self.hparams.embedding_dim,
+                                                          pretrained_embeddings=pretrained_embeddings,
+                                                          scope="InputEmbed")
+
+      self.embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
+      if not self.task.share_input_output_embeddings:
+        self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
+                                                             embedding_dim=self.lstm_decoder.sent_rep_dim,
+                                                             scope="OutputEmbed")
+        self.output_embedding_layer.create_vars()
+      else:
+        self.output_embedding_layer = self.input_embedding_layer
 
       self.lstm.create_vars()
 
@@ -53,12 +62,9 @@ class LmLSTM(object):
 
       seq_states = lstm_output_dic['raw_outputs']
 
-      def output_embedding(current_output):
-        return tf.add(
-          tf.matmul(current_output, tf.transpose(self.output_embedding_mat)),
-          self.output_embedding_bias)
 
-      logits = tf.map_fn(output_embedding, seq_states)
+
+      logits = self.output_embedding_layer.linear(seq_states)
 
       tf.logging.info("states")
       tf.logging.info(seq_states)
@@ -78,8 +84,7 @@ class LmLSTM(object):
 
       if is_train:
         loss = tf.nn.sampled_softmax_loss(
-          weights=self.output_embedding_mat,
-          biases=self.output_embedding_bias,
+          weights=self.output_embedding_layer.shared_weights,
           labels=tf.reshape(labels, [-1, 1]),
           inputs=tf.reshape(seq_states, [-1, 128]),
           num_classes=self.config.vocab_size,

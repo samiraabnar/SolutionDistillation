@@ -75,7 +75,7 @@ class LmLSTM(object):
       flat_logits = tf.reshape(logits, [-1, tf.shape(logits)[-1]])
       tf.logging.info(flat_logits)
 
-      flat_labels = tf.reshape(labels, [-1])
+      flat_labels = tf.reshape(targets, [-1])
       tf.logging.info(flat_labels)
 
       flat_mask = tf.cast(tf.reshape(inputs_mask, [-1]), tf.float32)
@@ -85,7 +85,7 @@ class LmLSTM(object):
       if is_train:
         loss = tf.nn.sampled_softmax_loss(
           weights=self.output_embedding_layer.shared_weights,
-          labels=tf.reshape(labels, [-1, 1]),
+          labels=tf.reshape(targets, [-1, 1]),
           inputs=tf.reshape(seq_states, [-1, 128]),
           num_classes=self.hparams.vocab_size,
           num_sampled=1000,
@@ -101,7 +101,7 @@ class LmLSTM(object):
       tf.logging.info(flat_labels)
       tf.logging.info(flat_mask)
       accuracy = tf.reduce_sum(tf.cast(tf.equal(flat_labels, flat_predictions), dtype=tf.float32) * flat_mask) / tf.reduce_sum(flat_mask)
-      correct_predictions = tf.cast(tf.equal(predictions, labels), dtype=tf.float32) * tf.cast(inputs_mask, dtype=tf.float32)
+      correct_predictions = tf.cast(tf.equal(predictions, targets), dtype=tf.float32) * tf.cast(inputs_mask, dtype=tf.float32)
       correct_sequences = tf.reduce_min(correct_predictions, axis=-1)
       sequence_accuracy = tf.reduce_sum(correct_sequences) / tf.cast(batch_size, dtype=tf.float32)
 

@@ -8,7 +8,7 @@ class LMTrainer(Trainer):
     super(LMTrainer, self).__init__(config, model_obj)
     self.task = task
 
-  def get_train_data_itarators(self):
+  def get_data_itarators(self):
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="train"))
     dataset = dataset.map(self.task.parse_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())

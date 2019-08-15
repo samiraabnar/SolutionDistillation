@@ -51,13 +51,13 @@ class LmLSTM(object):
 
 
   def apply(self, examples, is_train=True, reuse=tf.AUTO_REUSE, target_length=None):
-    inputs, labels, inputs_length = examples
+    inputs, targets, inputs_length, targets_lengths = examples
     tf.logging.info(inputs_length)
     inputs_mask = tf.sequence_mask(inputs_length)
 
     batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=reuse):
-      embedded_input = self.embedding_layer.apply(inputs, is_train)
+      embedded_input = self.embedding_layer.apply(inputs)
       lstm_output_dic = self.lstm.apply(inputs=embedded_input, inputs_length=inputs_length, is_train=is_train)
 
       seq_states = lstm_output_dic['raw_outputs']

@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from distill.data_util.prep_ptb import PTB
 from distill.layers.embedding import Embedding
 from distill.layers.lstm import LSTM
 from distill.layers.bilstm import BiLSTM
@@ -40,7 +41,7 @@ class LmLSTM(object):
                                                    dtype=tf.float32)
 
 
-  def apply(self, examples, is_train=True, reuse=tf.AUTO_REUSE):
+  def apply(self, examples, is_train=True, reuse=tf.AUTO_REUSE, target_length=None):
     inputs, labels, inputs_length = examples
     tf.logging.info(inputs_length)
     inputs_mask = tf.sequence_mask(inputs_length)
@@ -107,3 +108,63 @@ class LmLSTM(object):
             'sequence_accuracy': sequence_accuracy,
             'perplexity': perplexity,
             'trainable_vars': tf.trainable_variables(scope=self.scope)}
+
+
+if __name__ == '__main__':
+  from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40
+  import numpy as np
+
+  tf.logging.set_verbosity(tf.logging.INFO)
+
+  bin_iden = PTB('data/ptb')
+
+  dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
+  dataset = dataset.map(bin_iden.parse_examples)
+  dataset = dataset.padded_batch(5, padded_shapes=bin_iden.get_padded_shapes())
+  iterator = dataset.make_initializable_iterator()
+
+  example = iterator.get_next()
+
+
+  class Config(object):
+    def __init__(self):
+      self.vocab_size = bin_iden.vocab_length
+      self.hidden_dim = 32
+      self.output_dim = len(bin_iden.target_vocab),
+      self.embedding_dim = 32
+      self.input_dropout_keep_prob = 0.5
+      self.hidden_dropout_keep_prob = 0.5
+      self.attention_mechanism = None
+      self.encoder_depth = 1
+      self.decoder_depth = 1
+      self.sent_rep_mode = "final"
+      self.scope = "lstm_seq2seq"
+      self.train_embeddings=False
+
+
+  print("eos id: ", bin_iden.eos_id)
+  model = LmLSTM(Config(), task=bin_iden, scope="LMLSTM")
+  model.create_vars(reuse=False)
+
+  input, target,_,_= example
+  _ = model.apply(example, is_train=True, target_length=bin_iden.target_length)
+  outputs = model.apply(example, is_train=False, target_length=bin_iden.target_length)
+
+  predictions = outputs['predictions']
+
+  global_step = tf.train.get_or_create_global_step()
+  scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
+                                                      iterator.initializer))
+
+  accuracy = tf.equal(predictions, target)
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_lm_lstm', scaffold=scaffold) as sess:
+    for _ in np.arange(1):
+      acc, _inputs, _targets, _predictions, _logits = sess.run([accuracy, input, target, predictions, outputs['logits']])
+
+      print("input: ", _inputs)
+      print("targets: ", _targets)
+
+      print("predictions: ", _predictions)
+      print("logits: ", _logits)
+
+      print(acc)

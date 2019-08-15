@@ -8,7 +8,7 @@ class Seq2SeqTrainer(Trainer):
     super(Seq2SeqTrainer, self).__init__(config, model_obj)
     self.task = task
 
-  def get_train_data_itaratoes(self):
+  def get_train_data_itarators(self):
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="train"))
     dataset = dataset.map(self.task.parse_examples)
     dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
@@ -61,7 +61,7 @@ class Seq2SeqTrainer(Trainer):
 
   def build_train_graph(self):
 
-    train_iterator, dev_iterator, test_iterator = self.get_train_data_itaratoes()
+    train_iterator, dev_iterator, test_iterator = self.get_train_data_itarators()
 
     train_examples = train_iterator.get_next()
     dev_examples = dev_iterator.get_next()

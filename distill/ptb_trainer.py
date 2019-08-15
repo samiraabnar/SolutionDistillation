@@ -19,6 +19,8 @@ tf.app.flags.DEFINE_string("save_dir", None, "")
 tf.app.flags.DEFINE_string("model_type", "plain_lstm", "")
 tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
 tf.app.flags.DEFINE_integer("output_dim", 8000, "")
+tf.app.flags.DEFINE_integer("input_dim", 8000, "")
+
 tf.app.flags.DEFINE_integer("depth", 1, "")
 tf.app.flags.DEFINE_string("attention_mechanism", None, "")
 tf.app.flags.DEFINE_string("sent_rep_mode", 'all', "all| final| ")

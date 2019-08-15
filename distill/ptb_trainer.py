@@ -12,7 +12,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 tf.app.flags.DEFINE_string("exp_name", "trial", "")
-tf.app.flags.DEFINE_string("task_name", "ptb", "")
+tf.app.flags.DEFINE_string("task_name", "ptb_lm", "")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 

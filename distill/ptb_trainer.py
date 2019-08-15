@@ -224,7 +224,7 @@ if __name__ == '__main__':
   if hparams.save_dir is None:
     hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name,
                                     '_'.join([hparams.model,
-                                              'depth'+str(model_params[hparams.model].depth),
+                                              'depth'+str(model_params[hparams.model].encoder_depth),
                                               'hidden_dim'+str(model_params[hparams.model].hidden_dim),
                                               'batch_size'+str(model_params[hparams.model].batch_size),
                                               hparams.exp_name]))

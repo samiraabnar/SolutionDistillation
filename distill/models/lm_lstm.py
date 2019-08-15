@@ -36,7 +36,7 @@ class LmLSTM(object):
                                                              scope="OutputEmbed")
         self.output_embedding_layer.create_vars()
       else:
-        self.output_embedding_layer = self.input_embedding_layer
+        self.output_embedding_layer = self.embedding_layer
 
       self.lstm.create_vars()
 

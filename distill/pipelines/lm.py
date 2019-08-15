@@ -33,7 +33,7 @@ class LMTrainer(Trainer):
     return train_iterator, dev_iterator, test_iterator
 
   def build_train_graph(self):
-    self.model.creat_vars()
+    self.model.create_vars()
 
     train_iterator, dev_iterator, test_iterator = self.get_data_itarators()
     train_output_dic = self.model.apply(train_iterator.get_next())

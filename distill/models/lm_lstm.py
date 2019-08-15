@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from distill.data_util.prep_ptb import PTB
-from distill.layers.embedding import Embedding
+from distill.layers.embedding import Embedding, EmbeddingSharedWeights
 from distill.layers.lstm import LSTM
 from distill.layers.bilstm import BiLSTM
 

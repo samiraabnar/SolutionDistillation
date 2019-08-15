@@ -16,7 +16,7 @@ tf.app.flags.DEFINE_string("task_name", "ptb_lm", "")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
-tf.app.flags.DEFINE_string("model_type", "lm_lstm", "")
+tf.app.flags.DEFINE_string("model", "lm_lstm", "")
 tf.app.flags.DEFINE_string("encoder_attention_dir", "top_down", "top_down | bottom_up")
 tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
 tf.app.flags.DEFINE_integer("output_dim", 8000, "")
@@ -172,7 +172,7 @@ class PTBTrainer(object):
 
 
 if __name__ == '__main__':
-  Models = {"lstm_lm": LmLSTM}
+  Models = {"lm_lstm": LmLSTM}
   tasks = {'ptb_lm': PTB('data/ptb')}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
@@ -218,7 +218,7 @@ if __name__ == '__main__':
                            learning_rate=hparams.learning_rate)
 
 
-  model_params = {"lstm_lm": lstm_params}
+  model_params = {"lm_lstm": lstm_params}
 
 
   if hparams.save_dir is None:

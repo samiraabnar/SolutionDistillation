@@ -36,6 +36,8 @@ tf.app.flags.DEFINE_float("hidden_dropout_keep_prob", 0.5, "")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
+tf.app.flags.DEFINE_boolean("decay_learning_rate", True, "True | False")
+tf.app.flags.DEFINE_float("l2_rate", 0.001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
 tf.app.flags.DEFINE_integer("training_iterations", 30000, "")

@@ -7,7 +7,7 @@ class Trainer(object):
     self.model = model_obj
 
   def get_train_op(self, loss, params, start_learning_rate, base_learning_rate, warmup_steps,
-                   l2_rate, clip_gradient_norm=5,  scope=""):
+                   l2_rate=0.0001, clip_gradient_norm=5,  scope=""):
     # add training op
     with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
       self.global_step = tf.train.get_or_create_global_step()

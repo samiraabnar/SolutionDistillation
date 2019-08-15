@@ -22,7 +22,7 @@ class LmLSTM(object):
                       scope=scope)
 
 
-  def build_graph(self, reuse=tf.AUTO_REUSE):
+  def build_graph(self, reuse=tf.AUTO_REUSE, pretrained_embeddings=None):
     with tf.variable_scope(self.scope, reuse=reuse):
       self.embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
                                                           embedding_dim=self.hparams.embedding_dim,

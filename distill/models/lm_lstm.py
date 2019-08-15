@@ -7,9 +7,11 @@ from distill.layers.bilstm import BiLSTM
 
 
 class LmLSTM(object):
-  def __init__(self, config, model=LSTM, scope="LMLSTM"):
+  def __init__(self, config, task, model=LSTM, scope="LMLSTM"):
     self.config = config
     self.scope=scope
+    self.task = task
+    self.eos_id = self.task.eos_id
     self.lstm = model(hidden_dim=config.hidden_dim,
                       output_dim=config.vocab_size,
                       hidden_keep_prob=config.input_dropout_keep_prob,

@@ -87,7 +87,7 @@ class LmLSTM(object):
           weights=self.output_embedding_layer.shared_weights,
           biases=tf.zeros(self.hparams.vocab_size),
           labels=tf.reshape(targets, [-1, 1]),
-          inputs=tf.reshape(seq_states, [-1, 128]),
+          inputs=tf.reshape(seq_states, [-1, self.hparams.hidden_dim]),
           num_classes=self.hparams.vocab_size,
           num_sampled=1000,
           partition_strategy="div")

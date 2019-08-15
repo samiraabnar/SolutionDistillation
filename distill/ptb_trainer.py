@@ -1,5 +1,7 @@
 import tensorflow as tf
 import numpy as np
+
+from distill.common.hparams import TransformerHparam, LSTMHparam
 from distill.data_util.prep_ptb import PTB
 from distill.models.lm_lstm import LmLSTM
 from distill.layers.lstm import LSTM
@@ -162,12 +164,66 @@ class PTBTrainer(object):
 
 
 if __name__ == '__main__':
+  Models = {"lstm_lm": LmLSTM}
+  tasks = {'ptb_lm': PTB('data/ptb')}
+
+  hparams.vocab_size = tasks[hparams.task_name].vocab_length
+  hparams.output_dim = len(tasks[hparams.task_name].target_vocab)
+
+  transformer_params = TransformerHparam(input_dim=hparams.input_dim,
+                                         hidden_dim=hparams.hidden_dim,
+                                         output_dim=hparams.output_dim,
+                                         encoder_depth=hparams.encoder_depth,
+                                         decoder_depth=hparams.decoder_depth,
+                                         number_of_heads=2,
+                                         ff_filter_size=512,
+                                         initializer_gain=hparams.initializer_gain,
+                                         batch_size=hparams.batch_size,
+                                         input_dropout_keep_prob=hparams.input_dropout_keep_prob,
+                                         hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
+                                         vocab_size=hparams.vocab_size,
+                                         label_smoothing=hparams.label_smoothing,
+                                         encoder_self_attention_dir=hparams.encoder_attention_dir,
+                                         decoder_self_attention_dir="top_down",
+                                         decoder_cross_attention_dir="top_down",
+                                         train_embeddings=hparams.train_embeddings,
+                                         learning_rate=hparams.learning_rate
+                                         )
+
+  lstm_params = LSTMHparam(input_dim=hparams.input_dim,
+                           hidden_dim=hparams.hidden_dim,
+                           output_dim=hparams.output_dim,
+                           encoder_depth=hparams.encoder_depth,
+                           decoder_depth=hparams.decoder_depth,
+                           number_of_heads=hparams.number_of_heads,
+                           ff_filter_size=hparams.ff_filter_size,
+                           initializer_gain=hparams.initializer_gain,
+                           batch_size=hparams.batch_size,
+                           input_dropout_keep_prob=hparams.input_dropout_keep_prob,
+                           hidden_dropout_keep_prob=hparams.hidden_dropout_keep_prob,
+                           vocab_size=hparams.vocab_size,
+                           label_smoothing=hparams.label_smoothing,
+                           attention_mechanism=None,
+                           sent_rep_mode=hparams.sent_rep_mode,
+                           embedding_dim=300,
+                           train_embeddings = hparams.train_embeddings,
+                           learning_rate=hparams.learning_rate)
+
+
+  model_params = {"lstm_lm": lstm_params}
+
+
   if hparams.save_dir is None:
-    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name, '_'.join([hparams.model_type,'sent_rep_'+hparams.sent_rep_mode, 'depth'+str(hparams.depth),'hidden_dim'+str(hparams.hidden_dim),hparams.exp_name+"_l2"+str(hparams.l2_rate)]))
-  if hparams.bidirectional:
-    hparams.save_dir = hparams.save_dir + "_bidi_"
-  if hparams.attention_mechanism is not None:
-    hparams.save_dir = hparams.save_dir + "_"+hparams.attention_mechanism+"_"
+    hparams.save_dir = os.path.join(hparams.log_dir,hparams.task_name,
+                                    '_'.join([hparams.model,
+                                              'depth'+str(model_params[hparams.model].encoder_depth),
+                                              'hidden_dim'+str(model_params[hparams.model].hidden_dim),
+                                              'batch_size'+str(model_params[hparams.model].batch_size),
+                                              hparams.exp_name]))
+
+    model = Models[hparams.model](model_params[hparams.model],
+                                  task=tasks[hparams.task_name],
+                                  scope=hparams.model)
     
   trainer = PTBTrainer(hparams, model_class=LmLSTM)
   trainer.train()

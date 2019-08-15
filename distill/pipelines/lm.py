@@ -35,7 +35,7 @@ class LMTrainer(Trainer):
   def build_train_graph(self):
     self.model.build_graph()
 
-    train_iterator, dev_iterator, test_iterator = self.get_data_itaratoes()
+    train_iterator, dev_iterator, test_iterator = self.get_data_itarators()
     train_output_dic = self.model.apply(train_iterator.get_next())
     tf.summary.scalar("loss", train_output_dic["loss"], family="train")
     tf.summary.scalar("accuracy", train_output_dic["accuracy"], family="train")

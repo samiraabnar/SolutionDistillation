@@ -18,7 +18,7 @@ tf.app.flags.DEFINE_string("save_dir", None, "")
 
 tf.app.flags.DEFINE_string("model", "lm_lstm", "")
 tf.app.flags.DEFINE_string("encoder_attention_dir", "top_down", "top_down | bottom_up")
-tf.app.flags.DEFINE_integer("hidden_dim", 128, "")
+tf.app.flags.DEFINE_integer("hidden_dim", 300, "")
 tf.app.flags.DEFINE_integer("output_dim", 8000, "")
 tf.app.flags.DEFINE_integer("input_dim", 8000, "")
 tf.app.flags.DEFINE_integer("number_of_heads", 4, "")

@@ -85,7 +85,7 @@ class LmLSTM(object):
       if is_train:
         loss = tf.nn.sampled_softmax_loss(
           weights=self.output_embedding_layer.shared_weights,
-          biases=tf.zeros(targets.shape[0]),
+          biases=tf.zeros(self.hparams.vocab_size),
           labels=tf.reshape(targets, [-1, 1]),
           inputs=tf.reshape(seq_states, [-1, 128]),
           num_classes=self.hparams.vocab_size,

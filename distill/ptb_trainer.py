@@ -3,6 +3,7 @@ import numpy as np
 
 from distill.common.hparams import TransformerHparam, LSTMHparam
 from distill.data_util.prep_ptb import PTB
+from distill.data_util.prep_sentwiki import SentWiki
 from distill.models.lm_lstm import LmLSTM
 import os
 
@@ -12,7 +13,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 tf.app.flags.DEFINE_string("exp_name", "trial", "")
-tf.app.flags.DEFINE_string("task_name", "ptb_lm", "")
+tf.app.flags.DEFINE_string("task_name", "sent_wiki", "ptb_lm")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
@@ -58,7 +59,8 @@ hparams = tf.app.flags.FLAGS
 
 if __name__ == '__main__':
   Models = {"lm_lstm": LmLSTM}
-  tasks = {'ptb_lm': PTB('data/ptb')}
+  tasks = {'ptb_lm': PTB('data/ptb'),
+           'sent_wiki': SentWiki('data/sent_wiki')}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)

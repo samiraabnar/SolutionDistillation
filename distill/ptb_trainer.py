@@ -39,7 +39,7 @@ tf.app.flags.DEFINE_boolean("decay_learning_rate", True, "True | False")
 tf.app.flags.DEFINE_float("l2_rate", 0.0001, "")
 
 tf.app.flags.DEFINE_integer("batch_size", 32, "")
-tf.app.flags.DEFINE_integer("training_iterations", 30000, "")
+tf.app.flags.DEFINE_integer("training_iterations", 300000, "")
 
 tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 512, "embeddings dim")

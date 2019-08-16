@@ -95,7 +95,7 @@ class LmLSTM(object):
         loss = tf.contrib.seq2seq.sequence_loss(
           logits,
           targets,
-          weights=inputs_mask,
+          weights=tf.cast(inputs_mask, dtype=tf.float32),
           average_across_timesteps=False,
           average_across_batch=True)
 

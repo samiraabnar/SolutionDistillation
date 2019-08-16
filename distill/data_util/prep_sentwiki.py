@@ -99,7 +99,7 @@ class SentWiki(object):
 
   def read_sentences(self, filename):
     with tf.gfile.GFile(filename, "r") as f:
-      sentences = f.read().replace("\n", "<eos>\n").split("\n")
+      sentences = f.read().replace("\n", " <eos>\n").split("\n")
 
     for i in np.arange(len(sentences)):
       sentences[i] = ['<s>'] + sentences[i].split()

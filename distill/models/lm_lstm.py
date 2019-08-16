@@ -97,11 +97,11 @@ class LmLSTM(object):
         logits,
         targets,
         weights=tf.cast(inputs_mask, dtype=tf.float32),
-        average_across_timesteps=False,
+        average_across_timesteps=True,
         average_across_batch=True)
 
 
-      loss = tf.reduce_sum(loss)
+      #loss = tf.reduce_sum(loss)
       perplexity = tf.exp(loss)
 
       tf.logging.info(flat_labels)

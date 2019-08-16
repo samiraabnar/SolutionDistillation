@@ -118,8 +118,8 @@ class LSTM(object):
     }
 
   def predict(self, compute_decoding_step_input_fn, inputs_length, embedding_layer, eos_id,
-              target_length=None, init_state=None, is_train=True):
-    self.batch_size = tf.shape(inputs_length)[0]
+              target_length=None, init_state=None, is_train=True, initial_inputs=None):
+    batch_size = tf.shape(inputs_length)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
 
       # Run the data through the RNN layers
@@ -129,7 +129,7 @@ class LSTM(object):
           the_cell = self.multi_dropout_lstm_cell
 
         if init_state is None:
-          init_state= the_cell.zero_state(self.batch_size, tf.float32)
+          init_state= the_cell.zero_state(batch_size, tf.float32)
 
         all_outputs_tensor_array = tf.TensorArray(dtype=tf.float32, size=0,
                                      dynamic_size=True,
@@ -142,15 +142,21 @@ class LSTM(object):
 
           last_lstm_prediction_logits = tf.expand_dims(last_lstm_prediction, 1)
           last_lstm_prediction_logits = embedding_layer.linear(last_lstm_prediction_logits)
-          #tf.logging.info('last lstm prediction')
-          #tf.logging.info(last_lstm_prediction)
-
-          prediction = tf.argmax(last_lstm_prediction_logits, axis=-1)
+          tf.logging.info('last lstm prediction')
+          tf.logging.info(last_lstm_prediction)
+          tf.logging.info(tf.squeeze(last_lstm_prediction_logits))
+          prediction = tf.random.multinomial(logits=tf.squeeze(last_lstm_prediction_logits),
+                                             num_samples=1)
+          tf.logging.info('prediction')
+          tf.logging.info(prediction)
           embedded_prediction = embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]
 
           current_step_input = compute_decoding_step_input_fn(embedded_prediction)
-          cell_input = tf.concat([embedded_prediction, current_step_input], axis=-1)
+          if current_step_input is not None:
+            cell_input = tf.concat([embedded_prediction, current_step_input], axis=-1)
+          else:
+            cell_input = embedded_prediction
 
           lstm_prediction, state = the_cell(cell_input, last_state)
 
@@ -170,9 +176,11 @@ class LSTM(object):
           tf.less(tf.cast(step, dtype=tf.int32), tf.cast(timesteps, dtype=tf.int32)),
           tf.logical_not(tf.reduce_all(f)))
 
-        initial_outputs = tf.zeros([self.batch_size, self.hidden_dim])
-        init_finish = tf.cast(tf.zeros(self.batch_size, dtype=tf.int64), dtype=tf.bool)
-        init_output_lengths = tf.zeros(self.batch_size, dtype=tf.int32)
+        initial_outputs = tf.zeros([batch_size, self.hidden_dim])
+        if initial_inputs is not None:
+          initial_outputs = initial_inputs
+        init_finish = tf.cast(tf.zeros(batch_size, dtype=tf.int64), dtype=tf.bool)
+        init_output_lengths = tf.zeros(batch_size, dtype=tf.int32)
         output_lengths, all_outputs, final_prediction, lstm_state, _, _ = tf.while_loop(for_each_time_step, lstm_loop,
                                                        (init_output_lengths, all_outputs_tensor_array,
                                                         initial_outputs, init_state,init_finish, 0),
@@ -191,7 +199,7 @@ class LSTM(object):
       #tf.logging.info(lstm_outputs)
       #tf.logging.info(inputs_length)
 
-      bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
+      bach_indices = tf.expand_dims(tf.range(batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
 
       # Sum over all representations for each sentence!

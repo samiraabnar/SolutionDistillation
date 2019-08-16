@@ -3,9 +3,6 @@ import tensorflow as tf
 from distill.data_util.prep_ptb import PTB
 from distill.layers.embedding import Embedding, EmbeddingSharedWeights
 from distill.layers.lstm import LSTM
-from distill.layers.bilstm import BiLSTM
-
-
 
 class LmLSTM(object):
   def __init__(self, config, task, model=LSTM, scope="LMLSTM"):
@@ -65,21 +62,11 @@ class LmLSTM(object):
 
 
       logits = self.output_embedding_layer.linear(seq_states)
-
-      tf.logging.info("states")
-      tf.logging.info(seq_states)
-      tf.logging.info("logits")
-      tf.logging.info(logits)
       predictions = tf.argmax(logits, axis=-1)
 
-      flat_logits = tf.reshape(logits, [-1, tf.shape(logits)[-1]])
-      tf.logging.info(flat_logits)
 
       flat_labels = tf.reshape(targets, [-1])
-      tf.logging.info(flat_labels)
-
       flat_mask = tf.cast(tf.reshape(inputs_mask, [-1]), tf.float32)
-
       flat_predictions = tf.reshape(predictions, [-1])
 
       # if is_train:
@@ -100,12 +87,7 @@ class LmLSTM(object):
         average_across_timesteps=True,
         average_across_batch=True)
 
-
-      #loss = tf.reduce_sum(loss)
       perplexity = tf.exp(loss)
-
-      tf.logging.info(flat_labels)
-      tf.logging.info(flat_mask)
       accuracy = tf.reduce_sum(tf.cast(tf.equal(flat_labels, flat_predictions), dtype=tf.float32) * flat_mask) / tf.reduce_sum(flat_mask)
       correct_predictions = tf.cast(tf.equal(predictions, targets), dtype=tf.float32) * tf.cast(inputs_mask, dtype=tf.float32)
       correct_sequences = tf.reduce_min(correct_predictions, axis=-1)
@@ -120,9 +102,29 @@ class LmLSTM(object):
             'perplexity': perplexity,
             'trainable_vars': tf.trainable_variables(scope=self.scope)}
 
+  def sample(self, inputs, inputs_length):
 
+    with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+      embedded_inputs = self.embedding_layer.apply(inputs)
+      def compute_decoding_step_input(current_input):
+        return None
+
+      tf.logging.info(embedded_inputs)
+      lstm_decoder_output_dic = self.lstm.predict(inputs_length=inputs_length,
+                                                          target_length=40,
+                                                          compute_decoding_step_input_fn=compute_decoding_step_input,
+                                                          embedding_layer=self.output_embedding_layer, eos_id=self.eos_id,
+                                                          is_train=False,
+                                                          initial_inputs=embedded_inputs)
+      outputs = lstm_decoder_output_dic['seq_outputs']
+      outputs_lengths = lstm_decoder_output_dic['outputs_lengths']
+      output_mask = tf.cast(tf.sequence_mask(outputs_lengths, tf.shape(outputs)[1]), dtype=tf.int64)
+      logits = self.output_embedding_layer.linear(outputs)
+
+      predictions = tf.cast(tf.argmax(logits, axis=-1) * output_mask, dtype=tf.int64)
+
+      return predictions
 if __name__ == '__main__':
-  from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40
   import numpy as np
 
   tf.logging.set_verbosity(tf.logging.INFO)
@@ -168,6 +170,12 @@ if __name__ == '__main__':
                                                       iterator.initializer))
 
   accuracy = tf.equal(predictions, target)
+
+  number_of_sample = 3
+  initial_constant = bin_iden.word2id[bin_iden.start_token]
+  sampling_initial_inputs = tf.ones((number_of_sample), dtype=tf.int32) * initial_constant
+  tf.logging.info(sampling_initial_inputs)
+  samples = model.sample(sampling_initial_inputs, tf.map_fn(lambda  x: 1, sampling_initial_inputs))
   with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_lm_lstm', scaffold=scaffold) as sess:
     for _ in np.arange(1):
       acc, _inputs, _targets, _predictions, _logits = sess.run([accuracy, input, target, predictions, outputs['logits']])
@@ -179,3 +187,9 @@ if __name__ == '__main__':
       print("logits: ", _logits)
 
       print(acc)
+
+      samples = sess.run([samples])
+      print(samples[0])
+      for s in samples[0]:
+        print(s)
+        print(bin_iden.decode(s,bin_iden.id2word))

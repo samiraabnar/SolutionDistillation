@@ -29,8 +29,6 @@ class LSTMSeq2Seq(object):
                               sent_rep_mode=self.hparams.sent_rep_mode,
                               scope=scope+"_decoder")
 
-
-
   def create_vars(self, reuse=False, pretrained_embeddings=None):
     with tf.variable_scope(self.scope, reuse=reuse):
       self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
@@ -63,8 +61,6 @@ class LSTMSeq2Seq(object):
         self.lstm_encoder.create_vars()
       with tf.variable_scope("decoder"):
         self.lstm_decoder.create_vars()
-
-
 
   def apply(self, examples, target_length=None, is_train=True, reuse=tf.AUTO_REUSE):
 

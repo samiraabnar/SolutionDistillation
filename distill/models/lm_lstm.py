@@ -92,13 +92,17 @@ class LmLSTM(object):
           num_sampled=1000,
           partition_strategy="div")
       else:
-        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-          labels=flat_labels,
-          logits=flat_logits) * flat_mask
+        loss = tf.contrib.seq2seq.sequence_loss(
+          logits,
+          targets,
+          weights=inputs_mask,
+          average_across_timesteps=False,
+          average_across_batch=True)
 
-      loss = tf.reduce_mean(loss)
+
+      loss = tf.reduce_sum(loss)
       perplexity = tf.exp(loss)
-      
+
       tf.logging.info(flat_labels)
       tf.logging.info(flat_mask)
       accuracy = tf.reduce_sum(tf.cast(tf.equal(flat_labels, flat_predictions), dtype=tf.float32) * flat_mask) / tf.reduce_sum(flat_mask)

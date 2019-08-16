@@ -98,7 +98,7 @@ if __name__ == '__main__':
                            label_smoothing=hparams.label_smoothing,
                            attention_mechanism=None,
                            sent_rep_mode=hparams.sent_rep_mode,
-                           embedding_dim=300,
+                           embedding_dim=hparams.embedding_dim,
                            train_embeddings = hparams.train_embeddings,
                            learning_rate=hparams.learning_rate)
 

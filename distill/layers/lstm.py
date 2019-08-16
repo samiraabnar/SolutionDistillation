@@ -15,7 +15,6 @@ class LSTM(object):
     self.sent_rep_dim = self.hidden_dim
 
   def create_vars(self, reuse=False):
-    # Create the embeddings
     with tf.variable_scope(self.scope, reuse=reuse):
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cells"):
@@ -49,20 +48,6 @@ class LSTM(object):
   def apply(self, inputs, inputs_length, init_state=None, is_train=True, cache=None):
     self.batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-      #embedded_input = tf_layers.layer_norm(embedded_input)
-      #tf.logging.info("embedded_input")
-      #tf.logging.info(inputs)
-
-      #embedded_input = tf_layers.layer_norm(embedded_input)
-
-      # Create the fully connected layers
-      # with tf.variable_scope("InputProjection", reuse=tf.AUTO_REUSE):
-      #   embedded_input = tf.contrib.layers.fully_connected(embedded_input,
-      #                                              num_outputs=self.hidden_dim,
-      #                                              weights_initializer=self.input_fully_connected_weights,
-      #                                              biases_initializer=None)
-
-
       # Run the data through the RNN layers
       with tf.variable_scope("LSTM_Cells", reuse=tf.AUTO_REUSE):
         cell = self.multi_lstm_cell
@@ -79,34 +64,24 @@ class LSTM(object):
           initial_state=init_state)
         # lstm_outputs = tf_layers.layer_norm(lstm_outputs)
 
-        #tf.logging.info("seq_outputs"),
-        #tf.logging.info(lstm_outputs)
 
       if self.attention_mechanism is not None:
         with tf.variable_scope("Attention", reuse=tf.AUTO_REUSE):
           lstm_outputs = self.attention.apply(lstm_outputs, inputs_length, is_train)
 
 
-      #tf.logging.info("LSTM output before projection")
-      #tf.logging.info(lstm_outputs)
-      #tf.logging.info(inputs_length)
-
       bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
 
       # Sum over all representations for each sentence!
       inputs_mask = tf.expand_dims(tf.cast(tf.sequence_mask(inputs_length), tf.float32),-1)
-      # sentence_reps = tf.gather_nd(lstm_outputs, root_indices)#tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
+
       if self.sent_rep_mode == "all":
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1) / tf.expand_dims(tf.cast(inputs_length, tf.float32), -1)
       elif self.sent_rep_mode == "final":
         sentence_reps = tf.gather_nd(lstm_outputs, root_indices)
       else:
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
-
-      #tf.logging.info("final output:")
-      #tf.logging.info(sentence_reps)
-
 
 
     return {

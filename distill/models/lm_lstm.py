@@ -37,15 +37,6 @@ class LmLSTM(object):
 
       self.lstm.create_vars()
 
-      # Output embedding
-      self.output_embedding_mat = tf.get_variable("output_embedding_mat",
-                                                  [self.hparams.vocab_size, self.hparams.hidden_dim],
-                                                  dtype=tf.float32)
-
-      self.output_embedding_bias = tf.get_variable("output_embedding_bias",
-                                                   [self.hparams.vocab_size],
-                                                   dtype=tf.float32)
-
 
   def apply(self, examples, is_train=True, reuse=tf.AUTO_REUSE, target_length=None):
     inputs, targets, inputs_length, targets_lengths = examples
@@ -54,17 +45,17 @@ class LmLSTM(object):
 
     batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=reuse):
-      embedded_input = self.embedding_layer.apply(inputs)
-      lstm_output_dic = self.lstm.apply(inputs=embedded_input, inputs_length=inputs_length, is_train=is_train)
+      embedded_inputs = self.embedding_layer.apply(inputs)
+      if is_train:
+        embedded_inputs = tf.nn.dropout(embedded_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
+      lstm_output_dic = self.lstm.apply(inputs=embedded_inputs, inputs_length=inputs_length, is_train=is_train)
 
       seq_states = lstm_output_dic['raw_outputs']
 
-
-
       logits = self.output_embedding_layer.linear(seq_states)
+
       predictions = tf.argmax(logits, axis=-1)
-
-
       flat_labels = tf.reshape(targets, [-1])
       flat_mask = tf.cast(tf.reshape(inputs_mask, [-1]), tf.float32)
       flat_predictions = tf.reshape(predictions, [-1])
@@ -124,6 +115,8 @@ class LmLSTM(object):
       predictions = tf.cast(tf.argmax(logits, axis=-1) * output_mask, dtype=tf.int64)
 
       return predictions
+
+
 if __name__ == '__main__':
   import numpy as np
 

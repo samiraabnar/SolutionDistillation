@@ -96,9 +96,9 @@ class LmLSTM(object):
           labels=flat_labels,
           logits=flat_logits) * flat_mask
 
-      perplexity = tf.reduce_mean(tf.exp(loss))
       loss = tf.reduce_mean(loss)
-
+      perplexity = tf.exp(loss)
+      
       tf.logging.info(flat_labels)
       tf.logging.info(flat_mask)
       accuracy = tf.reduce_sum(tf.cast(tf.equal(flat_labels, flat_predictions), dtype=tf.float32) * flat_mask) / tf.reduce_sum(flat_mask)

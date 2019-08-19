@@ -29,8 +29,7 @@ class PTB(SentWiki):
     self.load_vocab()
 
 
-  @staticmethod
-  def read_ptb_raw_data(data_path=None):
+  def read_raw_data(self, data_path=None):
     """Load PTB raw data from data directory "data_path".
     Reads PTB text files, converts strings to integer ids,
     and performs mini-batching of the inputs.
@@ -48,9 +47,9 @@ class PTB(SentWiki):
     valid_path = os.path.join(data_path, "ptb.valid.txt")
     test_path = os.path.join(data_path, "ptb.test.txt")
 
-    train_data = PTB.read_sentences(train_path)
-    valid_data = PTB.read_sentences(valid_path)
-    test_data = PTB.read_sentences(test_path)
+    train_data = self.read_sentences(train_path)
+    valid_data = self.read_sentences(valid_path)
+    test_data = self.read_sentences(test_path)
 
     return train_data, valid_data, test_data
 
@@ -61,7 +60,7 @@ if __name__ == '__main__':
   ptb = PTB(data_path="data/ptb", build_vocab=True)
 
 
-  train_data, dev_data, test_data = PTB.read_ptb_raw_data('data/ptb')
+  train_data, dev_data, test_data = ptb.read_raw_data('data/ptb')
   #word_to_id, id_to_word = load_vocab('data/ptb')
 
   print("Length of train: ", len(train_data))

@@ -119,7 +119,7 @@ class LSTM(object):
                                      dynamic_size=True,
                                      clear_after_read=False,
                                      infer_shape=True)
-        sampled_predictions_tensor_array = tf.TensorArray(dtype=tf.float32, size=0,
+        sampled_predictions_tensor_array = tf.TensorArray(dtype=tf.int32, size=0,
                                                   dynamic_size=True,
                                                   clear_after_read=False,
                                                   infer_shape=True)

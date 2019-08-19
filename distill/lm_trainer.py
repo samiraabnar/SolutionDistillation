@@ -61,8 +61,8 @@ hparams = tf.app.flags.FLAGS
 
 if __name__ == '__main__':
   Models = {"lm_lstm": LmLSTM}
-  tasks = {'ptb_lm': PTB(os.path.join(hparams.data_dir,'/ptb')),
-           'sent_wiki': SentWiki(os.path.join(hparams.data_dir,'data/sent_wiki'),
+  tasks = {'ptb_lm': PTB(os.path.join(hparams.data_dir,'ptb')),
+           'sent_wiki': SentWiki(os.path.join(hparams.data_dir,'sent_wiki'),
                                  tie_embeddings=hparams.tie_embeddings)}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length

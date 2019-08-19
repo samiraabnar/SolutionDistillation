@@ -11,3 +11,4 @@ data/*
 .ipynb_checkpoints/*
 envname
 *.pyc
+.spyproject

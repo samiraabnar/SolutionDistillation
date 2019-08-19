@@ -39,6 +39,8 @@ class Trainer(object):
                           epsilon=self.model.hparams.optimizer_adam_epsilon)
       elif optimizer == 'rmsprop':
         opt = tf.train.RMSPropOptimizer(learning_rate=learning_rate)
+      elif optimizer == 'sgd':
+        opt = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
 
 
       grads_and_vars = opt.compute_gradients(loss, params)

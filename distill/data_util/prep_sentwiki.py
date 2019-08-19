@@ -27,6 +27,10 @@ class SentWiki(object):
     self.load_vocab()
 
   @property
+  def if_label_gaussian_noise(self):
+    return False
+
+  @property
   def share_input_output_embeddings(self):
     return self.tie_embeddings
 

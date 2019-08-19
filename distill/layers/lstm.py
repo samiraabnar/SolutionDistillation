@@ -13,12 +13,15 @@ class LSTM(object):
     self.attention_mechanism = attention_mechanism
     self.sent_rep_mode = sent_rep_mode
     self.sent_rep_dim = self.hidden_dim
+    self.initializer = tf.contrib.layers.layer_norm
+    self.normalizer = tf.contrib.layers.xavier_initializer()
 
   def create_vars(self, reuse=False):
     with tf.variable_scope(self.scope, reuse=reuse):
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cells"):
-        lstm0 = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0, name="L0")
+        lstm0 = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0,
+                                        initializer=self.initializer, name="L0")
         dropout_lstm0 = tf.contrib.rnn.DropoutWrapper(lstm0,
                                                       output_keep_prob=self.hidden_keep_prob,
                                                       variational_recurrent=True,
@@ -27,7 +30,8 @@ class LSTM(object):
         lstms = [lstm0]
         drop_lstms = [dropout_lstm0]
 
-        lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0, name="L1")
+        lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0,
+                                       initializer=self.initializer, name="L1")
         dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                       output_keep_prob=self.hidden_keep_prob,
                                                       variational_recurrent=True,

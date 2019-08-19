@@ -127,11 +127,10 @@ class LSTM(object):
           last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
           last_lstm_prediction_logits = output_embedding_layer.linear(last_lstm_prediction)
 
-          tf.logging.info("last lstm prediction logits")
-          tf.logging.info(last_lstm_prediction_logits)
           prediction = tf.random.multinomial(logits=tf.squeeze(last_lstm_prediction_logits),
                                              num_samples=1)
           tf.logging.info("prediction")
+          tf.logging.info(prediction)
 
           embedded_prediction = input_embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]
@@ -143,8 +142,6 @@ class LSTM(object):
             cell_input = embedded_prediction
 
           lstm_prediction, state = the_cell(cell_input, last_state)
-          tf.logging.info('lstm prediction')
-          tf.logging.info(lstm_prediction)
 
           all_outputs = all_outputs.write(step, lstm_prediction)
           finish_flags = tf.logical_or(finish_flags,tf.equal(prediction[:,-1],eos_id))

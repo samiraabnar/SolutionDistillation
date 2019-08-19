@@ -143,10 +143,8 @@ class LSTM(object):
             cell_input = embedded_prediction
 
           lstm_prediction, state = the_cell(cell_input, last_state)
-          lstm_prediction_logits = output_embedding_layer.linear(lstm_prediction)
           tf.logging.info('lstm prediction')
           tf.logging.info(lstm_prediction)
-          tf.logging.info(lstm_prediction_logits)
 
           all_outputs = all_outputs.write(step, lstm_prediction)
           finish_flags = tf.logical_or(finish_flags,tf.equal(prediction[:,-1],eos_id))

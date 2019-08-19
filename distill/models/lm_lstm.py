@@ -96,7 +96,11 @@ class LmLSTM(object):
   def sample(self, inputs, inputs_length):
 
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-      embedded_inputs = self.embedding_layer.apply(inputs)
+      if inputs is not None:
+          embedded_inputs = self.embedding_layer.apply(inputs)
+      else:
+          embedded_inputs = None
+          
       def compute_decoding_step_input(current_input):
         return None
 

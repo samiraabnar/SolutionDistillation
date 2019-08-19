@@ -117,13 +117,9 @@ class LSTM(object):
 
           last_lstm_prediction_logits = tf.expand_dims(last_lstm_prediction, 1)
           last_lstm_prediction_logits = embedding_layer.linear(last_lstm_prediction_logits)
-          tf.logging.info('last lstm prediction')
-          tf.logging.info(last_lstm_prediction)
           tf.logging.info(tf.squeeze(last_lstm_prediction_logits))
           prediction = tf.random.multinomial(logits=tf.squeeze(last_lstm_prediction_logits),
                                              num_samples=1)
-          tf.logging.info('prediction')
-          tf.logging.info(prediction)
           embedded_prediction = embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]
 
@@ -170,15 +166,12 @@ class LSTM(object):
           lstm_outputs = self.attention.apply(lstm_outputs, inputs_length, is_train)
 
 
-      #tf.logging.info("LSTM output before projection")
-      #tf.logging.info(lstm_outputs)
-      #tf.logging.info(inputs_length)
-
       bach_indices = tf.expand_dims(tf.range(batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
 
       # Sum over all representations for each sentence!
       inputs_mask = tf.expand_dims(tf.cast(tf.sequence_mask(inputs_length), tf.float32),-1)
+      
       # sentence_reps = tf.gather_nd(lstm_outputs, root_indices)#tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
       if self.sent_rep_mode == "all":
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1) / tf.expand_dims(tf.cast(inputs_length, tf.float32), -1)
@@ -187,8 +180,6 @@ class LSTM(object):
       else:
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
 
-      #tf.logging.info("final output:")
-      # tf.logging.info(sentence_reps)
 
 
 

@@ -119,6 +119,10 @@ class LSTM(object):
                                      dynamic_size=True,
                                      clear_after_read=False,
                                      infer_shape=True)
+        sampled_predictions_tensor_array = tf.TensorArray(dtype=tf.float32, size=0,
+                                                  dynamic_size=True,
+                                                  clear_after_read=False,
+                                                  infer_shape=True)
 
         # This loop gets called once for every "timestep" and obtains one column of the input data
         def lstm_loop(output_lengths, all_outputs, last_lstm_prediction,last_state, finish_flags, step):
@@ -129,6 +133,7 @@ class LSTM(object):
 
           prediction = tf.random.multinomial(logits=tf.squeeze(last_lstm_prediction_logits),
                                              num_samples=1)
+          sampled_predictions_tensor_array.write(step, prediction)
           tf.logging.info("prediction")
           tf.logging.info(prediction)
 
@@ -147,7 +152,7 @@ class LSTM(object):
           finish_flags = tf.logical_or(finish_flags,tf.equal(prediction[:,-1],eos_id))
           output_lengths = output_lengths + tf.cast( tf.logical_not(finish_flags), dtype=tf.int32)*1
 
-          return output_lengths, all_outputs, lstm_prediction, state, finish_flags, tf.add(step, 1)
+          return sampled_predictions_tensor_array, output_lengths, all_outputs, lstm_prediction, state, finish_flags, tf.add(step, 1)
 
 
         if target_length is None:
@@ -165,13 +170,14 @@ class LSTM(object):
 
         init_finish = tf.cast(tf.zeros(batch_size, dtype=tf.int64), dtype=tf.bool)
         init_output_lengths = tf.zeros(batch_size, dtype=tf.int32)
-        output_lengths, all_outputs, final_prediction, lstm_state, _, _ = tf.while_loop(for_each_time_step, lstm_loop,
-                                                       (init_output_lengths, all_outputs_tensor_array,
+        samples, output_lengths, all_outputs, final_prediction, lstm_state, _, _ = tf.while_loop(for_each_time_step, lstm_loop,
+                                                       (sampled_predictions_tensor_array, init_output_lengths, all_outputs_tensor_array,
                                                         initial_outputs, init_state,init_finish, 0),
                                                        parallel_iterations=32)
 
 
         lstm_outputs = tf.transpose(all_outputs.stack(),[1,0,2])
+        samples = tf.transpose(samples.stack(), [1, 0, 2])
 
 
       if self.attention_mechanism is not None:
@@ -201,7 +207,8 @@ class LSTM(object):
             'sents_reps': sentence_reps,
             'seq_outputs': lstm_outputs,
             'final_state': lstm_state,
-            'outputs_lengths': output_lengths
+            'outputs_lengths': output_lengths, 
+            'samples': samples
     }
 
 

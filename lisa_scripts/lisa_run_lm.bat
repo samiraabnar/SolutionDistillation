@@ -38,6 +38,7 @@ TMP_LOGS_DIR=$LOGS_DIR
 #cp -r "$LOGS_DIR"/* "$TMP_LOGS_DIR"/
 
 echo "$TMP_LOGS_DIR"
+echo "$TMP_DATA_DIR"
 export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/lm_trainer.py \

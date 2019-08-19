@@ -44,7 +44,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/lm_trainer.py \
 --log_dir="$TMP_LOGS_DIR" --data_dir="$TMP_DATA_DIR" \
 --batch_size=64 --hidden_dim=728 --embedding_dim=728 \
 --learning_rate=0.0002 \
---hidden_dropout_keep_pron=0.8 --input_dropout_keep_prob=0.6 \
+--hidden_dropout_keep_prob=0.8 --input_dropout_keep_prob=0.6 \
 --task_name=ptb_lm \
 --exp_name b64_drop8-6
 

@@ -14,6 +14,21 @@ from distill.data_util.prep_sentwiki import SentWiki
 Py3 = sys.version_info[0] == 3
 
 class PTB(SentWiki):
+  def __init__(self, data_path, build_vocab=False, tie_embeddings=True):
+
+    self.data_path = data_path
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+    self.unk = '<unk>'
+    self.start_token = '<s>'
+    self.pre_defs = [self.pad, self.start_token, self.eos, self.unk]
+    self.tie_embeddings = tie_embeddings
+
+    if build_vocab:
+      self.build_vocab(os.path.join(self.data_path, "ptb.train.txt"))
+    self.load_vocab()
+
+
   @staticmethod
   def read_ptb_raw_data(data_path=None):
     """Load PTB raw data from data directory "data_path".

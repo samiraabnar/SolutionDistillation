@@ -68,6 +68,9 @@ class LMTrainer(Trainer):
 
 
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")
+    self.add_metric_summaries(dev_output_dic['logits'], dev_output_dic['targets'], "dev")
+    self.add_metric_summaries(test_output_dic['logits'], test_output_dic['targets'], "test")
+
 
     train_loss = self.compute_loss(train_output_dic['logits'], train_output_dic['targets'])
     dev_loss = self.compute_loss(dev_output_dic['logits'], dev_output_dic['targets'])

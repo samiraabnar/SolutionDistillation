@@ -104,7 +104,6 @@ class LmLSTM(object):
       def compute_decoding_step_input(current_input):
         return None
 
-      tf.logging.info(embedded_inputs)
       lstm_decoder_output_dic = self.lstm.predict(inputs_length=inputs_length,
                                                           target_length=40,
                                                           compute_decoding_step_input_fn=compute_decoding_step_input,

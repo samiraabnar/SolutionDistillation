@@ -83,7 +83,6 @@ class LmLSTM(object):
             'predictions': predictions,
             'logits': logits,
             'targets': targets,
-            'accuracy': accuracy,
             'trainable_vars': tf.trainable_variables(scope=self.scope)}
 
   def sample(self, inputs, inputs_length):

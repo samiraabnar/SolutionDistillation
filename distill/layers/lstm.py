@@ -134,8 +134,6 @@ class LSTM(object):
           prediction = tf.random.multinomial(logits=tf.squeeze(last_lstm_prediction_logits),
                                              num_samples=1)
           sampled_predictions.write(step, prediction)
-          tf.logging.info("prediction")
-          tf.logging.info(prediction)
 
           embedded_prediction = input_embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]

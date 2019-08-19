@@ -31,6 +31,10 @@ class SentWiki(object):
     return False
 
   @property
+  def guassian_noise_scale(self):
+    return None
+
+  @property
   def share_input_output_embeddings(self):
     return self.tie_embeddings
 

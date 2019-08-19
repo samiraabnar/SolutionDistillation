@@ -61,28 +61,22 @@ class LMTrainer(Trainer):
     self.model.create_vars()
 
     train_iterator, dev_iterator, test_iterator = self.get_data_itarators()
-    train_output_dic = self.model.apply(train_iterator.get_next())
 
-    tf.summary.scalar("loss", train_output_dic["loss"], family="train")
-    tf.summary.scalar("accuracy", train_output_dic["accuracy"], family="train")
-    tf.summary.scalar("sequence_accuracy", train_output_dic["sequence_accuracy"], family="train")
-    tf.summary.scalar("perplexity", train_output_dic["perplexity"], family="train")
+    train_output_dic = self.model.apply(train_iterator.get_next())
+    dev_output_dic = self.model.apply(dev_iterator.get_next(), is_train=False)
+    test_output_dic = self.model.apply(test_iterator.get_next(), is_train=False)
+
 
     self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")
 
-    dev_output_dic = self.model.apply(dev_iterator.get_next(), is_train=False)
-    tf.summary.scalar("loss", dev_output_dic["loss"], family="dev")
-    tf.summary.scalar("accuracy", dev_output_dic["accuracy"], family="dev")
-    tf.summary.scalar("sequence_accuracy", dev_output_dic["sequence_accuracy"], family="dev")
-    tf.summary.scalar("perplexity", dev_output_dic["perplexity"], family="dev")
+    train_loss = self.compute_loss(train_output_dic['logits'], train_output_dic['targets'])
+    dev_loss = self.compute_loss(dev_output_dic['logits'], dev_output_dic['targets'])
+    test_loss = self.compute_loss(test_output_dic['logits'], test_output_dic['targets'])
 
-    test_output_dic = self.model.apply(test_iterator.get_next(), is_train=False)
-    tf.summary.scalar("loss", test_output_dic["loss"], family="test")
-    tf.summary.scalar("accuracy", test_output_dic["accuracy"], family="test")
-    tf.summary.scalar("sequence_accuracy", test_output_dic["sequence_accuracy"], family="test")
-    tf.summary.scalar("perplexity", test_output_dic["perplexity"], family="test")
+    tf.summary.scalar("loss", train_loss, family="train")
+    tf.summary.scalar("loss", dev_loss, family="dev")
+    tf.summary.scalar("loss", test_loss, family="test")
 
-    train_loss = train_output_dic["loss"]
     update_op, learning_rate = self.get_train_op(train_loss, train_output_dic["trainable_vars"],
                                                  start_learning_rate=0.000,
                                                  base_learning_rate=self.model.hparams.learning_rate,

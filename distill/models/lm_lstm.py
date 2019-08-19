@@ -78,20 +78,12 @@ class LmLSTM(object):
         average_across_timesteps=True,
         average_across_batch=True)
 
-      perplexity = tf.exp(loss)
-      accuracy = tf.reduce_sum(tf.cast(tf.equal(flat_labels, flat_predictions), dtype=tf.float32) * flat_mask) / tf.reduce_sum(flat_mask)
-      correct_predictions = tf.cast(tf.equal(predictions, targets), dtype=tf.float32) * tf.cast(inputs_mask, dtype=tf.float32)
-      correct_sequences = tf.reduce_min(correct_predictions, axis=-1)
-      sequence_accuracy = tf.reduce_sum(correct_sequences) / tf.cast(batch_size, dtype=tf.float32)
-
     return {'inputs': inputs,
             'loss': loss,
             'predictions': predictions,
             'logits': logits,
             'targets': targets,
             'accuracy': accuracy,
-            'sequence_accuracy': sequence_accuracy,
-            'perplexity': perplexity,
             'trainable_vars': tf.trainable_variables(scope=self.scope)}
 
   def sample(self, inputs, inputs_length):

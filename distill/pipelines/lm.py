@@ -86,7 +86,7 @@ class LMTrainer(Trainer):
                                                  warmup_steps=self.model.hparams.learning_rate_warmup_steps,
                                                  clip_gradient_norm=self.model.hparams.clip_grad_norm,
                                                  l2_rate=self.config.l2_rate,
-                                                 optimizer="rmsprop"
+                                                 optimizer="adam"
                                                  )
     tf.summary.scalar("learning_rate", learning_rate, family="train")
 

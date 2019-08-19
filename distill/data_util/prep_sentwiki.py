@@ -58,7 +58,7 @@ class SentWiki(object):
     count_pairs = sorted(counter.items(), key=lambda x: (-x[1], x[0]))
 
     words, _ = list(zip(*count_pairs))
-    words = self.pre_defs + words
+    words = self.pre_defs + list(words)
     word_to_id = dict(zip(words, range(len(words))))
 
     id_to_word = {}

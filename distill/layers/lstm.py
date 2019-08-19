@@ -1,7 +1,5 @@
 import tensorflow as tf
-import tensorflow.contrib.layers as tf_layers
 from distill.layers.attention import FeedforwardSelfAttention
-from distill.layers.embedding import Embedding
 
 class LSTM(object):
   def __init__(self, hidden_dim, output_dim, attention_mechanism, hidden_keep_prob,depth, sent_rep_mode="all",scope="LSTM"):
@@ -13,8 +11,8 @@ class LSTM(object):
     self.attention_mechanism = attention_mechanism
     self.sent_rep_mode = sent_rep_mode
     self.sent_rep_dim = self.hidden_dim
-    self.initializer = tf.contrib.layers.layer_norm
-    self.normalizer = tf.contrib.layers.xavier_initializer()
+    self.normalizer = tf.contrib.layers.layer_norm
+    self.initializer = tf.contrib.layers.xavier_initializer()
 
   def create_vars(self, reuse=False):
     with tf.variable_scope(self.scope, reuse=reuse):
@@ -78,7 +76,6 @@ class LSTM(object):
       bach_indices = tf.expand_dims(tf.range(self.batch_size), 1)
       root_indices = tf.concat([bach_indices, tf.expand_dims(tf.cast(inputs_length - 1, dtype=tf.int32), 1)], axis=-1)
 
-      # Sum over all representations for each sentence!
       inputs_mask = tf.expand_dims(tf.cast(tf.sequence_mask(inputs_length), tf.float32),-1)
 
       if self.sent_rep_mode == "all":
@@ -156,7 +153,6 @@ class LSTM(object):
 
           return sampled_predictions, output_lengths, all_outputs, lstm_prediction, state, finish_flags, tf.add(step, 1)
 
-
         if target_length is None:
           timesteps = tf.reduce_max(inputs_length)
         else:
@@ -193,7 +189,6 @@ class LSTM(object):
       # Sum over all representations for each sentence!
       inputs_mask = tf.expand_dims(tf.cast(tf.sequence_mask(inputs_length), tf.float32),-1)
 
-      # sentence_reps = tf.gather_nd(lstm_outputs, root_indices)#tf.reduce_sum(lstm_outputs * inputs_mask, axis=1)
       if self.sent_rep_mode == "all":
         sentence_reps = tf.reduce_sum(lstm_outputs * inputs_mask, axis=1) / tf.expand_dims(tf.cast(inputs_length, tf.float32), -1)
       elif self.sent_rep_mode == "final":

@@ -37,8 +37,8 @@ class Trainer(object):
                           beta1=self.model.hparams.optimizer_adam_beta1,
                           beta2=self.model.hparams.optimizer_adam_beta2,
                           epsilon=self.model.hparams.optimizer_adam_epsilon)
-      elif optimizer == 'adadelta':
-        opt = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
+      elif optimizer == 'rmsprop':
+        opt = tf.train.RMSPropOptimizer(learning_rate=learning_rate)
 
 
       grads_and_vars = opt.compute_gradients(loss, params)

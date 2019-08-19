@@ -106,7 +106,6 @@ class LSTM(object):
               target_length=None, init_state=None, is_train=True, initial_inputs=None):
     batch_size = tf.shape(inputs_length)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-
       # Run the data through the RNN layers
       with tf.variable_scope("LSTM_Cells", reuse=tf.AUTO_REUSE):
         the_cell = self.multi_lstm_cell

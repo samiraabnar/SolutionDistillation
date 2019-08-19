@@ -13,12 +13,13 @@ Py3 = sys.version_info[0] == 3
 
 class SentWiki(object):
 
-  def __init__(self, data_path, build_vocab=False):
+  def __init__(self, data_path, build_vocab=False, tie_embeddings=True):
     self.data_path = data_path
     self.eos = '<eos>'
     self.pad = '<pad>'
     self.unk = '<unk>'
     self.start_token = '<s>'
+    self.tie_embeddings = tie_embeddings
 
     if build_vocab:
       self.build_vocab(os.path.join(self.data_path, "train.txt"))
@@ -26,7 +27,7 @@ class SentWiki(object):
 
   @property
   def share_input_output_embeddings(self):
-    return True
+    return self.tie_embeddings
 
   @property
   def vocab_length(self):
@@ -173,6 +174,7 @@ class SentWiki(object):
 
   def get_tfrecord_path(self, mode):
     return os.path.join(self.data_path, mode + ".tfr")
+
 
 if __name__ == '__main__':
   sentwiki = SentWiki(data_path="data/sent_wiki", build_vocab=True)

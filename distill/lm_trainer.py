@@ -45,6 +45,7 @@ tf.app.flags.DEFINE_integer("training_iterations", 300000, "")
 tf.app.flags.DEFINE_integer("vocab_size", 8000, "")
 tf.app.flags.DEFINE_integer("embedding_dim", 512, "embeddings dim")
 tf.app.flags.DEFINE_boolean("bidirectional", False, "If the LSTM layer is bidirectional")
+tf.app.flags.DEFINE_boolean("tie_embeddings", True, "If input and output embeddings are tied")
 
 
 tf.app.flags.DEFINE_string("pretrained_embedding_path", "data/sst/filtered_glove.txt", "pretrained embedding path")
@@ -60,7 +61,7 @@ hparams = tf.app.flags.FLAGS
 if __name__ == '__main__':
   Models = {"lm_lstm": LmLSTM}
   tasks = {'ptb_lm': PTB('data/ptb'),
-           'sent_wiki': SentWiki('data/sent_wiki')}
+           'sent_wiki': SentWiki('data/sent_wiki', tie_embeddings=hparams.tie_embeddings)}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)
@@ -116,7 +117,9 @@ if __name__ == '__main__':
                                               'batch_size'+str(model_params[hparams.model].batch_size),
                                               hparams.exp_name]))
 
-    
+    if not hparams.tie_embeddings:
+      hparams.save_dir += "_ntied"
+
   model = Models[hparams.model](model_params[hparams.model],
                                   task=tasks[hparams.task_name],
                                   scope=hparams.model)

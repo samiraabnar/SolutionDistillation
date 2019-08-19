@@ -14,6 +14,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 tf.app.flags.DEFINE_string("exp_name", "trial", "")
 tf.app.flags.DEFINE_string("task_name", "sent_wiki", "ptb_lm")
+tf.app.flags.DEFINE_string("data_dir", "data", "")
 tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
@@ -60,8 +61,9 @@ hparams = tf.app.flags.FLAGS
 
 if __name__ == '__main__':
   Models = {"lm_lstm": LmLSTM}
-  tasks = {'ptb_lm': PTB('data/ptb'),
-           'sent_wiki': SentWiki('data/sent_wiki', tie_embeddings=hparams.tie_embeddings)}
+  tasks = {'ptb_lm': PTB(os.path.join(hparams.data_dir,'/ptb')),
+           'sent_wiki': SentWiki(os.path.join(hparams.data_dir,'data/sent_wiki'),
+                                 tie_embeddings=hparams.tie_embeddings)}
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)

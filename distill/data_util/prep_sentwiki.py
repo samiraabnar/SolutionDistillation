@@ -19,6 +19,7 @@ class SentWiki(object):
     self.pad = '<pad>'
     self.unk = '<unk>'
     self.start_token = '<s>'
+    self.pre_defs = [self.pad, self.start_token, self.eos, self.unk]
     self.tie_embeddings = tie_embeddings
 
     if build_vocab:
@@ -59,11 +60,7 @@ class SentWiki(object):
     words, _ = list(zip(*count_pairs))
     word_to_id = dict(zip(words, range(len(words))))
 
-    if self.unk not in word_to_id:
-      word_to_id[self.unk] = len(word_to_id)
-
-    if self.start_token not in word_to_id:
-      word_to_id[self.start_token] = len(word_to_id)
+    word_to_id = self.pre_defs + word_to_id
 
     id_to_word = {}
     for word,id in word_to_id.items():
@@ -82,12 +79,13 @@ class SentWiki(object):
     self.id2word = vocab['id_to_word']
 
   def encode_sent(self, sent):
-    encoded_sent = []
+    encoded_sent = [self.word2id[self.start_token]]
     for word in sent:
       if word not in self.word2id:
         word = self.unk
       encoded_sent.append(self.word2id[word])
 
+    encoded_sent.append(self.word2id[self.eos])
     return encoded_sent
 
   @staticmethod
@@ -103,7 +101,7 @@ class SentWiki(object):
       sentences = f.read().replace("\n", " <eos>\n").split("\n")
 
     for i in np.arange(len(sentences)):
-      sentences[i] = ['<s>'] + sentences[i].split()
+      sentences[i] = sentences[i].split()
 
     return sentences
 

@@ -1,4 +1,6 @@
 import tensorflow as tf
+
+from distill.common.metrics import padded_cross_entropy_loss, get_eval_metrics
 from distill.pipelines.basic_trainer import Trainer
 
 
@@ -32,15 +34,41 @@ class LMTrainer(Trainer):
 
     return train_iterator, dev_iterator, test_iterator
 
+  def compute_loss(self,logits, targets, softmax_temperature=1.0):
+    xentropy, weights = padded_cross_entropy_loss(
+      logits, targets, self.model.hparams.label_smoothing, self.config.output_dim,
+      softmax_temperature=softmax_temperature,  gaussian_noise=self.task.if_label_gaussian_noise, gaussian_noise_scale=self.task.guassian_noise_scale)
+
+    loss = tf.reduce_sum(xentropy) / tf.reduce_sum(weights)
+
+    return loss
+
+  def add_metric_summaries(self, logits, labels, family):
+    eval_metrics = get_eval_metrics(logits, labels, self.model.hparams)
+    for metric in eval_metrics:
+      tf.summary.scalar(metric, tf.reduce_mean(eval_metrics[metric]), family=family)
+
+  def get_metric_summaries_as_dic(self, logits, labels):
+    metric_summaries = {}
+    eval_metrics = get_eval_metrics(logits, labels, self.model.hparams)
+    for metric in eval_metrics:
+      metric_summaries[metric] = tf.reduce_mean(eval_metrics[metric])
+
+    return metric_summaries
+
+
   def build_train_graph(self):
     self.model.create_vars()
 
     train_iterator, dev_iterator, test_iterator = self.get_data_itarators()
     train_output_dic = self.model.apply(train_iterator.get_next())
+
     tf.summary.scalar("loss", train_output_dic["loss"], family="train")
     tf.summary.scalar("accuracy", train_output_dic["accuracy"], family="train")
     tf.summary.scalar("sequence_accuracy", train_output_dic["sequence_accuracy"], family="train")
     tf.summary.scalar("perplexity", train_output_dic["perplexity"], family="train")
+
+    self.add_metric_summaries(train_output_dic['logits'], train_output_dic['targets'], "train")
 
     dev_output_dic = self.model.apply(dev_iterator.get_next(), is_train=False)
     tf.summary.scalar("loss", dev_output_dic["loss"], family="dev")

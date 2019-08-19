@@ -88,6 +88,7 @@ class LmLSTM(object):
             'loss': loss,
             'predictions': predictions,
             'logits': logits,
+            'targets': targets,
             'accuracy': accuracy,
             'sequence_accuracy': sequence_accuracy,
             'perplexity': perplexity,

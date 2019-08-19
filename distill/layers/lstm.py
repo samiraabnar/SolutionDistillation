@@ -124,8 +124,8 @@ class LSTM(object):
         def lstm_loop(output_lengths, all_outputs, last_lstm_prediction,last_state, finish_flags, step):
 
 
-          last_lstm_prediction_logits = tf.expand_dims(last_lstm_prediction, 1)
-          last_lstm_prediction_logits = output_embedding_layer.apply(last_lstm_prediction_logits)
+          last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
+          last_lstm_prediction_logits = output_embedding_layer.linear(last_lstm_prediction)
 
           tf.logging.info("last lstm prediction logits")
           tf.logging.info(last_lstm_prediction_logits)
@@ -143,8 +143,10 @@ class LSTM(object):
             cell_input = embedded_prediction
 
           lstm_prediction, state = the_cell(cell_input, last_state)
+          lstm_prediction_logits = output_embedding_layer.linear(lstm_prediction)
           tf.logging.info('lstm prediction')
           tf.logging.info(lstm_prediction)
+          tf.logging.info(lstm_prediction_logits)
 
           all_outputs = all_outputs.write(step, lstm_prediction)
           finish_flags = tf.logical_or(finish_flags,tf.equal(prediction[:,-1],eos_id))
@@ -164,7 +166,8 @@ class LSTM(object):
 
         initial_outputs = tf.zeros([batch_size, self.hidden_dim])
         if initial_inputs is not None:
-          initial_outputs = initial_inputs
+          initial_outputs = output_embedding_layer.apply(initial_inputs)
+
         init_finish = tf.cast(tf.zeros(batch_size, dtype=tf.int64), dtype=tf.bool)
         init_output_lengths = tf.zeros(batch_size, dtype=tf.int32)
         output_lengths, all_outputs, final_prediction, lstm_state, _, _ = tf.while_loop(for_each_time_step, lstm_loop,

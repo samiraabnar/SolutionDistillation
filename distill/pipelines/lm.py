@@ -85,7 +85,8 @@ class LMTrainer(Trainer):
                                                  base_learning_rate=self.model.hparams.learning_rate,
                                                  warmup_steps=self.model.hparams.learning_rate_warmup_steps,
                                                  clip_gradient_norm=self.model.hparams.clip_grad_norm,
-                                                 l2_rate=self.config.l2_rate
+                                                 l2_rate=self.config.l2_rate,
+                                                 optimizer="adadelta"
                                                  )
     tf.summary.scalar("learning_rate", learning_rate, family="train")
 

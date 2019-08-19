@@ -7,7 +7,9 @@ class Trainer(object):
     self.model = model_obj
 
   def get_train_op(self, loss, params, start_learning_rate, base_learning_rate, warmup_steps,
-                   l2_rate=0.0001, clip_gradient_norm=5,  scope=""):
+                   l2_rate=0.0001, clip_gradient_norm=5,
+                   optimizer='adam',
+                   scope=""):
     # add training op
     with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
       self.global_step = tf.train.get_or_create_global_step()
@@ -30,10 +32,15 @@ class Trainer(object):
                                decay_learning_rate)
 
 
-      opt = tf.train.AdamOptimizer(learning_rate=learning_rate,
-                                   beta1=self.model.hparams.optimizer_adam_beta1,
-                                   beta2=self.model.hparams.optimizer_adam_beta2,
-                                   epsilon=self.model.hparams.optimizer_adam_epsilon)
+      if optimizer == 'adam':
+        opt = tf.train.AdamOptimizer(learning_rate=learning_rate,
+                          beta1=self.model.hparams.optimizer_adam_beta1,
+                          beta2=self.model.hparams.optimizer_adam_beta2,
+                          epsilon=self.model.hparams.optimizer_adam_epsilon)
+      elif optimizer == 'adadelta':
+        opt = tf.train.AdadeltaOptimizer(learning_rate=learning_rate)
+
+
       grads_and_vars = opt.compute_gradients(loss, params)
       gradients, variables = zip(*grads_and_vars)
       if clip_gradient_norm > 0:

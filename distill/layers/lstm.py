@@ -125,7 +125,7 @@ class LSTM(object):
                                                   infer_shape=True)
 
         # This loop gets called once for every "timestep" and obtains one column of the input data
-        def lstm_loop(output_lengths, all_outputs, last_lstm_prediction,last_state, finish_flags, step):
+        def lstm_loop(sampled_predictions, output_lengths, all_outputs, last_lstm_prediction,last_state, finish_flags, step):
 
 
           last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
@@ -133,7 +133,7 @@ class LSTM(object):
 
           prediction = tf.random.multinomial(logits=tf.squeeze(last_lstm_prediction_logits),
                                              num_samples=1)
-          sampled_predictions_tensor_array.write(step, prediction)
+          sampled_predictions.write(step, prediction)
           tf.logging.info("prediction")
           tf.logging.info(prediction)
 
@@ -152,7 +152,7 @@ class LSTM(object):
           finish_flags = tf.logical_or(finish_flags,tf.equal(prediction[:,-1],eos_id))
           output_lengths = output_lengths + tf.cast( tf.logical_not(finish_flags), dtype=tf.int32)*1
 
-          return sampled_predictions_tensor_array, output_lengths, all_outputs, lstm_prediction, state, finish_flags, tf.add(step, 1)
+          return sampled_predictions, output_lengths, all_outputs, lstm_prediction, state, finish_flags, tf.add(step, 1)
 
 
         if target_length is None:
@@ -160,7 +160,7 @@ class LSTM(object):
         else:
           timesteps = target_length
 
-        for_each_time_step = lambda l, c, a, b, f, step: tf.logical_and(
+        for_each_time_step = lambda s, l, c, a, b, f, step: tf.logical_and(
           tf.less(tf.cast(step, dtype=tf.int32), tf.cast(timesteps, dtype=tf.int32)),
           tf.logical_not(tf.reduce_all(f)))
 
@@ -207,7 +207,7 @@ class LSTM(object):
             'sents_reps': sentence_reps,
             'seq_outputs': lstm_outputs,
             'final_state': lstm_state,
-            'outputs_lengths': output_lengths, 
+            'outputs_lengths': output_lengths,
             'samples': samples
     }
 

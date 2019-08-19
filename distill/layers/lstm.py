@@ -102,7 +102,7 @@ class LSTM(object):
         
     return the_cell
 
-  def predict(self, compute_decoding_step_input_fn, inputs_length, embedding_layer, eos_id,
+  def predict(self, compute_decoding_step_input_fn, inputs_length, input_embedding_layer, output_embedding_layer, eos_id,
               target_length=None, init_state=None, is_train=True, initial_inputs=None):
     batch_size = tf.shape(inputs_length)[0]
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
@@ -125,10 +125,10 @@ class LSTM(object):
 
 
           last_lstm_prediction_logits = tf.expand_dims(last_lstm_prediction, 1)
-          last_lstm_prediction_logits = embedding_layer.linear(last_lstm_prediction_logits)
+          last_lstm_prediction_logits = output_embedding_layer.linear(last_lstm_prediction_logits)
           prediction = tf.random.multinomial(logits=tf.squeeze(last_lstm_prediction_logits),
                                              num_samples=1)
-          embedded_prediction = embedding_layer.apply(prediction)
+          embedded_prediction = input_embedding_layer.apply(prediction)
           embedded_prediction = embedded_prediction[:,-1,:]
 
           current_step_input = compute_decoding_step_input_fn(embedded_prediction)

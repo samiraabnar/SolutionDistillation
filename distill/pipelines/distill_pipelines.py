@@ -177,7 +177,6 @@ class SSTDistiller(Distiller):
 
     return update_op,distill_op, scaffold
 
-
 class SSTRepDistiller(SSTDistiller):
   def __init__(self, config, student_model, teacher_model):
     super(SSTRepDistiller, self).__init__(config, student_model, teacher_model)
@@ -260,8 +259,6 @@ class SSTRepDistiller(SSTDistiller):
                                                         test_iterator.initializer))
 
     return teacher_update_op, distill_rep_op, distill_logit_op, student_update_op, scaffold
-
-
 
 class Seq2SeqDistiller(Distiller):
 
@@ -442,3 +439,137 @@ class Seq2SeqDistiller(Distiller):
     test_iterator = dataset.make_initializable_iterator()
 
     return train_iterator, dev_iterator, test_iterator
+
+
+class Seq2SeqParallel(Seq2SeqDistiller):
+
+  def __init__(self, config, student_model, teacher_model, trainer):
+    super(Seq2SeqParallel, self).__init__(config, student_model, teacher_model)
+    self.trainer = trainer
+
+  def apply_model(self, model, train_examples, dev_examples, test_examples, name_tag="", softmax_temperature=1.0):
+    train_output_dic = model.apply(train_examples, target_length=self.trainer.task.target_length, is_train=True)
+    dev_output_dic = model.apply(dev_examples, target_length=self.trainer.task.target_length, is_train=False)
+    # test_output_dic = model.apply(test_examples, target_length=self.trainer.task.target_length, is_train=False)
+
+    train_loss = self.trainer.compute_loss(train_output_dic['logits'],
+                                           train_output_dic['targets'], softmax_temperature=softmax_temperature)
+    dev_loss = self.trainer.compute_loss(dev_output_dic['logits'],
+                                         dev_output_dic['targets'], softmax_temperature=softmax_temperature)
+    # test_loss = self.trainer.compute_loss(test_output_dic['logits'],
+    #                                              test_output_dic['targets'], softmax_temperature=softmax_temperature)
+
+    train_output_dic['loss'] = train_loss
+    tf.summary.scalar("loss", train_loss, family=name_tag + "_train")
+    tf.summary.scalar("loss", dev_loss, family=name_tag + "_dev")
+    # tf.summary.scalar("loss", test_loss, family=name_tag+"_test")
+
+    self.trainer.add_metric_summaries(train_output_dic['logits'],
+                                      train_output_dic['targets'], name_tag + "_train")
+    self.trainer.add_metric_summaries(dev_output_dic['logits'],
+                                      dev_output_dic['targets'], name_tag + "_dev")
+    # self.trainer.add_metric_summaries(test_output_dic['logits'],
+    #                                  test_output_dic['targets'], name_tag+"_test")
+
+    return train_output_dic, dev_output_dic, None
+
+  def build_train_graph(self):
+    train_iterator, dev_iterator, test_iterator = self.get_train_data_itaratoes()
+    teacher_train_examples, student_train_examples = train_iterator.get_next()
+    teacher_dev_examples, student_dev_examples = dev_iterator.get_next()
+
+    self.teacher.create_vars(reuse=False)
+    self.student.create_vars(reuse=False)
+
+    teacher_train_output_dic, teacher_dev_output_dic, teacher_test_output_dic = \
+      self.apply_model(self.teacher, teacher_train_examples, teacher_dev_examples, None, "teacher",
+                       softmax_temperature=self.config.teacher_temp)
+    student_train_output_dic, student_dev_output_dic, student_test_output_dic = \
+      self.apply_model(self.student, student_train_examples, student_dev_examples, None, "student",
+                       softmax_temperature=self.config.student_temp)
+
+    # Compute mean distance between representations
+    distill_rep_loss = get_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
+                                                         teacher_train_output_dic['outputs'],
+                                                         mode=self.config.rep_loss_mode)
+
+    # Compute mean distance between representations
+    general_bias_distill_rep_loss = get_biased_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
+                                                                             teacher_train_output_dic['outputs'],
+                                                                             mode=self.config.rep_loss_mode,
+                                                                             bias="general")
+    local_bias_distill_rep_loss = get_biased_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
+                                                                           teacher_train_output_dic['outputs'],
+                                                                           mode=self.config.rep_loss_mode, bias="local")
+
+    # Compute logit distill loss
+    distill_logit_loss = get_logit_distill_loss(student_train_output_dic['logits'],
+                                                teacher_train_output_dic['logits'],
+                                                softmax_temperature=self.config.distill_temp,
+                                                stop_grad_for_teacher=not self.config.learn_to_teach)
+
+    # Compute uniform rep loss
+    teacher_uniform_rep_loss = get_single_state_uniform_rsa_loss(teacher_train_output_dic['outputs'],
+                                                                 mode=self.config.rep_loss_mode)
+    student_uniform_rep_loss = get_single_state_uniform_rsa_loss(student_train_output_dic['outputs'],
+                                                                 mode=self.config.rep_loss_mode)
+    embedding_rep_loss = get_single_state_rsa_distill_loss(self.student.input_embedding_layer.shared_weights,
+                                                           self.teacher.input_embedding_layer.shared_weights,
+                                                           mode=self.config.rep_loss_mode)
+
+    tf.summary.scalar("embedding_rep_loss", embedding_rep_loss, family="student_train")
+    tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_train")
+    tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_train")
+    tf.summary.scalar("general_bias_distill_rep_loss", general_bias_distill_rep_loss, family="student_train")
+    tf.summary.scalar("local_bias_distill_rep_loss", local_bias_distill_rep_loss, family="student_train")
+    tf.summary.scalar("uniform_rep_loss", student_uniform_rep_loss, family="student_train")
+    tf.summary.scalar("uniform_rep_loss", teacher_uniform_rep_loss, family="teacher_train")
+
+    dev_distill_rep_loss = get_single_state_rsa_distill_loss(student_dev_output_dic['outputs'],
+                                                             teacher_dev_output_dic['outputs'],
+                                                             mode=self.config.rep_loss_mode)
+
+    dev_distill_logit_loss = get_logit_distill_loss(student_dev_output_dic['logits'],
+                                                    teacher_dev_output_dic['logits'],
+                                                    softmax_temperature=self.config.distill_temp)
+    dev_uniform_rep_loss = get_single_state_uniform_rsa_loss(student_dev_output_dic['outputs'],
+                                                             mode=self.config.rep_loss_mode)
+    teacher_dev_uniform_rep_loss = get_single_state_uniform_rsa_loss(teacher_dev_output_dic['outputs'],
+                                                                     mode=self.config.rep_loss_mode)
+
+    tf.summary.scalar("distill_rep_loss", dev_distill_rep_loss, family="student_dev")
+    tf.summary.scalar("distill_logit_loss", dev_distill_logit_loss, family="student_dev")
+    tf.summary.scalar("uniform_rep_loss", dev_uniform_rep_loss, family="student_dev")
+    tf.summary.scalar("uniform_rep_loss", teacher_dev_uniform_rep_loss, family="teacher_dev")
+
+    distill_params = student_train_output_dic["trainable_vars"]
+    if self.config.learn_to_teach:
+      distill_params + teacher_train_output_dic["trainable_vars"]
+
+    teacher_update_op, teacher_learning_rate = self.trainer.get_train_op(teacher_train_output_dic['loss'],
+                                                                         teacher_train_output_dic["trainable_vars"],
+                                                                         start_learning_rate=0.000,
+                                                                         base_learning_rate=self.teacher.hparams.learning_rate,
+                                                                         warmup_steps=1000,
+                                                                         l2_rate=self.trainer.config.l2_rate,
+                                                                         scope="teacher")
+
+    student_loss = self.config.data_weight * student_train_output_dic[
+      'loss'] + self.config.distill_logits_weight * distill_logit_loss
+    student_update_op, student_learning_rate = self.trainer.get_train_op(student_loss,
+                                                                         student_train_output_dic["trainable_vars"],
+                                                                         start_learning_rate=0.000,
+                                                                         base_learning_rate=self.student.hparams.learning_rate,
+                                                                         warmup_steps=1000,
+                                                                         l2_rate=self.trainer.config.l2_rate,
+                                                                         scope="student")
+
+    tf.summary.scalar("learning_rate", teacher_learning_rate, family="teacher_train")
+
+    scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
+                                                        train_iterator.initializer,
+                                                        dev_iterator.initializer,
+                                                        test_iterator.initializer))
+
+    return teacher_update_op, None, None, student_update_op, scaffold
+

@@ -444,7 +444,7 @@ class Seq2SeqDistiller(Distiller):
 class Seq2SeqParallel(Seq2SeqDistiller):
 
   def __init__(self, config, student_model, teacher_model, trainer):
-    super(Seq2SeqParallel, self).__init__(config, student_model, teacher_model)
+    super(Seq2SeqParallel, self).__init__(config, student_model, teacher_model, trainer)
     self.trainer = trainer
 
   def apply_model(self, model, train_examples, dev_examples, test_examples, name_tag="", softmax_temperature=1.0):

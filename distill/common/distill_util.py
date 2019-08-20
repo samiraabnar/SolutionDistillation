@@ -130,9 +130,9 @@ def dot_product_sim(a, b, pair_wise=True):
 
 def reweight(dists, direction="general"):
   # It should be applied before normalizing!
-  if direction == "general":
+  if direction == "general": #the closer they are: the bigger they will be!
     return 1.0 / tf.math.pow(dists+ 0.000000001, 2)
-  else: #local
+  else: #local -> the more distant the points, the much more distant they will be!
     return tf.math.pow(dists, 2)
 
 

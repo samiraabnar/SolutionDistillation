@@ -78,8 +78,9 @@ class EmbeddingSharedWeights(object):
     self.scope = scope
     self.pretrained_embeddings = pretrained_embeddings
     if self.pretrained_embeddings is None:
-      self.initializer = tf.random_normal_initializer(
-                  0., self.hidden_size ** -0.5)
+      self.initializer = tf.contrib.layers.xavier_initializer()
+      # tf.random_normal_initializer(
+      #           0., self.hidden_size ** -0.5)
     else:
       self.initializer = pretrained_embeddings
 

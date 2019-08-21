@@ -3,6 +3,8 @@ import tensorflow as tf
 from distill.data_util.prep_ptb import PTB
 from distill.layers.embedding import Embedding, EmbeddingSharedWeights
 from distill.layers.lstm import LSTM
+from tensorflow.contrib.seq2seq.python.ops.basic_decoder import BasicDecoder, BasicDecoderOutput
+from tensorflow.contrib.seq2seq.python.ops.helper import TrainingHelper, ScheduledEmbeddingTrainingHelper, ScheduledOutputTrainingHelper
 
 class LmLSTM(object):
   def __init__(self, config, task, model=LSTM, scope="LMLSTM"):
@@ -110,6 +112,8 @@ class LmLSTM(object):
       predictions = tf.cast(tf.argmax(logits, axis=-1) * output_mask, dtype=tf.int64)
 
       return predictions
+
+
 
 
 if __name__ == '__main__':

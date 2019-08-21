@@ -7,6 +7,7 @@ from distill.data_util.prep_sentwiki import SentWiki
 from distill.models.lm_lstm import LmLSTM
 import os
 
+from distill.models.scheduled_lstm_decoder import ScheduledLSTMDecoder
 from distill.pipelines.lm import LMTrainer
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -15,10 +16,10 @@ tf.logging.set_verbosity(tf.logging.INFO)
 tf.app.flags.DEFINE_string("exp_name", "trial", "")
 tf.app.flags.DEFINE_string("task_name", "sent_wiki", "ptb_lm")
 tf.app.flags.DEFINE_string("data_dir", "data", "")
-tf.app.flags.DEFINE_string("log_dir", "logs", "")
+#tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("save_dir", None, "")
 
-tf.app.flags.DEFINE_string("model", "lm_lstm", "")
+tf.app.flags.DEFINE_string("model", "lm_lstm", "lm_lstm | schedule_lstm")
 tf.app.flags.DEFINE_string("encoder_attention_dir", "top_down", "top_down | bottom_up")
 tf.app.flags.DEFINE_integer("hidden_dim", 512, "")
 tf.app.flags.DEFINE_integer("output_dim", 8000, "")
@@ -60,7 +61,8 @@ hparams = tf.app.flags.FLAGS
 
 
 if __name__ == '__main__':
-  Models = {"lm_lstm": LmLSTM}
+  Models = {"lm_lstm": LmLSTM,
+            "schedule_lstm": ScheduledLSTMDecoder}
   tasks = {'ptb_lm': PTB(os.path.join(hparams.data_dir,'ptb')),
            'sent_wiki': SentWiki(os.path.join(hparams.data_dir,'sent_wiki'),
                                  tie_embeddings=hparams.tie_embeddings)}
@@ -108,7 +110,8 @@ if __name__ == '__main__':
                            learning_rate=hparams.learning_rate)
 
 
-  model_params = {"lm_lstm": lstm_params}
+  model_params = {"lm_lstm": lstm_params,
+                  "schedule_lstm": lstm_params }
 
 
   if hparams.save_dir is None:

@@ -44,16 +44,9 @@ def get_single_state_rsa_distill_loss(student_states, teacher_states, mode='dot_
 
 def get_single_state_uniform_rsa_loss(student_states, mode='dot_product'):
 
-
-  #tf.logging.info('state shapes')
-  #tf.logging.info(student_states)
-
   student_rsm = dot_product_sim(student_states, student_states,pair_wise=True)
   teacher_rsm = tf.ones_like(student_rsm)
 
-  #tf.logging.info('dist shapes')
-  #tf.logging.info(teacher_rsm)
-  #tf.logging.info(student_rsm)
 
 
   if mode == 'squared':
@@ -83,6 +76,49 @@ def get_biased_single_state_rsa_distill_loss(student_states, teacher_states, mod
 
   return rsa_score
 
+
+def dot_product(a, b, pair_wise=False):
+  a = tf.reshape(a, [-1, tf.shape(a)[-1]])
+  b = tf.reshape(b, [-1, tf.shape(b)[-1]])
+
+  a = tf.cast(a, dtype=tf.float32)
+  b = tf.cast(b, dtype=tf.float32)
+
+  if pair_wise:
+    sum_ab = tf.matmul(a, b, transpose_b=True)
+    sum_aa = tf.reduce_sum(tf.multiply(a,a), axis=-1)
+    sum_bb = tf.reduce_sum(tf.multiply(b, b), axis=-1)
+
+    return sum_ab / (tf.sqrt(sum_aa) * tf.sqrt(sum_bb))
+  else:
+    sum_ab = tf.reduce_sum(tf.multiply(a,b), axis=-1)
+    sum_aa = tf.reduce_sum(tf.multiply(a,a), axis=-1)
+    sum_bb = tf.reduce_sum(tf.multiply(b,b), axis=-1)
+
+    return tf.reduce_mean(sum_ab / tf.maximum(tf.sqrt(sum_aa) * tf.sqrt(sum_bb),0.000000000001))
+
+
+
+def get_rep_sim(student_state, teacher_states, mode, topk=None, similarity_fn=dot_product):
+  a = similarity_fn(student_state,student_state, pair_wise=True)
+  b = similarity_fn(teacher_states,teacher_states, pair_wise=True)
+
+  _, ar = tf.nn.top_k(a, a.shape[0])
+  _, br = tf.nn.top_k(b, b.shape[0])
+
+  if topk is not None:
+    a = a * tf.cast(ar > ar.shape[0] - topk, tf.float32)
+    b = b * tf.cast(br > br.shape[0] - topk, tf.float32)
+
+  if mode == "rank":
+    return similarity_fn(ar,br)
+  elif mode == "degree":
+    ad = tf.reduce_sum(a, axis=-1)
+    bd = tf.reduce_sum(b, axis=-1)
+    return similarity_fn(ad, bd)
+
+  else:
+    return similarity_fn(a, b)
 
 
 def sigmoid_cross_entropy_rsa(d_a, d_b):
@@ -145,6 +181,19 @@ if __name__ == '__main__':
     rsa_3 = get_single_state_rsa_distill_loss(a,a, mode='squared')
     rsa_4 = get_single_state_rsa_distill_loss(a,b, mode='squared')
 
+    a_sim = dot_product(a,a, pair_wise=True)
+    b_sim = dot_product(b,b, pair_wise=True)
+
+    rsa_5 = get_rep_sim(a,b,mode="degree",topk=3)
+    rsa_55 = get_rep_sim(a,a,mode="degree",topk=3)
+
+    rsa_6 = get_rep_sim(a,b,mode="rank")
+    rsa_66 = get_rep_sim(a,a,mode="rank")
+
+    rsa_7 = get_rep_sim(a, b, mode="std")
+    rsa_77 = get_rep_sim(a, a, mode="std")
+
+
     #tf.logging.info('dist shapes')
     #tf.logging.info(d_a)
     #tf.logging.info(d_b)
@@ -152,10 +201,22 @@ if __name__ == '__main__':
     #rsa = squared_dist_rsm(d_a, d_b)
 
     with tf.Session() as sess:
-      print(sess.run(rsa_1))
-      print(sess.run(rsa_2))
+      # print(sess.run(rsa_1))
+      # print(sess.run(rsa_2))
+      #
+      # print(sess.run(rsa_3))
+      # print(sess.run(rsa_4))
 
-      print(sess.run(rsa_3))
-      print(sess.run(rsa_4))
+      print(sess.run(a_sim))
+      print(sess.run(b_sim))
+
+      print(sess.run(rsa_5))
+      print(sess.run(rsa_55))
+
+      print(sess.run(rsa_6))
+      print(sess.run(rsa_66))
+
+      print(sess.run(rsa_7))
+      print(sess.run(rsa_77))
 
 

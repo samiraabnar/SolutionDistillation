@@ -3,7 +3,7 @@ import numpy as np
 from distill.data_util.prep_sst import SST
 from distill.data_util.vocab import PretrainedVocab
 from distill.common.distill_util import get_single_state_rsa_distill_loss, get_logit_distill_loss, \
-  get_single_state_uniform_rsa_loss, get_biased_single_state_rsa_distill_loss
+  get_single_state_uniform_rsa_loss, get_biased_single_state_rsa_distill_loss, get_rep_sim
 from distill.pipelines.seq2seq import Seq2SeqTrainer
 
 
@@ -516,6 +516,31 @@ class Seq2SeqParallel(Seq2SeqDistiller):
     embedding_rep_loss = get_single_state_rsa_distill_loss(self.student.input_embedding_layer.shared_weights,
                                                            self.teacher.input_embedding_layer.shared_weights,
                                                            mode=self.config.rep_loss_mode)
+
+    rep_degree_sim =  get_rep_sim(student_train_output_dic['outputs'],
+                                  teacher_train_output_dic['outputs'],mode="degree",topk=None)
+    rep_rank_sim = get_rep_sim(student_train_output_dic['outputs'],
+                                  teacher_train_output_dic['outputs'],mode="rank",topk=None)
+    rep_std_sim = get_rep_sim(student_train_output_dic['outputs'],
+                                  teacher_train_output_dic['outputs'],mode="std",topk=None)
+    rep_std_sim_top10 = get_rep_sim(student_train_output_dic['outputs'],
+                                  teacher_train_output_dic['outputs'],mode="std",topk=10)
+
+    embedding_degree_sim = get_rep_sim(self.student.input_embedding_layer.shared_weights,
+                                  self.teacher.input_embedding_layer.shared_weights,mode="degree",topk=None)
+    embedding_rank_sim = get_rep_sim(self.student.input_embedding_layer.shared_weights,
+                                  self.teacher.input_embedding_layer.shared_weights,mode="rank",topk=None)
+    embedding_std_sim = get_rep_sim(self.student.input_embedding_layer.shared_weights,
+                                  self.teacher.input_embedding_layer.shared_weights,mode="std",topk=None)
+
+    tf.summary.scalar("rep_degree_sim", rep_degree_sim, family="train_reps")
+    tf.summary.scalar("rep_rank_sim", rep_rank_sim, family="train_reps")
+    tf.summary.scalar("rep_std_sim", rep_std_sim, family="train_reps")
+    tf.summary.scalar("rep_std_sim_top10", rep_std_sim_top10, family="train_reps")
+    tf.summary.scalar("embedding_degree_sim", embedding_degree_sim, family="train_reps")
+    tf.summary.scalar("embedding_rank_sim", embedding_rank_sim, family="train_reps")
+    tf.summary.scalar("embedding_std_sim", embedding_std_sim, family="train_reps")
+
 
     tf.summary.scalar("embedding_rep_loss", embedding_rep_loss, family="student_train")
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_train")

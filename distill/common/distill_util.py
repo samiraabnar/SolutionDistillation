@@ -103,12 +103,12 @@ def get_rep_sim(student_state, teacher_states, mode, topk=None, similarity_fn=do
   a = similarity_fn(student_state,student_state, pair_wise=True)
   b = similarity_fn(teacher_states,teacher_states, pair_wise=True)
 
-  _, ar = tf.nn.top_k(a, a.shape[0])
-  _, br = tf.nn.top_k(b, b.shape[0])
+  _, ar = tf.nn.top_k(a, tf.shape(a)[0])
+  _, br = tf.nn.top_k(b, tf.shape(b)[0])
 
   if topk is not None:
-    a = a * tf.cast(ar > ar.shape[0] - topk, tf.float32)
-    b = b * tf.cast(br > br.shape[0] - topk, tf.float32)
+    a = a * tf.cast(ar > tf.shape(ar)[0] - topk, tf.float32)
+    b = b * tf.cast(br > tf.shape(br)[0] - topk, tf.float32)
 
   if mode == "rank":
     return similarity_fn(ar,br)

@@ -47,7 +47,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/lm_trainer.py \
 --learning_rate=0.001 \
 --hidden_dropout_keep_prob=0.8 --input_dropout_keep_prob=0.9 \
 --task_name=sent_wiki \
---exp_name b32_drop8-9_run0
+--exp_name b32_drop8-9_run1
 
 #Copy input file to scratch
 #cp -r  "$TMP_DATA_DIR"/* "$DATA_DIR"/

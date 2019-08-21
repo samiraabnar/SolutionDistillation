@@ -69,6 +69,9 @@ class SentWiki(object):
     words = self.pre_defs + list(words)
     print(words[0])
     print(words[1])
+    print(words[2])
+    print(words[3])
+    print(words[4])
     word_to_id = dict(zip(words, range(len(words))))
 
     id_to_word = {}

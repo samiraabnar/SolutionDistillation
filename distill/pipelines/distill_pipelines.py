@@ -404,7 +404,7 @@ class Seq2SeqDistiller(Distiller):
     tf.logging.info(teacher_train_output_dic["trainable_vars"])
     
     tf.summary.scalar("learning_rate", teacher_learning_rate, family="teacher_train")
-#    tf.summary.scalar("distill_logit_learning_rate", distill_logit_learning_rate, family="student_train")
+    #tf.summary.scalar("distill_logit_learning_rate", distill_logit_learning_rate, family="student_train")
 
     scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                         train_iterator.initializer,

@@ -45,8 +45,8 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_parallel.py \
 --teacher_model=enc_utransformer --student_model=enc_utransformer \
 --teacher_train_embeddings=True --student_train_embeddings=True \
 --student_decoder_depth=1 --student_encoder_depth=4 --teacher_decoder_depth=1 --teacher_encoder_depth=4 \
---student_input_dropout_keep_prob=1.0 --student_hidden_dropout_keep_prob=1.0 \
---teacher_input_dropout_keep_prob=1.0 --teacher_hidden_dropout_keep_prob=1.0 \
+--student_input_dropout_keep_prob=0.9 --student_hidden_dropout_keep_prob=0.9 \
+--teacher_input_dropout_keep_prob=0.9 --teacher_hidden_dropout_keep_prob=0.9 \
 --student_learning_rate=0.0002 \
 --teacher_learning_rate=0.0002 \
 --distill_learning_rate=0.0002 \
@@ -58,7 +58,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_parallel.py \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=False \
 --distill_temp=1.0 --teacher_temp=1.0 --student_temp=1.0 \
---task_name=arithmatic_simple_samelength10_depth4 --exp_name=_parallel_drop1-1_drop1-1_L2_nc
+--task_name=arithmatic_simple_samelength10_depth4 --exp_name=_parallel_drop9-9_drop9-9_L2_nc
 
 
 #Copy input file to scratch

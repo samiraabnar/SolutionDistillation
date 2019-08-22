@@ -47,7 +47,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --student_decoder_depth=4 --student_encoder_depth=4 --teacher_decoder_depth=2 --teacher_encoder_depth=2 \
 --student_input_dropout_keep_prob=0.9 --student_hidden_dropout_keep_prob=0.9 \
 --teacher_input_dropout_keep_prob=0.6 --teacher_hidden_dropout_keep_prob=0.6 \
---student_learning_rate=0.0001 \
+--student_learning_rate=0.00004 \
 --teacher_learning_rate=0.0001 \
 --distill_learning_rate=0.0001 \
 --data_weight=0.0 \
@@ -58,7 +58,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=True \
 --distill_temp=1.0 --teacher_temp=1.0 --student_temp=1.0 \
---task_name=arithmatic_simple_samelength10_depth4 --exp_name=_distill-1_drop6-6_drop9-9_L2
+--task_name=arithmatic_simple_samelength10_depth4 --exp_name=_distill-1_drop6-6_drop9-9_L2_sLr00004
 
 
 #Copy input file to scratch

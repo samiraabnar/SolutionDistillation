@@ -513,9 +513,9 @@ class Seq2SeqParallel(Seq2SeqDistiller):
     #                                                              mode=self.config.rep_loss_mode)
     # student_uniform_rep_loss = get_single_state_uniform_rsa_loss(student_train_output_dic['outputs'],
     #                                                              mode=self.config.rep_loss_mode)
-    # embedding_rep_loss = get_single_state_rsa_distill_loss(self.student.input_embedding_layer.shared_weights,
-    #                                                        self.teacher.input_embedding_layer.shared_weights,
-    #                                                        mode=self.config.rep_loss_mode)
+    embedding_rep_loss = get_single_state_rsa_distill_loss(self.student.input_embedding_layer.shared_weights,
+                                                            self.teacher.input_embedding_layer.shared_weights,
+                                                            mode=self.config.rep_loss_mode)
 
     rep_degree_sim =  get_rep_sim(student_train_output_dic['outputs'],
                                   teacher_train_output_dic['outputs'],mode="degree",topk=None)
@@ -542,7 +542,7 @@ class Seq2SeqParallel(Seq2SeqDistiller):
     tf.summary.scalar("embedding_std_sim", embedding_std_sim, family="train_reps")
 
 
-    #tf.summary.scalar("embedding_rep_loss", embedding_rep_loss, family="student_train")
+    tf.summary.scalar("embedding_rep_loss", embedding_rep_loss, family="student_train")
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_train")
     tf.summary.scalar("distill_logit_loss", distill_logit_loss, family="student_train")
     #tf.summary.scalar("general_bias_distill_rep_loss", general_bias_distill_rep_loss, family="student_train")

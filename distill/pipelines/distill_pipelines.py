@@ -367,8 +367,9 @@ class Seq2SeqDistiller(Distiller):
     distill_params = student_train_output_dic["trainable_vars"]
     if self.config.learn_to_teach:
         distill_params + teacher_train_output_dic["trainable_vars"]
-        
-    teacher_update_op, teacher_learning_rate = self.trainer.get_train_op(teacher_train_output_dic['loss'],
+
+    teacher_loss = teacher_train_output_dic['loss'] + self.config.teacher_rep_distill_weight * distill_rep_loss
+    teacher_update_op, teacher_learning_rate = self.trainer.get_train_op(teacher_loss,
                                                          teacher_train_output_dic["trainable_vars"],
                                                          start_learning_rate=0.000,
                                                          base_learning_rate=self.teacher.hparams.learning_rate, warmup_steps=1000,

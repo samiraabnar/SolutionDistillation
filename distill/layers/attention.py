@@ -211,15 +211,14 @@ class ReversedMultiHeadScaledDotProductAttention(MultiHeadScaledDotProductAttent
     # values rather than regular attention (which uses a single q, k, v).
 
     with tf.name_scope("attention") as scope:
-
       q = self.q_dense_layer(x)
       k = self.k_dense_layer(y)
       v = self.v_dense_layer(y)
 
-      if x_presence is None:
+      if x_presence is None: #if it's None initialize with one
         x_presence = tf.ones((tf.shape(x)[0],tf.shape(x)[1],1))
 
-      if y_presence is None:
+      if y_presence is None: #if it's None initialize with one
         y_presence = tf.ones((tf.shape(y)[0],tf.shape(y)[1],1))
 
       if cache is not None:

@@ -44,7 +44,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --batch_size=128 --teacher_hidden_dim=1024 --student_hidden_dim=512 \
 --teacher_model=lstm --student_model=lstm \
 --teacher_train_embeddings=True --student_train_embeddings=True \
---student_decoder_depth=4 --student_encoder_depth=4 --teacher_decoder_depth=2 --teacher_encoder_depth=2 \
+--student_decoder_depth=1 --student_encoder_depth=4 --teacher_decoder_depth=1 --teacher_encoder_depth=2 \
 --student_input_dropout_keep_prob=0.9 --student_hidden_dropout_keep_prob=0.9 \
 --teacher_input_dropout_keep_prob=0.1 --teacher_hidden_dropout_keep_prob=0.1 \
 --student_learning_rate=0.001 \
@@ -53,7 +53,6 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --data_weight=1.0 \
 --distill_logits_weight=0.0 \
 --distill_rep_weight=0.1 \
-
 --decay_learning_rate=True --l2_rate=0.0001 \
 --student_encoder_attention_dir="top_down" \
 --teacher_encoder_attention_dir="top_down" \

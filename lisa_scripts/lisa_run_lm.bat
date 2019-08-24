@@ -43,11 +43,11 @@ export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/lm_trainer.py \
 --log_dir="$TMP_LOGS_DIR" --data_dir="$TMP_DATA_DIR" \
---batch_size=64 --hidden_dim=1024 --embedding_dim=1024 \
+--batch_size=64 --hidden_dim=728 --embedding_dim=728 \
 --learning_rate=0.0001 \
 --hidden_dropout_keep_prob=0.8 --input_dropout_keep_prob=0.8 \
 --task_name=sent_wiki \
---exp_name drop8-8_run4
+--exp_name drop8-8_ndepthshare_run0
 
 #Copy input file to scratch
 #cp -r  "$TMP_DATA_DIR"/* "$DATA_DIR"/

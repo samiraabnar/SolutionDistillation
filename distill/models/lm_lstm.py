@@ -3,8 +3,6 @@ import tensorflow as tf
 from distill.data_util.prep_ptb import PTB
 from distill.layers.embedding import Embedding, EmbeddingSharedWeights
 from distill.layers.lstm import LSTM
-from tensorflow.contrib.seq2seq.python.ops.basic_decoder import BasicDecoder, BasicDecoderOutput
-from tensorflow.contrib.seq2seq.python.ops.helper import TrainingHelper, ScheduledEmbeddingTrainingHelper, ScheduledOutputTrainingHelper
 
 class LmLSTM(object):
   def __init__(self, config, task, model=LSTM, scope="LMLSTM"):
@@ -37,7 +35,7 @@ class LmLSTM(object):
       else:
         self.output_embedding_layer = self.embedding_layer
 
-      self.lstm.create_vars()
+      self.lstm.create_vars(share_in_depth=False)
 
 
   def apply(self, examples, is_train=True, reuse=tf.AUTO_REUSE, target_length=None):

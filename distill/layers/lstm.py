@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 from distill.layers.attention import FeedforwardSelfAttention
 
 class LSTM(object):
@@ -14,7 +15,7 @@ class LSTM(object):
     self.normalizer = tf.contrib.layers.layer_norm
     self.initializer = tf.contrib.layers.xavier_initializer()
 
-  def create_vars(self, reuse=False):
+  def create_vars(self, reuse=False, share_in_depth=True):
     with tf.variable_scope(self.scope, reuse=reuse):
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cells"):
@@ -28,16 +29,28 @@ class LSTM(object):
         lstms = [lstm0]
         drop_lstms = [dropout_lstm0]
 
-        lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0,
-                                       initializer=self.initializer, name="L1")
-        dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
-                                                      output_keep_prob=self.hidden_keep_prob,
-                                                      variational_recurrent=True,
-                                                      dtype=tf.float32
-                                                     )
         if self.num_layers > 1:
-          lstms.extend([lstm] * (self.num_layers-1))
-          drop_lstms.extend([dropout_lstm] * (self.num_layers - 1))
+          if share_in_depth:
+            lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0,
+                                           initializer=self.initializer, name="L1")
+            dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
+                                                          output_keep_prob=self.hidden_keep_prob,
+                                                          variational_recurrent=True,
+                                                          dtype=tf.float32
+                                                         )
+            lstms.extend([lstm] * (self.num_layers - 1))
+            drop_lstms.extend([dropout_lstm] * (self.num_layers - 1))
+          else:
+            for i in np.arange(1, self.num_layers):
+              lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0,
+                                             initializer=self.initializer, name="L"+str(i))
+              dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
+                                                           output_keep_prob=self.hidden_keep_prob,
+                                                           variational_recurrent=True,
+                                                           dtype=tf.float32
+                                                           )
+            lstms.extend([lstm] )
+            drop_lstms.extend([dropout_lstm])
 
         self.multi_lstm_cell = tf.contrib.rnn.MultiRNNCell(lstms)
         self.multi_dropout_lstm_cell = tf.contrib.rnn.MultiRNNCell(drop_lstms)

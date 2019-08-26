@@ -20,6 +20,7 @@ class TransformerHparam(object):
                attention_mechanism=None,
                sent_rep_mode=None,
                embedding_dim=None,
+               cls_token=False
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -54,6 +55,7 @@ class TransformerHparam(object):
     self.decoder_self_attention_dir = decoder_self_attention_dir
     self.decoder_cross_attention_dir = decoder_cross_attention_dir
     self.train_embeddings = train_embeddings
+    self.cls_token = cls_token
 
 
 class LSTMHparam(object):
@@ -78,6 +80,7 @@ class LSTMHparam(object):
                decoder_cross_attention_dir="top_down",
                attention_mechanism=None,
                sent_rep_mode=None,
+               cls_token=False
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size

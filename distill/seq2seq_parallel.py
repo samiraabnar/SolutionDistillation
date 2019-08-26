@@ -150,6 +150,13 @@ if __name__ == '__main__':
             "enc_transformer": TransformerHparam,
             "enc_utransformer": TransformerHparam}
 
+  CLS_TOKEN = {"lstm": False,
+              "bilstm": False,
+              "transformer": False,
+              "utransformer": False,
+              "enc_transformer": True,
+              "enc_utransformer": True}
+
   teacher_params = PARAM_TYPES[hparams.teacher_model](input_dim=hparams.input_dim,
                                                       output_dim=hparams.output_dim,
                                                       hidden_dim=hparams.teacher_hidden_dim,
@@ -170,7 +177,8 @@ if __name__ == '__main__':
                                                       attention_mechanism=None,
                                                       sent_rep_mode=hparams.teacher_sent_rep_mode,
                                                       embedding_dim=hparams.teacher_hidden_dim,
-                                                      learning_rate=hparams.teacher_learning_rate
+                                                      learning_rate=hparams.teacher_learning_rate,
+                                                      cls_token=CLS_TOKEN[hparams.teacher_model]
                                                       )
 
   student_params = PARAM_TYPES[hparams.student_model](input_dim=hparams.input_dim,
@@ -193,7 +201,8 @@ if __name__ == '__main__':
                                                       attention_mechanism=None,
                                                       sent_rep_mode=hparams.student_sent_rep_mode,
                                                       embedding_dim=hparams.student_hidden_dim,
-                                                      learning_rate=hparams.student_learning_rate
+                                                      learning_rate=hparams.student_learning_rate,
+                                                      cls_token = CLS_TOKEN[hparams.student_model]
                                                       )
 
 

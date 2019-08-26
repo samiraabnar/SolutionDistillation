@@ -4,8 +4,6 @@ from tensor2tensor.utils.beam_search import EOS_ID
 
 from distill.common.beam_search import sequence_beam_search
 from distill.common.layer_utils import get_decoder_self_attention_bias, get_position_encoding, get_padding_bias, get_padding
-from distill.data_util.prep_arithmatic import Arithmatic
-from distill.data_util.prep_sst import SST
 from distill.data_util.prep_trec6 import CharTrec6
 from distill.layers.attention import MultiHeadScaledDotProductAttention, ReversedMultiHeadScaledDotProductAttention
 from distill.layers.embedding import EmbeddingSharedWeights
@@ -32,7 +30,6 @@ class TransformerEncoder(object):
       self.layers = []
       for i in np.arange(self.depth):
         # Create sublayers for each layer.
-
         if self.self_attention_dir == "bottom_up":
           self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                             num_heads=self.number_of_heads,
@@ -606,18 +603,18 @@ class EncodingTransformer(object):
       else:
         self.output_embedding_layer = self.input_embedding_layer
     
-      self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
-                                                      activation=None,
-                                                      use_bias=False,
-                                                      kernel_initializer=self.initializer,
-                                                      bias_initializer=tf.zeros_initializer(),
-                                                      kernel_regularizer=None,
-                                                      bias_regularizer=None,
-                                                      activity_regularizer=None,
-                                                      kernel_constraint=None,
-                                                      bias_constraint=None,
-                                                      trainable=True,
-                                                      name="OutProj")
+      # self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
+      #                                                 activation=None,
+      #                                                 use_bias=False,
+      #                                                 kernel_initializer=self.initializer,
+      #                                                 bias_initializer=tf.zeros_initializer(),
+      #                                                 kernel_regularizer=None,
+      #                                                 bias_regularizer=None,
+      #                                                 activity_regularizer=None,
+      #                                                 kernel_constraint=None,
+      #                                                 bias_constraint=None,
+      #                                                 trainable=True,
+      #                                                 name="OutProj")
 #      self.output_projections_layer = FeedFowardNetwork(hidden_size=self.hidden_dim,
 #                                                 filter_size=1,
 #                                                 relu_dropout_keepprob=self.dropout_keep_prob,
@@ -655,6 +652,8 @@ class EncodingTransformer(object):
 
       # Run the inputs through the encoder layer to map the symbol
       # representations to continuous representations.
+      if self.hparams.cls_token:
+        inputs = tf.concat([tf.ones(inputs.shape[:-1]) * self.task.word2id[self.task.cls_token], inputs], axis=1)
       encoder_outputs, encoder_outputs_presence = self.encode(inputs, attention_bias, is_train, dic_to_save_weights=dic_to_save_weights)
       outputs = self.decode(encoder_outputs=encoder_outputs,
                             encoder_outputs_presence=encoder_outputs_presence,
@@ -707,10 +706,13 @@ class EncodingTransformer(object):
       float32 tensor with shape [batch_size, target_length, vocab_size]
     """
     with tf.name_scope("decode"):
-      if encoder_outputs_presence is not None:
-        outputs = tf.reduce_sum(encoder_outputs * encoder_outputs_presence, axis=1)
+      if self.hparams.cls_token:
+        outputs = encoder_outputs[:,0]
       else:
-        outputs = tf.reduce_mean(encoder_outputs, axis=1)
+        if encoder_outputs_presence is not None:
+          outputs = tf.reduce_sum(encoder_outputs * encoder_outputs_presence, axis=1)
+        else:
+          outputs = tf.reduce_mean(encoder_outputs, axis=1)
 
 
       return tf.expand_dims(outputs, axis=1)

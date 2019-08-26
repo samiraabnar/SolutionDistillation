@@ -58,7 +58,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_parallel.py \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=False \
 --distill_temp=1.0 --teacher_temp=1.0 --student_temp=1.0 \
---task_name=arithmatic_simple_samelength10_depth4 --exp_name=_parallel_bottomup_drop10-9_drop9-10_L2_nc
+--task_name=arithmatic_simple_samelength10_depth4 --exp_name=_parallel_bottomup_drop10-9_drop9-10_L2_nc_cls_token
 
 
 #Copy input file to scratch

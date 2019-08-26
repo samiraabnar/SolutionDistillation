@@ -48,6 +48,7 @@ class Arithmatic(object):
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False
@@ -70,7 +71,7 @@ class Arithmatic(object):
     return len(self.id2word)
 
   def load_vocab(self):
-    self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','*','+','-']
+    self.id2word = [self.pad, self.eos, self.cls_token] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','*','+','-']
 
     self.word2id = {}
     for i in np.arange(len(self.id2word)):
@@ -213,6 +214,7 @@ class ArithmaticSimple(ArithmaticSameLength):
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False
@@ -280,6 +282,7 @@ class ArithmaticSimpleSameLength(ArithmaticSimple):
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False
@@ -319,6 +322,7 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False
@@ -395,6 +399,7 @@ class ArithmaticSimpleSameLength10(ArithmaticSimple):
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False
@@ -434,6 +439,7 @@ class ArithmaticSimpleSameLength10Depth6(ArithmaticSimpleSameLength10):
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False
@@ -451,6 +457,7 @@ class ArithmaticSimpleSameLength10Depth4(ArithmaticSimpleSameLength10):
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False
@@ -468,6 +475,7 @@ class ArithmaticSimpleSameLength10Depth2(ArithmaticSimpleSameLength10):
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False
@@ -545,6 +553,7 @@ class ArithmaticSimpleSameLength100Depth2Zipfian(ArithmaticSimpleSameLength10Dep
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False

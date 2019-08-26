@@ -611,8 +611,8 @@ if __name__ == '__main__':
 #  bin_iden.build_tfrecords(2000, 'dev')
 #  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden = ArithmaticSimpleSameLength100Depth2Zipfian('data/arithmatic_simple_samelength100_depth2_zipfian')
+  bin_iden = ArithmaticSimpleSameLength10Depth2('data/arithmatic_simple_samelength10_depth2')
 
-  bin_iden.build_tfrecords(50000, 'train')
+  bin_iden.build_tfrecords(100000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')
   bin_iden.build_tfrecords(2000, 'test')

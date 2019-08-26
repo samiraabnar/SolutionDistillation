@@ -511,6 +511,7 @@ class ArithmaticSimpleSameLength10Depth2Zipfian(ArithmaticSimpleSameLength10Dept
 
     self.eos = '<eos>'
     self.pad = '<pad>'
+    self.cls_token = '<cls>'
 
     self.load_vocab()
     self.pretrained = False

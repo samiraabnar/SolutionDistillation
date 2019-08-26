@@ -163,7 +163,7 @@ if __name__ == '__main__':
                                                       encoder_depth=hparams.teacher_encoder_depth,
                                                       decoder_depth=hparams.teacher_decoder_depth,
                                                       number_of_heads=4,
-                                                      ff_filter_size=hparams.student_hidden_dim*2,
+                                                      ff_filter_size=hparams.student_hidden_dim*4,
                                                       initializer_gain=hparams.initializer_gain,
                                                       batch_size=hparams.batch_size,
                                                       input_dropout_keep_prob=hparams.teacher_input_dropout_keep_prob,

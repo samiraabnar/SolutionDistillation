@@ -194,7 +194,7 @@ class ArithmaticSameLength(Arithmatic):
     self.pretrained = False
 
   @property 
-  def max_depth():
+  def max_depth(self):
     return 40
 
   @property
@@ -220,7 +220,7 @@ class ArithmaticSimple(ArithmaticSameLength):
     self.pretrained = False
 
   def load_vocab(self):
-    self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
+    self.id2word = [self.pad, self.eos, self.cls_token] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
 
     self.word2id = {}
     for i in np.arange(len(self.id2word)):
@@ -288,7 +288,7 @@ class ArithmaticSimpleSameLength(ArithmaticSimple):
     self.pretrained = False
 
   def load_vocab(self):
-    self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
+    self.id2word = [self.pad, self.eos, self.cls_token] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
 
     self.word2id = {}
     for i in np.arange(len(self.id2word)):
@@ -328,7 +328,7 @@ class ArithmaticSimpleCurriculumLength(ArithmaticSimple):
     self.pretrained = False
 
   def load_vocab(self):
-    self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
+    self.id2word = [self.pad, self.eos, self.cls_token] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
 
     self.word2id = {}
     for i in np.arange(len(self.id2word)):
@@ -409,7 +409,7 @@ class ArithmaticSimpleSameLength10(ArithmaticSimple):
     return 20
     
   def load_vocab(self):
-    self.id2word = [self.pad, self.eos] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
+    self.id2word = [self.pad, self.eos, self.cls_token] + list(map(str,np.arange(self.num_of_symbols))) + ['(',')','+','-']
 
     self.word2id = {}
     for i in np.arange(len(self.id2word)):

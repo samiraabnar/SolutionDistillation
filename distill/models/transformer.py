@@ -653,7 +653,7 @@ class EncodingTransformer(object):
       # Run the inputs through the encoder layer to map the symbol
       # representations to continuous representations.
       if self.hparams.cls_token:
-        inputs = tf.concat([tf.expand_dims(tf.ones(tf.shape(inputs)[:-1]), axis=-1) * \
+        inputs = tf.concat([tf.expand_dims(tf.ones(tf.shape(inputs)[:-1], dtype=tf.int32), axis=-1) * \
                             self.task.word2id[self.task.cls_token],
                             inputs], axis=1)
         tf.logging.info("inputs shape")

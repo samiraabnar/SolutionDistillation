@@ -483,8 +483,26 @@ class ArithmaticSimpleSameLength10Depth2(ArithmaticSimpleSameLength10):
   @property 
   def max_depth(self):
     return 2
-    
-    
+
+
+class ArithmaticSimpleSameLength100Depth2(ArithmaticSimpleSameLength10Depth2):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple_samelength10_depth2'
+    self.vocab_path = os.path.join(self.data_path, 'vocab')
+
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+    self.cls_token = '<cls>'
+
+    self.load_vocab()
+    self.pretrained = False
+
+  @property
+  def num_of_symbols(self):
+    return 101
+
+
 class ArithmaticSimpleSameLength10Depth2Zipfian(ArithmaticSimpleSameLength10Depth2):
   def __init__(self, data_path):
     self.data_path = data_path
@@ -611,8 +629,8 @@ if __name__ == '__main__':
 #  bin_iden.build_tfrecords(2000, 'dev')
 #  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden = ArithmaticSimpleSameLength10Depth2('data/arithmatic_simple_samelength10_depth2')
+  bin_iden = ArithmaticSimpleSameLength100Depth2('data/arithmatic_simple_samelength10_depth2')
 
-  bin_iden.build_tfrecords(100000, 'train')
+  bin_iden.build_tfrecords(50000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')
   bin_iden.build_tfrecords(2000, 'test')

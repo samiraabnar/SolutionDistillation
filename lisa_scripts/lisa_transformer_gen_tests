@@ -48,7 +48,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_parallel.py \
 --student_input_dropout_keep_prob=0.9 --student_hidden_dropout_keep_prob=0.9 \
 --teacher_input_dropout_keep_prob=0.9 --teacher_hidden_dropout_keep_prob=0.9 \
 --student_learning_rate=0.0009 \
---teacher_learning_rate=0.0009 \
+--teacher_learning_rate=0.0001 \
 --distill_learning_rate=0.0009 \
 --data_weight=1.0 \
 --distill_logits_weight=0.0 \
@@ -58,7 +58,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_parallel.py \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=False \
 --distill_temp=1.0 --teacher_temp=1.0 --student_temp=1.0 \
---task_name=arithmatic_simple_samelength10_depth2 --exp_name=_parallel_drop9-9_drop9-9_L20001_cls_token_run2
+--task_name=arithmatic_simple_samelength10_depth2 --exp_name=_parallel_drop9-9_drop9-9_L20001_cls_token_run3
 
 
 #Copy input file to scratch

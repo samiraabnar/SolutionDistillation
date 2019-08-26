@@ -41,24 +41,24 @@ export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_parallel.py \
 --log_dir="$TMP_LOGS_DIR" --data_dir="$TMP_DATA_DIR" \
---batch_size=128 --teacher_hidden_dim=512 --student_hidden_dim=512 \
+--batch_size=128 --teacher_hidden_dim=256 --student_hidden_dim=128 \
 --teacher_model=enc_utransformer --student_model=enc_utransformer \
 --teacher_train_embeddings=True --student_train_embeddings=True \
 --student_decoder_depth=1 --student_encoder_depth=4 --teacher_decoder_depth=1 --teacher_encoder_depth=4 \
---student_input_dropout_keep_prob=1.0 --student_hidden_dropout_keep_prob=0.9 \
---teacher_input_dropout_keep_prob=1.0 --teacher_hidden_dropout_keep_prob=0.9 \
---student_learning_rate=0.0002 \
---teacher_learning_rate=0.0002 \
---distill_learning_rate=0.0002 \
+--student_input_dropout_keep_prob=0.9 --student_hidden_dropout_keep_prob=0.9 \
+--teacher_input_dropout_keep_prob=0.9 --teacher_hidden_dropout_keep_prob=0.9 \
+--student_learning_rate=0.0009 \
+--teacher_learning_rate=0.0009 \
+--distill_learning_rate=0.0009 \
 --data_weight=1.0 \
 --distill_logits_weight=0.0 \
 --decay_learning_rate=True --l2_rate=0.0001 \
---student_encoder_attention_dir="bottom_up" \
---teacher_encoder_attention_dir="bottom_up" \
+--student_encoder_attention_dir="top_down" \
+--teacher_encoder_attention_dir="top_down" \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=False \
 --distill_temp=1.0 --teacher_temp=1.0 --student_temp=1.0 \
---task_name=arithmatic_simple_samelength10_depth4 --exp_name=_parallel_bottomup_drop10-9_drop9-10_L2_nc_cls_token
+--task_name=arithmatic_simple_samelength10_depth2 --exp_name=_parallel_drop9-9_drop9-9_L20001_cls_token
 
 
 #Copy input file to scratch

@@ -646,18 +646,15 @@ class EncodingTransformer(object):
     inputs, targets, inputs_lengths, targets_lengths = examples
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
-      # Calculate attention bias for encoder self-attention and decoder
-      # multi-headed attention layers.
-      attention_bias = get_padding_bias(inputs)
-
-      # Run the inputs through the encoder layer to map the symbol
-      # representations to continuous representations.
       if self.hparams.cls_token:
         inputs = tf.concat([tf.expand_dims(tf.ones(tf.shape(inputs)[:-1], dtype=tf.int64), axis=-1) * \
                             self.task.word2id[self.task.cls_token],
                             inputs], axis=1)
         tf.logging.info("inputs shape")
         tf.logging.info(inputs)
+
+      attention_bias = get_padding_bias(inputs)
+
       encoder_outputs, encoder_outputs_presence = self.encode(inputs, attention_bias, is_train, dic_to_save_weights=dic_to_save_weights)
       outputs = self.decode(encoder_outputs=encoder_outputs,
                             encoder_outputs_presence=encoder_outputs_presence,

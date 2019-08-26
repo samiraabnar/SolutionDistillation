@@ -114,6 +114,12 @@ if __name__ == '__main__':
             "enc_transformer": EncodingTransformer,
             "enc_utransformer": EncodingUniversalTransformer}
 
+  CLS_TOKEN = {"lstm": False,
+              "bilstm": False,
+              "transformer": False,
+              "utransformer": False,
+              "enc_transformer": True,
+              "enc_utransformer": True}
 
   tasks = {'identity': AlgorithmicIdentityDecimal40(os.path.join(hparams.data_dir,'alg')),
            'identity_binary': AlgorithmicIdentityBinary40(os.path.join(hparams.data_dir,'alg')),
@@ -138,7 +144,7 @@ if __name__ == '__main__':
            'wsj_parse': ParseWSJ(os.path.join(hparams.data_dir,'wsj')),
            'imdb': IMDB(data_path=os.path.join(hparams.data_dir,"imdb"),
                         pretrained=True),
-            'char_trec': CharTrec6(os.path.join(hparams.data_dir,"char_trec6"), build_vocab=False)
+            'char_trec': CharTrec6(os.path.join(hparams.data_dir,"char_trec6"), build_vocab=False),
            }
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
@@ -171,7 +177,8 @@ if __name__ == '__main__':
                                                       attention_mechanism=None,
                                                       sent_rep_mode=hparams.teacher_sent_rep_mode,
                                                       embedding_dim=hparams.teacher_hidden_dim,
-                                                      learning_rate=hparams.teacher_learning_rate
+                                                      learning_rate=hparams.teacher_learning_rate,
+                                                      cls_token=CLS_TOKEN[hparams.teacher_model]
                                                       )
 
   student_params = PARAM_TYPES[hparams.student_model](input_dim=hparams.input_dim,
@@ -194,7 +201,8 @@ if __name__ == '__main__':
                                                       attention_mechanism=None,
                                                       sent_rep_mode=hparams.student_sent_rep_mode,
                                                       embedding_dim=hparams.student_hidden_dim,
-                                                      learning_rate=hparams.student_learning_rate
+                                                      learning_rate=hparams.student_learning_rate,
+                                                      cls_token=CLS_TOKEN[hparams.student_model]
                                                       )
 
 

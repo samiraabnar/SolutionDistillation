@@ -630,7 +630,7 @@ if __name__ == '__main__':
 #  bin_iden.build_tfrecords(2000, 'dev')
 #  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden = ArithmaticSimpleSameLength10Depth2('data/arithmatic_simple_samelength10_depth2')
+  bin_iden = ArithmaticSimpleSameLength10Depth4('data/arithmatic_simple_samelength10_depth4')
 
   bin_iden.build_tfrecords(50000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')

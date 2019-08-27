@@ -44,7 +44,7 @@ def get_word_embs(word_emb_path, word_emb_size, predefineds, vocabulary_size=100
 
 
 class Vocab(object):
-  def __init__(self, path, init_tokens=['<pad>', '<eos>','<unk>']):
+  def __init__(self, path, init_tokens=['<pad>', '<eos>','<unk>','<cls>']):
     self.word_to_index = {}
     self.index_to_word = {}
 
@@ -106,12 +106,14 @@ class Vocab(object):
 
 class PretrainedVocab(Vocab):
   def __init__(self, path, pre_training_path, embedding_dim,
-               init_tokens={'pad':'<pad>', 'eos':'<eos>', 'unk':'<unk>'}):
+               init_tokens={'pad':'<pad>', 'eos':'<eos>', 'unk':'<unk>', 'cls': '<cls>'}):
     self.word_to_index = {}
     self.index_to_word = {}
     self.unknown = init_tokens['unk']
     self.pad = init_tokens['pad']
     self.eos = init_tokens['eos']
+    self.cls = init_tokens['cls']
+
     self.predefineds = {self.unknown: np.random.uniform(
       -0.05, 0.05, embedding_dim).astype(np.float32),
                         self.pad:np.random.uniform(

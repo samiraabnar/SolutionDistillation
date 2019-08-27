@@ -50,11 +50,19 @@ class SST(object):
     self.eos = '<eos>'
     self.pad = '<pad>'
     self.unk = '<unk>'
+    self.cls = '<cls>'
     self.pretrained = pretrained
     self.fine_grained = True
     self.vocab = Vocab(path=self.vocab_path)
     self.load_vocab()
 
+  @property
+  def if_label_gaussian_noise(self):
+    return False
+
+  @property
+  def guassian_noise_scale(self):
+    return 0.9
 
   def get_pretrained_path(self,pretrained_model):
     return os.path.join(self.data_path, "filtered_pretrained_"+pretrained_model)
@@ -66,7 +74,6 @@ class SST(object):
   def prepare_pretrained(self, full_pretrained_path, pretrained_model, embedding_dim):
     filtered_path = self.get_pretrained_path(pretrained_model)
     full_embeddings = {}
-    print(self.vocab.index_to_word)
 
     with open(full_pretrained_path, encoding='utf-8') as f:
       for line in f:
@@ -74,7 +81,6 @@ class SST(object):
         if not line: continue
         vocab, embed = line.split(u' ', 1)
         if vocab.lower() in self.vocab.word_to_index:
-          print(vocab)
           full_embeddings[vocab] = np.asarray(embed.split(), dtype=np.float32)
 
     ordered_embeddings = []
@@ -84,14 +90,16 @@ class SST(object):
                    '<eos>':np.random.uniform(
       -0.05, 0.05, embedding_dim).astype(np.float32),
                    '<unk>':np.random.uniform(
-      -0.05, 0.05, embedding_dim).astype(np.float32)}
+      -0.05, 0.05, embedding_dim).astype(np.float32),
+                   '<cls>': np.random.uniform(
+                     -0.05, 0.05, embedding_dim).astype(np.float32)
+                   }
 
     print("total numbr of vocabs in filtered Glove", len(list(full_embeddings.keys())))
     print("total number of vocabs:", len(self.vocab.index_to_word))
     for key in np.arange(len(self.vocab.index_to_word)):
       token = self.vocab.index_to_word[key]
       if token in full_embeddings:
-        print("in glove ", token)
         ordered_embeddings.append(full_embeddings[token].astype(np.float32))
       elif token in init_tokens:
         ordered_embeddings.append(init_tokens[token])
@@ -442,7 +450,7 @@ if __name__ == '__main__':
 
   sst_prep = SST(data_path="data/sst/",
                  add_subtrees=False,
-                 pretrained=True)
+                 pretrained=False)
 
   print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="train", feature_type="full", add_subtrees=False))))
   print(sum(1 for _ in tf.python_io.tf_record_iterator(sst_prep.get_tfrecord_path(mode="test", feature_type="full", add_subtrees=False))))

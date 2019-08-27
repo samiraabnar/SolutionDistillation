@@ -21,19 +21,19 @@ class LmLSTM(object):
 
   def create_vars(self, reuse=tf.AUTO_REUSE, pretrained_embeddings=None):
     with tf.variable_scope(self.scope, reuse=reuse):
-      self.embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
+      self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
                                                           embedding_dim=self.hparams.embedding_dim,
                                                           pretrained_embeddings=pretrained_embeddings,
                                                           scope="InputEmbed")
 
-      self.embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
+      self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
       if not self.task.share_input_output_embeddings:
         self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
                                                              embedding_dim=self.hparams.hidden_dim,
                                                              scope="OutputEmbed")
         self.output_embedding_layer.create_vars()
       else:
-        self.output_embedding_layer = self.embedding_layer
+        self.output_embedding_layer = self.input_embedding_layer
 
       self.lstm.create_vars(share_in_depth=False)
 
@@ -45,7 +45,7 @@ class LmLSTM(object):
 
     batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=reuse):
-      embedded_inputs = self.embedding_layer.apply(inputs)
+      embedded_inputs = self.input_embedding_layer.apply(inputs)
       if is_train:
         embedded_inputs = tf.nn.dropout(embedded_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
 
@@ -77,7 +77,7 @@ class LmLSTM(object):
 
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
       if inputs is not None:
-          embedded_inputs = self.embedding_layer.apply(inputs)
+          embedded_inputs = self.input_embedding_layer.apply(inputs)
       else:
           embedded_inputs = None
           

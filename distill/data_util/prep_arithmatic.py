@@ -586,10 +586,40 @@ class ArithmaticSimpleSameLength21Depth2Zipfian(ArithmaticSimpleSameLength10Dept
       yield example
 
 
+class ArithmaticSimpleSameLength201Depth2Zipfian(ArithmaticSimpleSameLength21Depth2Zipfian):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple_samelength10_depth2_zipfian'
+    self.vocab_path = os.path.join(self.data_path, 'vocab')
+
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+    self.cls_token = '<cls>'
+
+    self.load_vocab()
+    self.pretrained = False
+
+  @property
+  def train_length(self):
+    return 40
+
+  @property
+  def dev_length(self):
+    return 40
+
+  @property
+  def forbidden_lengths(self):
+    return []
+
+  @property
+  def num_of_symbols(self):
+    return 201
+
+
 class ArithmaticSimpleSameLength21Depth2Normal(ArithmaticSimpleSameLength10Depth2):
   def __init__(self, data_path):
     self.data_path = data_path
-    self.task_name = 'arithmatic_simple_samelength10_depth2_normal'
+    self.task_name = 'arithmatic_simple_samelength21_depth2_normal'
     self.vocab_path = os.path.join(self.data_path, 'vocab')
 
     self.eos = '<eos>'
@@ -660,10 +690,11 @@ class ArithmaticSimpleSameLength21Depth2Normal(ArithmaticSimpleSameLength10Depth
 
       yield example
 
+
 class ArithmaticSimpleSameLength201Depth2Normal(ArithmaticSimpleSameLength21Depth2Normal):
   def __init__(self, data_path):
     self.data_path = data_path
-    self.task_name = 'arithmatic_simple_samelength10_depth2_normal'
+    self.task_name = 'arithmatic_simple_samelength201_depth2_normal'
     self.vocab_path = os.path.join(self.data_path, 'vocab')
 
     self.eos = '<eos>'
@@ -681,35 +712,6 @@ class ArithmaticSimpleSameLength201Depth2Normal(ArithmaticSimpleSameLength21Dept
   def num_of_symbols(self):
     return 201  # -10-10
 
-
-class ArithmaticSimpleSameLength201Depth2Zipfian(ArithmaticSimpleSameLength21Depth2Zipfian):
-  def __init__(self, data_path):
-    self.data_path = data_path
-    self.task_name = 'arithmatic_simple_samelength10_depth2_zipfian'
-    self.vocab_path = os.path.join(self.data_path,'vocab')
-
-    self.eos = '<eos>'
-    self.pad = '<pad>'
-    self.cls_token = '<cls>'
-
-    self.load_vocab()
-    self.pretrained = False
-
-  @property
-  def train_length(self):
-    return 40
-
-  @property
-  def dev_length(self):
-    return 40
-
-  @property
-  def forbidden_lengths(self):
-      return []
-      
-  @property
-  def num_of_symbols(self):
-      return 201
 
 
 
@@ -765,8 +767,8 @@ if __name__ == '__main__':
   bin_iden.build_tfrecords(2000, 'dev')
   bin_iden.build_tfrecords(2000, 'test')
 
-bin_iden = ArithmaticSimpleSameLength21Depth2Normal('data/arithmatic_simple_samelength21_depth2_normal')
+  bin_iden = ArithmaticSimpleSameLength21Depth2Normal('data/arithmatic_simple_samelength21_depth2_normal')
 
-bin_iden.build_tfrecords(50000, 'train')
-bin_iden.build_tfrecords(2000, 'dev')
-bin_iden.build_tfrecords(2000, 'test')
+  bin_iden.build_tfrecords(50000, 'train')
+  bin_iden.build_tfrecords(2000, 'dev')
+  bin_iden.build_tfrecords(2000, 'test')

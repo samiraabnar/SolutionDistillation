@@ -527,6 +527,15 @@ class ArithmaticSimpleSameLength21Depth2Zipfian(ArithmaticSimpleSameLength10Dept
   @property
   def num_of_symbols(self):
       return 21 #-10-10
+
+  def load_vocab(self):
+    self.id2word = [self.pad, self.eos, self.cls_token] + list(map(str,np.arange(-self.num_of_symbols/2,self.num_of_symbols/2+1))) + ['(',')','+','-']
+
+    self.word2id = {}
+    for i in np.arange(len(self.id2word)):
+      self.word2id[self.id2word[i]] = i
+
+
   def generator(self, number_of_examples, mode="train"):
     max_length = self.train_length if mode == "train" else self.dev_length
     possible_lengths = list(set(np.arange(1,max_length+1)) - set(self.forbidden_lengths))

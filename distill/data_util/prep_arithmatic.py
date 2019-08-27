@@ -529,7 +529,7 @@ class ArithmaticSimpleSameLength21Depth2Zipfian(ArithmaticSimpleSameLength10Dept
       return 21 #-10-10
 
   def load_vocab(self):
-    self.id2word = [self.pad, self.eos, self.cls_token] + list(map(str,np.arange(-self.num_of_symbols/2,self.num_of_symbols/2+1))) + ['(',')','+','-']
+    self.id2word = [self.pad, self.eos, self.cls_token] + list(map(str,np.arange(int(-self.num_of_symbols/2),int(self.num_of_symbols/2+1)))) + ['(',')','+','-']
 
     self.word2id = {}
     for i in np.arange(len(self.id2word)):

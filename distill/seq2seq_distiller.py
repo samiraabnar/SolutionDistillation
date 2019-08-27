@@ -79,7 +79,12 @@ tf.app.flags.DEFINE_float("teacher_input_dropout_keep_prob", 0.8, "")
 tf.app.flags.DEFINE_float("teacher_hidden_dropout_keep_prob", 0.9, "")
 tf.app.flags.DEFINE_float("student_input_dropout_keep_prob", 0.75, "")
 tf.app.flags.DEFINE_float("student_hidden_dropout_keep_prob", 0.5, "")
-
+tf.app.flags.DEFINE_float("teacher_attention_dropout_keepprob", 1.0, "")
+tf.app.flags.DEFINE_float("teacher_relu_dropout_keepprob", 1.0, "")
+tf.app.flags.DEFINE_float("teacher_postprocess_dropout_keepprob", 1.0, "")
+tf.app.flags.DEFINE_float("student_attention_dropout_keepprob", 1.0, "")
+tf.app.flags.DEFINE_float("student_relu_dropout_keepprob", 1.0, "")
+tf.app.flags.DEFINE_float("student_postprocess_dropout_keepprob", 1.0, "")
 
 tf.app.flags.DEFINE_float("teacher_learning_rate", 0.001, "")
 tf.app.flags.DEFINE_float("student_learning_rate", 0.001, "")
@@ -187,7 +192,10 @@ if __name__ == '__main__':
                                                       sent_rep_mode=hparams.teacher_sent_rep_mode,
                                                       embedding_dim=hparams.teacher_hidden_dim,
                                                       learning_rate=hparams.teacher_learning_rate,
-                                                      cls_token=CLS_TOKEN[hparams.teacher_model]
+                                                      cls_token=CLS_TOKEN[hparams.teacher_model],
+                                                      attention_dropout_keepprob=hparams.teacher_hidden_dropout_keep_prob,
+                                                      relu_dropout_keepprob=hparams.teacher_relu_dropout_keepprob,
+                                                      postprocess_dropout_keepprob=hparams.teacher_postprocess_dropout_keepprob,
                                                       )
 
   student_params = PARAM_TYPES[hparams.student_model](input_dim=hparams.input_dim,
@@ -211,7 +219,10 @@ if __name__ == '__main__':
                                                       sent_rep_mode=hparams.student_sent_rep_mode,
                                                       embedding_dim=hparams.student_hidden_dim,
                                                       learning_rate=hparams.student_learning_rate,
-                                                      cls_token=CLS_TOKEN[hparams.student_model]
+                                                      cls_token=CLS_TOKEN[hparams.student_model],
+                                                      attention_dropout_keepprob=hparams.student_hidden_dropout_keep_prob,
+                                                      relu_dropout_keepprob=hparams.student_relu_dropout_keepprob,
+                                                      postprocess_dropout_keepprob=hparams.student_postprocess_dropout_keepprob,
                                                       )
 
 

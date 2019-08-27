@@ -20,7 +20,10 @@ class TransformerHparam(object):
                attention_mechanism=None,
                sent_rep_mode=None,
                embedding_dim=None,
-               cls_token=False
+               cls_token=False,
+               attention_dropout_keepprob=1.0,
+               relu_dropout_keepprob=1.0,
+               postprocess_dropout_keepprob=1.0
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -56,6 +59,9 @@ class TransformerHparam(object):
     self.decoder_cross_attention_dir = decoder_cross_attention_dir
     self.train_embeddings = train_embeddings
     self.cls_token = cls_token
+    self.attention_dropout_keepprob = attention_dropout_keepprob
+    self.relu_dropout_keepprob = relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = postprocess_dropout_keepprob
 
 
 class LSTMHparam(object):
@@ -80,7 +86,10 @@ class LSTMHparam(object):
                decoder_cross_attention_dir="top_down",
                attention_mechanism=None,
                sent_rep_mode=None,
-               cls_token=False
+               cls_token=False,
+               attention_dropout_keepprob=1.0,
+               relu_dropout_keepprob=1.0,
+               postprocess_dropout_keepprob=1.0
                ):
     self.input_dim = input_dim
     self.vocab_size = vocab_size
@@ -111,4 +120,7 @@ class LSTMHparam(object):
     self.clip_grad_norm = 0.  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.train_embeddings = train_embeddings
+    self.attention_dropout_keepprob = attention_dropout_keepprob
+    self.relu_dropout_keepprob = relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = postprocess_dropout_keepprob
 

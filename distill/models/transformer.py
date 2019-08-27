@@ -4,6 +4,7 @@ from tensor2tensor.utils.beam_search import EOS_ID
 
 from distill.common.beam_search import sequence_beam_search
 from distill.common.layer_utils import get_decoder_self_attention_bias, get_position_encoding, get_padding_bias, get_padding
+from distill.data_util.prep_arithmatic import ArithmaticSimpleSameLength201Depth2Normal
 from distill.data_util.prep_trec6 import CharTrec6
 from distill.layers.attention import MultiHeadScaledDotProductAttention, ReversedMultiHeadScaledDotProductAttention
 from distill.layers.embedding import EmbeddingSharedWeights
@@ -14,11 +15,17 @@ tpu = False
 
 
 class TransformerEncoder(object):
-  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, self_attention_dir="top_down", scope="TransformerEncoder"):
+  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size,
+               attention_dropout_keepprob,
+               relu_dropout_keepprob,
+               postprocess_dropout_keepprob,
+               self_attention_dir="top_down", scope="TransformerEncoder"):
     self.hidden_dim = hidden_dim
     self.number_of_heads = number_of_heads
     self.depth = depth
-    self.dropout_keep_prob = dropout_keep_prob
+    self.attention_dropout_keepprob = attention_dropout_keepprob
+    self.relu_dropout_keepprob = relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = postprocess_dropout_keepprob
     self.ff_filter_size = ff_filter_size
     self.self_attention_dir = self_attention_dir
 
@@ -33,25 +40,25 @@ class TransformerEncoder(object):
         if self.self_attention_dir == "bottom_up":
           self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                             num_heads=self.number_of_heads,
-                                                                            attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                            attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                             scope="Attention" + str(i))
         else:
           self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                             num_heads=self.number_of_heads,
-                                                                            attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                            attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                             scope="Attention" + str(i))
 
         feed_forward_network = FeedFowardNetwork(hidden_size=self.hidden_dim,
                                                  filter_size=self.ff_filter_size,
-                                                 relu_dropout_keepprob=self.dropout_keep_prob,
+                                                 relu_dropout_keepprob=self.relu_dropout_keepprob,
                                                  allow_pad=True,
                                                  scope="FF"+str(i))
 
         wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
         wrapped_self_attention.create_vars()
         wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
         wrapped_ff.create_vars()
 
         self.layers.append([wrapped_self_attention, wrapped_ff])
@@ -69,9 +76,6 @@ class TransformerEncoder(object):
         self_attention_layer = layer[0]
         feed_forward_network = layer[1]
 
-        tf.logging.info("encoder inputs:")
-        tf.logging.info(encoder_inputs)
-
         encoder_inputs, encoder_inputs_presence = self_attention_layer.apply(x=encoder_inputs, y=encoder_inputs,
                                                                              x_presence=encoder_inputs_presence,
                                                                              y_presence=encoder_inputs_presence,
@@ -86,11 +90,17 @@ class TransformerEncoder(object):
 
 
 class TransformerDecoder(object):
-  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, self_attention_dir="top_down", cross_attention_dir="top_down", scope="TransformerDecoder"):
+  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size,
+               attention_dropout_keepprob,
+               relu_dropout_keepprob,
+               postprocess_dropout_keepprob,
+               self_attention_dir="top_down", cross_attention_dir="top_down", scope="TransformerDecoder"):
     self.hidden_dim = hidden_dim
     self.number_of_heads = number_of_heads
     self.depth = depth
-    self.dropout_keep_prob = dropout_keep_prob
+    self.attention_dropout_keepprob = attention_dropout_keepprob
+    self.relu_dropout_keepprob = relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = postprocess_dropout_keepprob
     self.ff_filter_size = ff_filter_size
     self.self_attention_dir = self_attention_dir
     self.cross_attention_dir = cross_attention_dir
@@ -105,36 +115,36 @@ class TransformerDecoder(object):
         if self.self_attention_dir == "bottom_up":
           self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
-                                                                  attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                  attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                   scope="SelfAttention"+str(i))
         else:
           self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                     num_heads=self.number_of_heads,
-                                                                    attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                    attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                     scope="SelfAttention" + str(i))
 
         if self.cross_attention_dir == "bottom_up":
           enc_dec_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
-                                                                  attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                  attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                   scope="EncDecAttention" + str(i))
         else:
           enc_dec_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                        num_heads=self.number_of_heads,
-                                                                       attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                       attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                        scope="EncDecAttention" + str(i))
         feed_forward_network = FeedFowardNetwork(self.hidden_dim,
                                                  self.ff_filter_size,
-                                                 self.dropout_keep_prob,
+                                                 self.relu_dropout_keepprob,
                                                  allow_pad=True,
                                                  scope="FF"+str(i))
 
         wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
         wrapped_enc_dec_attention = PrePostProcessingWrapper(layer=enc_dec_attention_layer, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob=self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
         wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
 
         wrapped_self_attention.create_vars()
         wrapped_enc_dec_attention.create_vars()
@@ -173,8 +183,15 @@ class TransformerDecoder(object):
 
 
 class UniversalTransformerEncoder(TransformerEncoder):
-  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, self_attention_dir="top_down", scope="TransformerEncoder"):
-    super(UniversalTransformerEncoder, self).__init__(hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob, self_attention_dir, scope)
+  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size,
+               attention_dropout_keepprob,
+               relu_dropout_keepprob,
+               postprocess_dropout_keepprob,
+               self_attention_dir="top_down", scope="TransformerEncoder"):
+    super(UniversalTransformerEncoder, self).__init__(hidden_dim, number_of_heads, depth, ff_filter_size,
+                                                      attention_dropout_keepprob,
+                                                      relu_dropout_keepprob,
+                                                      postprocess_dropout_keepprob, self_attention_dir, scope)
 
   def create_vars(self, reuse=False):
 
@@ -185,25 +202,25 @@ class UniversalTransformerEncoder(TransformerEncoder):
         if self.self_attention_dir == "bottom_up":
           self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                             num_heads=self.number_of_heads,
-                                                                            attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                            attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                             scope="Attention")
         else:
           self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                     num_heads=self.number_of_heads,
-                                                                    attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                    attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                     scope="Attention")
 
         feed_forward_network = FeedFowardNetwork(hidden_size=self.hidden_dim,
                                                  filter_size=self.ff_filter_size,
-                                                 relu_dropout_keepprob=self.dropout_keep_prob,
+                                                 relu_dropout_keepprob=self.relu_dropout_keepprob,
                                                  allow_pad=True,
                                                  scope="FF")
 
         wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
         wrapped_self_attention.create_vars(reuse=tf.AUTO_REUSE)
         wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
         wrapped_ff.create_vars(reuse=tf.AUTO_REUSE)
 
         self.layers.append([wrapped_self_attention, wrapped_ff])
@@ -214,10 +231,15 @@ class UniversalTransformerEncoder(TransformerEncoder):
 
 
 class UniversalTransformerDecoder(TransformerDecoder):
-  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, dropout_keep_prob,
-               self_attention_dir="top_down", cross_attention_dir="top_down", scope="TransformerDecoder"):
+  def __init__(self, hidden_dim, number_of_heads, depth, ff_filter_size, attention_dropout_keepprob,
+               relu_dropout_keepprob,
+               postprocess_dropout_keepprob,
+               self_attention_dir="top_down",
+               cross_attention_dir="top_down", scope="TransformerDecoder"):
     super(UniversalTransformerDecoder, self).__init__(hidden_dim, number_of_heads, depth, ff_filter_size,
-                                                      dropout_keep_prob,self_attention_dir,cross_attention_dir, scope)
+                                                      attention_dropout_keepprob,
+                                                      relu_dropout_keepprob,
+                                                      postprocess_dropout_keepprob,self_attention_dir,cross_attention_dir, scope)
 
 
   def create_vars(self, reuse=False):
@@ -229,37 +251,38 @@ class UniversalTransformerDecoder(TransformerDecoder):
         if self.self_attention_dir == "bottom_up":
           self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
-                                                                  attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                  attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                   scope="SelfAttention")
         else:
           self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                     num_heads=self.number_of_heads,
-                                                                    attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                    attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                     scope="SelfAttention")
 
         if self.cross_attention_dir == "bottom_up":
           enc_dec_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                   num_heads=self.number_of_heads,
-                                                                  attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                  attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                   scope="EncDecAttention")
         else:
           enc_dec_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
                                                                        num_heads=self.number_of_heads,
-                                                                       attention_dropout_keepprob=self.dropout_keep_prob,
+                                                                       attention_dropout_keepprob=self.attention_dropout_keepprob,
                                                                        scope="EncDecAttention")
         feed_forward_network = FeedFowardNetwork(self.hidden_dim,
                                                  self.ff_filter_size,
-                                                 self.dropout_keep_prob,
+                                                 self.relu_dropout_keepprob,
                                                  allow_pad=True,
                                                  scope="FF")
 
         wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
         wrapped_enc_dec_attention = PrePostProcessingWrapper(layer=enc_dec_attention_layer, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob=self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
         wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.dropout_keep_prob)
+                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
 
+        wrapped_self_attention.create_vars(reuse=tf.AUTO_REUSE)
         wrapped_self_attention.create_vars(reuse=tf.AUTO_REUSE)
         wrapped_enc_dec_attention.create_vars(reuse=tf.AUTO_REUSE)
         wrapped_ff.create_vars(reuse=tf.AUTO_REUSE)
@@ -289,10 +312,14 @@ class Transformer(object):
     self.encoder_depth = hparams.encoder_depth
     self.ff_filter_size = hparams.ff_filter_size
     self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.attention_dropout_keepprob = hparams.attention_dropout_keepprob
+    self.relu_dropout_keepprob = hparams.relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = hparams.postprocess_dropout_keepprob
     self.initializer_gain = hparams.initializer_gain
     self.scope = scope
     self.task = task
     self.eos_id = self.task.eos_id
+
 
   def create_vars(self, reuse=False,pretrained_embeddings=None):
     self.initializer = tf.variance_scaling_initializer(
@@ -312,11 +339,15 @@ class Transformer(object):
         self.output_embedding_layer = self.input_embedding_layer
 
       self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
-                                              self.dropout_keep_prob,
+                                              attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                              relu_dropout_keepprob=self.relu_dropout_keepprob,
+                                              postprocess_dropout_keepprob=self.postprocess_dropout_keepprob,
                                               self_attention_dir=self.hparams.encoder_self_attention_dir,
                                               scope="TransformerEncoder")
       self.decoder_stack = TransformerDecoder(self.hidden_dim, self.number_of_heads, self.decoder_depth, self.ff_filter_size,
-                                              self.dropout_keep_prob,
+                                              attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                              relu_dropout_keepprob=self.relu_dropout_keepprob,
+                                              postprocess_dropout_keepprob=self.postprocess_dropout_keepprob,
                                               self_attention_dir=self.hparams.decoder_self_attention_dir,
                                               cross_attention_dir=self.hparams.decoder_cross_attention_dir,
                                               scope="TransformerDecoder")
@@ -390,15 +421,17 @@ class Transformer(object):
       embedded_inputs = self.input_embedding_layer.apply(inputs)
       inputs_padding = get_padding(inputs)
 
+      if is_train:
+        embedded_inputs = tf.nn.dropout(
+            embedded_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
       with tf.name_scope("add_pos_encoding"):
         length = tf.shape(embedded_inputs)[1]
         pos_encoding = get_position_encoding(
             length, self.hidden_dim)
         encoder_inputs = embedded_inputs + pos_encoding
 
-      if is_train:
-        encoder_inputs = tf.nn.dropout(
-            encoder_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
 
       return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train)
 
@@ -425,9 +458,6 @@ class Transformer(object):
         length = tf.shape(decoder_inputs)[1]
         decoder_inputs += get_position_encoding(
             length, self.hidden_dim)
-      if is_train:
-        decoder_inputs = tf.nn.dropout(
-            decoder_inputs, keep_prob=self.dropout_keep_prob)
 
       # Run values
       decoder_self_attention_bias = get_decoder_self_attention_bias(
@@ -555,11 +585,15 @@ class UniversalTransformer(Transformer):
         self.output_embedding_layer = self.input_embedding_layer
 
       self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
-                                              self.dropout_keep_prob,
-                                              scope="TransformerEncoder")
+                                                       attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                                       relu_dropout_keepprob=self.relu_dropout_keepprob,
+                                                       postprocess_dropout_keepprob=self.postprocess_dropout_keepprob,
+                                                       scope="TransformerEncoder")
       self.decoder_stack = UniversalTransformerDecoder(self.hidden_dim, self.number_of_heads, self.decoder_depth, self.ff_filter_size,
-                                              self.dropout_keep_prob,
-                                              scope="TransformerDecoder")
+                                                       attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                                       relu_dropout_keepprob=self.relu_dropout_keepprob,
+                                                       postprocess_dropout_keepprob=self.postprocess_dropout_keepprob,
+                                                       scope="TransformerDecoder")
 
       self.encoder_stack.create_vars(reuse=tf.AUTO_REUSE)
       self.decoder_stack.create_vars(reuse=tf.AUTO_REUSE)
@@ -580,7 +614,9 @@ class EncodingTransformer(object):
     self.number_of_heads = hparams.number_of_heads
     self.encoder_depth = hparams.encoder_depth
     self.ff_filter_size = hparams.ff_filter_size
-    self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.attention_dropout_keepprob = hparams.attention_dropout_keepprob
+    self.relu_dropout_keepprob = hparams.relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = hparams.postprocess_dropout_keepprob
     self.initializer_gain = hparams.initializer_gain
     self.scope = scope
     self.task = task
@@ -605,7 +641,9 @@ class EncodingTransformer(object):
         
 
       self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
-                                              self.dropout_keep_prob,
+                                              attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                              relu_dropout_keepprob=self.relu_dropout_keepprob,
+                                              postprocess_dropout_keepprob=self.postprocess_dropout_keepprob,
                                               self_attention_dir=self.hparams.encoder_self_attention_dir,
                                               scope="TransformerEncoder")
 
@@ -665,15 +703,17 @@ class EncodingTransformer(object):
       embedded_inputs = self.input_embedding_layer.apply(inputs)
       inputs_padding = get_padding(inputs)
 
+      if is_train:
+        embedded_inputs = tf.nn.dropout(
+            embedded_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
       with tf.name_scope("add_pos_encoding"):
         length = tf.shape(embedded_inputs)[1]
         pos_encoding = get_position_encoding(
             length, self.hidden_dim)
         encoder_inputs = embedded_inputs + pos_encoding
 
-      if is_train:
-        encoder_inputs = tf.nn.dropout(
-            encoder_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
 
       return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train, dic_to_save_weights=dic_to_save_weights)
 
@@ -717,7 +757,9 @@ class DecodingTransformer(object):
     self.number_of_heads = hparams.number_of_heads
     self.encoder_depth = hparams.encoder_depth
     self.ff_filter_size = hparams.ff_filter_size
-    self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.attention_dropout_keepprob = hparams.attention_dropout_keepprob
+    self.relu_dropout_keepprob = hparams.relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = hparams.postprocess_dropout_keepprob
     self.initializer_gain = hparams.initializer_gain
     self.scope = scope
     self.task = task
@@ -742,7 +784,9 @@ class DecodingTransformer(object):
 
       self.decoder_stack = TransformerDecoder(self.hidden_dim, self.number_of_heads, self.encoder_depth,
                                               self.ff_filter_size,
-                                              self.dropout_keep_prob,
+                                              attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                              relu_dropout_keepprob=self.relu_dropout_keepprob,
+                                              postprocess_dropout_keepprob=self.postprocess_dropout_keepprob,
                                               self_attention_dir=self.hparams.encoder_self_attention_dir,
                                               scope="TransformerDecoder")
 
@@ -802,15 +846,16 @@ class DecodingTransformer(object):
       embedded_inputs = self.input_embedding_layer.apply(inputs)
       inputs_padding = get_padding(inputs)
 
+      if is_train:
+        embedded_inputs = tf.nn.dropout(embedded_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
       with tf.name_scope("add_pos_encoding"):
         length = tf.shape(embedded_inputs)[1]
         pos_encoding = get_position_encoding(
           length, self.hidden_dim)
         encoder_inputs = embedded_inputs + pos_encoding
 
-      if is_train:
-        encoder_inputs = tf.nn.dropout(
-          encoder_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
 
       return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train,
                                       dic_to_save_weights=dic_to_save_weights)
@@ -854,7 +899,9 @@ class EncodingUniversalTransformer(EncodingTransformer):
     self.number_of_heads = hparams.number_of_heads
     self.encoder_depth = hparams.encoder_depth
     self.ff_filter_size = hparams.ff_filter_size
-    self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.attention_dropout_keepprob = hparams.attention_dropout_keepprob
+    self.relu_dropout_keepprob = hparams.relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = hparams.postprocess_dropout_keepprob
     self.initializer_gain = hparams.initializer_gain
     self.scope = scope
     self.task = task
@@ -890,10 +937,13 @@ class EncodingUniversalTransformer(EncodingTransformer):
       #                                         trainable=True,
       #                                         name="OutProj")
         
-      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,
-                                              self.dropout_keep_prob,
-                                              self_attention_dir=self.hparams.encoder_self_attention_dir,
-                                              scope="UniversalTransformerEncoder")
+      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth,
+                                                       self.ff_filter_size,
+                                                       attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                                       relu_dropout_keepprob=self.relu_dropout_keepprob,
+                                                       postprocess_dropout_keepprob=self.postprocess_dropout_keepprob,
+                                                       self_attention_dir=self.hparams.encoder_self_attention_dir,
+                                                       scope="UniversalTransformerEncoder")
 
 
       self.encoder_stack.create_vars(reuse=tf.AUTO_REUSE)
@@ -915,7 +965,9 @@ class EncodingUniversalTransformerWithLocalBias(EncodingUniversalTransformer):
     self.number_of_heads = hparams.number_of_heads
     self.encoder_depth = hparams.encoder_depth
     self.ff_filter_size = hparams.ff_filter_size
-    self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.attention_dropout_keepprob = hparams.attention_dropout_keepprob
+    self.relu_dropout_keepprob = hparams.relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = hparams.postprocess_dropout_keepprob
     self.initializer_gain = hparams.initializer_gain
     self.scope = scope
     self.task = task
@@ -927,8 +979,9 @@ if __name__ == '__main__':
   tf.logging.set_verbosity(tf.logging.INFO)
 
   #bin_iden = AlgorithmicIdentityBinary40('data/alg')
-  #bin_iden = Arithmatic('data/arithmatic')
-  bin_iden = CharTrec6(data_path="data/char_trec6/")
+  bin_iden = ArithmaticSimpleSameLength201Depth2Normal(
+             'data/arithmatic_simple_samelength201_depth2_normal')
+  #bin_iden = CharTrec6(data_path="data/char_trec6/")
 
   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
   dataset = dataset.map(bin_iden.parse_examples)
@@ -944,8 +997,9 @@ if __name__ == '__main__':
       self.hidden_dim = 32
       self.output_dim = self.vocab_size
       self.embedding_dim = 32
-      self.input_dropout_keep_prob = 0.5
-      self.hidden_dropout_keep_prob = 0.5
+      self.attention_dropout_keepprob = 0.1
+      self.relu_dropout_keepprob = 0.1
+      self.postprocess_dropout_keepprob = 0.1
       self.attention_mechanism = None
       self.encoder_depth = 1
       self.decoder_depth = 1
@@ -978,6 +1032,7 @@ if __name__ == '__main__':
       self.decoder_self_attention_dir = "top_down"
       self.decoder_cross_attention_dir = "top_down"
       self.train_embeddings = True
+      self.cls_token = True
 
 
   transformer = EncodingTransformer(Config(),
@@ -999,6 +1054,6 @@ if __name__ == '__main__':
       inp, targ, pred = sess.run([inputs, targets, predictions])
 
       print(inp)
-      print(bin_iden.decode(inp[0],bin_iden.id2token))
-      print(bin_iden.decode(pred[0],bin_iden.id2token))
-      print(bin_iden.decode(targ[0],bin_iden.id2token))
+      print(bin_iden.decode(inp[0]))
+      print(bin_iden.decode(pred[0]))
+      print(bin_iden.decode(targ[0]))

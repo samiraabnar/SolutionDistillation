@@ -589,7 +589,7 @@ class ArithmaticSimpleSameLength21Depth2Zipfian(ArithmaticSimpleSameLength10Dept
 class ArithmaticSimpleSameLength21Depth2Normal(ArithmaticSimpleSameLength10Depth2):
   def __init__(self, data_path):
     self.data_path = data_path
-    self.task_name = 'arithmatic_simple_samelength10_depth2_zipfian'
+    self.task_name = 'arithmatic_simple_samelength10_depth2_normal'
     self.vocab_path = os.path.join(self.data_path, 'vocab')
 
     self.eos = '<eos>'
@@ -632,7 +632,7 @@ class ArithmaticSimpleSameLength21Depth2Normal(ArithmaticSimpleSameLength10Depth
       while exp < -int(self.num_of_symbols / 2) or exp > int(self.num_of_symbols / 2):
 
         if mode == "train":
-          randomNums = np.maximum(1, np.minimum(np.random.normal(loc=5, scale=2, size=1), N))
+          randomNums = np.maximum(1, np.minimum(np.random.normal(loc=int(N/2), scale=2, size=1), N))
           length_index = int(np.round(randomNums)[0])
         else:
           length_index = np.random.randint(len(possible_lengths))
@@ -663,7 +663,7 @@ class ArithmaticSimpleSameLength21Depth2Normal(ArithmaticSimpleSameLength10Depth
 class ArithmaticSimpleSameLength201Depth2Normal(ArithmaticSimpleSameLength21Depth2Normal):
   def __init__(self, data_path):
     self.data_path = data_path
-    self.task_name = 'arithmatic_simple_samelength10_depth2_zipfian'
+    self.task_name = 'arithmatic_simple_samelength10_depth2_normal'
     self.vocab_path = os.path.join(self.data_path, 'vocab')
 
     self.eos = '<eos>'
@@ -759,8 +759,14 @@ if __name__ == '__main__':
 #  bin_iden.build_tfrecords(2000, 'dev')
 #  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden = ArithmaticSimpleSameLength21Depth2Normal('data/arithmatic_simple_samelength21_depth2_normal')
+  bin_iden = ArithmaticSimpleSameLength201Depth2Normal('data/arithmatic_simple_samelength201_depth2_normal')
 
-  bin_iden.build_tfrecords(50000, 'train')
+  bin_iden.build_tfrecords(100000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')
   bin_iden.build_tfrecords(2000, 'test')
+
+bin_iden = ArithmaticSimpleSameLength21Depth2Normal('data/arithmatic_simple_samelength21_depth2_normal')
+
+bin_iden.build_tfrecords(50000, 'train')
+bin_iden.build_tfrecords(2000, 'dev')
+bin_iden.build_tfrecords(2000, 'test')

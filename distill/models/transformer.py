@@ -701,6 +701,143 @@ class EncodingTransformer(object):
       return tf.expand_dims(outputs, axis=1)
 
 
+class DecodingTransformer(object):
+  """Transformer model for sequence classification.
+  Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
+  The Transformer model consists of an encoder and decoder. The input is an int
+  sequence (or a batch of sequences). The encoder produces a continous
+  representation, and the decoder uses the encoder output to generate
+  probabilities for the output classes.
+  """
+
+  def __init__(self, hparams, task, scope="Transformer"):
+    self.hparams = hparams
+    self.vocab_size = hparams.vocab_size
+    self.hidden_dim = hparams.hidden_dim
+    self.number_of_heads = hparams.number_of_heads
+    self.encoder_depth = hparams.encoder_depth
+    self.ff_filter_size = hparams.ff_filter_size
+    self.dropout_keep_prob = hparams.hidden_dropout_keep_prob
+    self.initializer_gain = hparams.initializer_gain
+    self.scope = scope
+    self.task = task
+    self.eos_id = self.task.eos_id
+
+  def create_vars(self, reuse=False, pretrained_embeddings=None):
+    self.initializer = tf.variance_scaling_initializer(
+      self.initializer_gain, mode="fan_avg", distribution="normal")
+
+    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
+
+      self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
+                                                          method="matmul" if tpu else "gather", scope="InputEmbed",
+                                                          pretrained_embeddings=pretrained_embeddings)
+      self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
+      if not self.task.share_input_output_embeddings:
+        self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
+                                                             embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")
+        self.output_embedding_layer.create_vars()
+      else:
+        self.output_embedding_layer = self.input_embedding_layer
+
+      self.decoder_stack = TransformerDecoder(self.hidden_dim, self.number_of_heads, self.encoder_depth,
+                                              self.ff_filter_size,
+                                              self.dropout_keep_prob,
+                                              self_attention_dir=self.hparams.encoder_self_attention_dir,
+                                              scope="TransformerDecoder")
+
+      self.decoder_stack.create_vars(reuse=False)
+
+  def apply(self, examples, target_length=None, reuse=tf.AUTO_REUSE, is_train=True, dic_to_save_weights=None):
+    """Calculate target logits or inferred target sequences.
+    Args:
+      inputs: int tensor with shape [batch_size, input_length].
+      targets: None or int tensor with shape [batch_size, target_length].
+    Returns:
+      If targets is defined, then return logits for each word in the target
+      sequence. float tensor with shape [batch_size, target_length, vocab_size]
+      If target is none, then generate output sequence one token at a time.
+        returns a dictionary {
+          output: [batch_size, decoded length]
+          score: [batch_size, float]}
+    """
+    inputs, targets, inputs_lengths, targets_lengths = examples
+
+    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
+      if self.hparams.cls_token:
+        inputs = tf.concat([tf.expand_dims(tf.ones(tf.shape(inputs)[:-1], dtype=tf.int64), axis=-1) * \
+                            self.task.word2id[self.task.cls_token],
+                            inputs], axis=1)
+        tf.logging.info("inputs shape")
+        tf.logging.info(inputs)
+
+      attention_bias = get_padding_bias(inputs)
+
+      encoder_outputs, encoder_outputs_presence = self.encode(inputs, attention_bias, is_train,
+                                                              dic_to_save_weights=dic_to_save_weights)
+      outputs = self.decode(encoder_outputs=encoder_outputs,
+                            encoder_outputs_presence=encoder_outputs_presence,
+                            is_train=is_train, dic_to_save_weights=dic_to_save_weights)
+
+      # outputs  = self.output_projections_layer.apply(outputs)
+      logits = self.output_embedding_layer.linear(outputs)
+      predictions = tf.argmax(logits, axis=-1)
+
+      return {'logits': logits,
+              'outputs': outputs,
+              'predictions': predictions,
+              'targets': targets,
+              'trainable_vars': tf.trainable_variables(scope=self.scope),
+              }
+
+  def encode(self, inputs, attention_bias, is_train=True, dic_to_save_weights=None):
+    """Generate continuous representation for inputs.
+    Args:
+      inputs: int tensor with shape [batch_size, input_length].
+      attention_bias: float tensor with shape [batch_size, 1, 1, input_length]
+    Returns:
+      float tensor with shape [batch_size, input_length, hidden_size]
+    """
+    with tf.variable_scope("encode", reuse=tf.AUTO_REUSE):
+      embedded_inputs = self.input_embedding_layer.apply(inputs)
+      inputs_padding = get_padding(inputs)
+
+      with tf.name_scope("add_pos_encoding"):
+        length = tf.shape(embedded_inputs)[1]
+        pos_encoding = get_position_encoding(
+          length, self.hidden_dim)
+        encoder_inputs = embedded_inputs + pos_encoding
+
+      if is_train:
+        encoder_inputs = tf.nn.dropout(
+          encoder_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
+      return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train,
+                                      dic_to_save_weights=dic_to_save_weights)
+
+  def decode(self, encoder_outputs, encoder_outputs_presence=None, is_train=True, dic_to_save_weights=None):
+    """Generate logits for each value in the target sequence.
+    Args:
+      targets: target values for the output sequence.
+        int tensor with shape [batch_size, target_length]
+      encoder_outputs: continuous representation of input sequence.
+        float tensor with shape [batch_size, input_length, hidden_size]
+      attention_bias: float tensor with shape [batch_size, 1, 1, input_length]
+    Returns:
+      float32 tensor with shape [batch_size, target_length, vocab_size]
+    """
+    with tf.name_scope("decode"):
+      if self.hparams.cls_token:
+        outputs = encoder_outputs[:, 0]
+      else:
+        if encoder_outputs_presence is not None:
+          outputs = tf.reduce_sum(encoder_outputs * encoder_outputs_presence, axis=1)
+        else:
+          outputs = tf.reduce_mean(encoder_outputs, axis=1)
+
+      return tf.expand_dims(outputs, axis=1)
+
+
 class EncodingUniversalTransformer(EncodingTransformer):
   """Transformer model for sequence to sequence data.
   Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf

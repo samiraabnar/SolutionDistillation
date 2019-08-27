@@ -810,10 +810,6 @@ class ArithmaticSimpleSameLength201Depth2Normal(ArithmaticSimpleSameLength21Dept
     return 201  # -10-10
 
 
-
-
-
-
 if __name__ == '__main__':
 #  bin_iden = ArithmaticSimple('data/arithmatic_simple')
 #

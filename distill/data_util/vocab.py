@@ -119,7 +119,10 @@ class PretrainedVocab(Vocab):
                         self.pad:np.random.uniform(
       -0.05, 0.05, embedding_dim).astype(np.float32),
                         self.eos:np.random.uniform(
-      -0.05, 0.05, embedding_dim).astype(np.float32)}
+      -0.05, 0.05, embedding_dim).astype(np.float32),
+                        self.cls: np.random.uniform(
+                          -0.05, 0.05, embedding_dim).astype(np.float32)
+                        }
 
     self.path = path
     self.pre_training_path = pre_training_path

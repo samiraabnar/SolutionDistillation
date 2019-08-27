@@ -109,7 +109,9 @@ hparams = tf.app.flags.FLAGS
 
 if __name__ == '__main__':
 
-  Models = {"lstm": LSTMSeq2Seq,
+  Models = {
+            "lm_lstm": LmLSTM,
+            "lstm": LSTMSeq2Seq,
             "bilstm": BidiLSTMSeq2Seq,
             "transformer": Transformer,
             "utransformer": UniversalTransformer,
@@ -149,7 +151,7 @@ if __name__ == '__main__':
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)
 
   PARAM_TYPES = {
-            "lm_lstm": LmLSTM,
+            "lm_lstm": LSTMHparam,
             "lstm": LSTMHparam,
             "bilstm": LSTMHparam,
             "transformer": TransformerHparam,
@@ -157,7 +159,9 @@ if __name__ == '__main__':
             "enc_transformer": TransformerHparam,
             "enc_utransformer": TransformerHparam}
 
-  CLS_TOKEN = {"lstm": False,
+  CLS_TOKEN = {
+              "lm_lstm": False,
+              "lstm": False,
               "bilstm": False,
               "transformer": False,
               "utransformer": False,

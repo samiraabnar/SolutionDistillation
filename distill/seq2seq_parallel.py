@@ -6,7 +6,9 @@ import os
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40, \
   AlgorithmicAdditionDecimal40, AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
 from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, ArithmaticSimpleCurriculumLength,\
-ArithmaticSimpleSameLength10, ArithmaticSimpleSameLength10Depth6, ArithmaticSimpleSameLength10Depth2, ArithmaticSimpleSameLength10Depth4, ArithmaticSimpleSameLength21Depth2Zipfian
+ArithmaticSimpleSameLength10, ArithmaticSimpleSameLength10Depth6, ArithmaticSimpleSameLength10Depth2, \
+  ArithmaticSimpleSameLength10Depth4, \
+  ArithmaticSimpleSameLength21Depth2Normal, ArithmaticSimpleSameLength201Depth2Normal
 from distill.data_util.prep_imdb import IMDB
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
@@ -15,7 +17,7 @@ from distill.data_util.prep_wsj_parsing import ParseWSJ
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer, \
   EncodingUniversalTransformer
-from distill.pipelines.distill_pipelines import Seq2SeqDistiller, Seq2SeqParallel
+from distill.pipelines.distill_pipelines import Seq2SeqParallel
 from distill.pipelines.seq2seq import Seq2SeqTrainer
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -129,7 +131,9 @@ if __name__ == '__main__':
            'arithmatic_simple_samelength10_depth6': ArithmaticSimpleSameLength10Depth6(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth6')),
            'arithmatic_simple_samelength10_depth4': ArithmaticSimpleSameLength10Depth4(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth4')),
            'arithmatic_simple_samelength10_depth2': ArithmaticSimpleSameLength10Depth2(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth2')),
-            'arithmatic_simple_samelength21_depth2_zipfian': ArithmaticSimpleSameLength21Depth2Zipfian(os.path.join(hparams.data_dir,'arithmatic_simple_samelength21_depth2_zipfian')),
+            'arithmatic_simple_samelength21_depth2_zipfian': ArithmaticSimpleSameLength21Depth2Normal(os.path.join(hparams.data_dir,'arithmatic_simple_samelength21_depth2_normal')),
+           'arithmatic_simple_samelength201_depth2_zipfian': ArithmaticSimpleSameLength201Depth2Normal(
+             os.path.join(hparams.data_dir, 'arithmatic_simple_samelength201_depth2_normal')),
            'sst': SST(data_path=os.path.join(hparams.data_dir,"sst/"),
                  add_subtrees=False,
                  pretrained=True),

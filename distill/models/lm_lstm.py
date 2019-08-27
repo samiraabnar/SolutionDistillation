@@ -56,20 +56,7 @@ class LmLSTM(object):
       logits = self.output_embedding_layer.linear(seq_states)
 
       predictions = tf.argmax(logits, axis=-1)
-      flat_labels = tf.reshape(targets, [-1])
-      flat_mask = tf.cast(tf.reshape(inputs_mask, [-1]), tf.float32)
-      flat_predictions = tf.reshape(predictions, [-1])
 
-      # if is_train:
-      #   loss = tf.nn.sampled_softmax_loss(
-      #     weights=self.output_embedding_layer.shared_weights,
-      #     biases=tf.zeros(self.hparams.vocab_size),
-      #     labels=tf.reshape(targets, [-1, 1]),
-      #     inputs=tf.reshape(seq_states, [-1, self.hparams.hidden_dim]),
-      #     num_classes=self.hparams.vocab_size,
-      #     num_sampled=1000,
-      #     partition_strategy="div")
-      # else:
 
       loss = tf.contrib.seq2seq.sequence_loss(
         logits,
@@ -80,6 +67,7 @@ class LmLSTM(object):
 
     return {'inputs': inputs,
             'loss': loss,
+            'outputs': lstm_output_dic['raw_outputs'],
             'predictions': predictions,
             'logits': logits,
             'targets': targets,

@@ -109,6 +109,14 @@ class SST(object):
 
     np.save(filtered_path, ordered_embeddings)
 
+  @property
+  def word2id(self):
+    return self.vocab.word_to_index
+
+  @property
+  def id2word(self):
+    return self.vocab.index_to_word
+
   def decode(self, ids):
     return [self.vocab.index_to_word[i] for i in ids]
 

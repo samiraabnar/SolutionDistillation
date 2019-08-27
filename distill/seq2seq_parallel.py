@@ -136,7 +136,7 @@ if __name__ == '__main__':
              os.path.join(hparams.data_dir, 'arithmatic_simple_samelength201_depth2_normal')),
            'sst': SST(data_path=os.path.join(hparams.data_dir,"sst/"),
                  add_subtrees=False,
-                 pretrained=True),
+                 pretrained=False),
            'ptb_lm': PTB(os.path.join(hparams.data_dir,'ptb')),
            'wsj_parse': ParseWSJ(os.path.join(hparams.data_dir,'wsj')),
            'imdb': IMDB(data_path=os.path.join(hparams.data_dir,"imdb"),

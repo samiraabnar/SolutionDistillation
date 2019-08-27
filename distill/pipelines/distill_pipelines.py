@@ -444,7 +444,6 @@ class Seq2SeqDistiller(Distiller):
 
     return train_iterator, dev_iterator, test_iterator
 
-
 class Seq2SeqParallel(Seq2SeqDistiller):
 
   def __init__(self, config, student_model, teacher_model, trainer):

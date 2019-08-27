@@ -454,26 +454,20 @@ class Seq2SeqParallel(Seq2SeqDistiller):
   def apply_model(self, model, train_examples, dev_examples, test_examples, name_tag="", softmax_temperature=1.0):
     train_output_dic = model.apply(train_examples, target_length=self.trainer.task.target_length, is_train=True)
     dev_output_dic = model.apply(dev_examples, target_length=self.trainer.task.target_length, is_train=False)
-    # test_output_dic = model.apply(test_examples, target_length=self.trainer.task.target_length, is_train=False)
 
     train_loss = self.trainer.compute_loss(train_output_dic['logits'],
                                            train_output_dic['targets'], softmax_temperature=softmax_temperature)
     dev_loss = self.trainer.compute_loss(dev_output_dic['logits'],
                                          dev_output_dic['targets'], softmax_temperature=softmax_temperature)
-    # test_loss = self.trainer.compute_loss(test_output_dic['logits'],
-    #                                              test_output_dic['targets'], softmax_temperature=softmax_temperature)
 
     train_output_dic['loss'] = train_loss
     tf.summary.scalar("loss", train_loss, family=name_tag + "_train")
     tf.summary.scalar("loss", dev_loss, family=name_tag + "_dev")
-    # tf.summary.scalar("loss", test_loss, family=name_tag+"_test")
 
     self.trainer.add_metric_summaries(train_output_dic['logits'],
                                       train_output_dic['targets'], name_tag + "_train")
     self.trainer.add_metric_summaries(dev_output_dic['logits'],
                                       dev_output_dic['targets'], name_tag + "_dev")
-    # self.trainer.add_metric_summaries(test_output_dic['logits'],
-    #                                  test_output_dic['targets'], name_tag+"_test")
 
     return train_output_dic, dev_output_dic, None
 
@@ -498,10 +492,7 @@ class Seq2SeqParallel(Seq2SeqDistiller):
                                                          mode=self.config.rep_loss_mode)
 
     # Compute mean distance between representations
-    # general_bias_distill_rep_loss = get_biased_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
-    #                                                                          teacher_train_output_dic['outputs'],
-    #                                                                          mode=self.config.rep_loss_mode,
-    #                                                                          bias="general")
+
     local_bias_distill_rep_loss = get_biased_single_state_rsa_distill_loss(student_train_output_dic['outputs'],
                                                                            teacher_train_output_dic['outputs'],
                                                                            mode=self.config.rep_loss_mode, bias="local")

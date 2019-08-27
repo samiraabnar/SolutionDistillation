@@ -14,6 +14,7 @@ from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
 from distill.data_util.prep_trec6 import CharTrec6, Trec6
 from distill.data_util.prep_wsj_parsing import ParseWSJ
+from distill.models.lm_lstm import LmLSTM
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer, \
   EncodingUniversalTransformer
@@ -147,7 +148,9 @@ if __name__ == '__main__':
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)
 
-  PARAM_TYPES = {"lstm": LSTMHparam,
+  PARAM_TYPES = {
+            "lm_lstm": LmLSTM,
+            "lstm": LSTMHparam,
             "bilstm": LSTMHparam,
             "transformer": TransformerHparam,
             "utransformer": TransformerHparam,

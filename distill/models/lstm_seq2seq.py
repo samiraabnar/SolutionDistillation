@@ -137,15 +137,11 @@ class LSTMSeq2Seq(object):
           outputs = lstm_decoder_output_dic['seq_outputs']
           outputs_lengths = lstm_decoder_output_dic['outputs_lengths']
 
-      #tf.logging.info("outputs")
-      #tf.logging.info(outputs)
 
       output_mask = tf.cast(tf.sequence_mask(outputs_lengths, tf.shape(outputs)[1]), dtype=tf.int64)
 
 
       logits = self.output_embedding_layer.linear(outputs)
-      #tf.logging.info("logits")
-      #tf.logging.info(logits)
       predictions = tf.cast(tf.argmax(logits, axis=-1) * output_mask, dtype=tf.int64)
 
     return {'logits': logits,

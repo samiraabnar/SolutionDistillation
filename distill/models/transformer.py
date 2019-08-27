@@ -602,24 +602,6 @@ class EncodingTransformer(object):
         self.output_embedding_layer.create_vars()
       else:
         self.output_embedding_layer = self.input_embedding_layer
-    
-      # self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
-      #                                                 activation=None,
-      #                                                 use_bias=False,
-      #                                                 kernel_initializer=self.initializer,
-      #                                                 bias_initializer=tf.zeros_initializer(),
-      #                                                 kernel_regularizer=None,
-      #                                                 bias_regularizer=None,
-      #                                                 activity_regularizer=None,
-      #                                                 kernel_constraint=None,
-      #                                                 bias_constraint=None,
-      #                                                 trainable=True,
-      #                                                 name="OutProj")
-#      self.output_projections_layer = FeedFowardNetwork(hidden_size=self.hidden_dim,
-#                                                 filter_size=1,
-#                                                 relu_dropout_keepprob=self.dropout_keep_prob,
-#                                                 allow_pad=True,
-#                                                 scope="OutputFF")
         
 
       self.encoder_stack = TransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth, self.ff_filter_size,

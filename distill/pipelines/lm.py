@@ -13,21 +13,33 @@ class LMTrainer(Trainer):
   def get_data_itarators(self):
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="train"))
     dataset = dataset.map(self.task.parse_examples)
-    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.apply(
+      tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
+                                                     bucket_batch_sizes=[self.config.batch_size]*11,
+                                                     bucket_boundaries=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                                                     padded_shapes=self.task.get_padded_shapes()))
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     train_iterator = dataset.make_initializable_iterator()
 
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="dev"))
     dataset = dataset.map(self.task.parse_examples)
-    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.apply(
+      tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
+                                                     bucket_batch_sizes=[self.config.batch_size] * 11,
+                                                     bucket_boundaries=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                                                     padded_shapes=self.task.get_padded_shapes()))
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     dev_iterator = dataset.make_initializable_iterator()
 
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="test"))
     dataset = dataset.map(self.task.parse_examples)
-    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.apply(
+      tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
+                                                     bucket_batch_sizes=[self.config.batch_size] * 11,
+                                                     bucket_boundaries=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                                                     padded_shapes=self.task.get_padded_shapes()))
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
     test_iterator = dataset.make_initializable_iterator()

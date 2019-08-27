@@ -5,9 +5,13 @@ import os
 
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40, \
   AlgorithmicAdditionDecimal40, AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
-from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, ArithmaticSimpleCurriculumLength,\
-ArithmaticSimpleSameLength10, ArithmaticSimpleSameLength10Depth6, ArithmaticSimpleSameLength10Depth2, ArithmaticSimpleSameLength10Depth4,\
-  ArithmaticSimpleSameLength21Depth2Zipfian, ArithmaticSimpleSameLength201Depth2Zipfian
+from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, \
+  ArithmaticSimpleCurriculumLength, \
+  ArithmaticSimpleSameLength10, ArithmaticSimpleSameLength10Depth6, ArithmaticSimpleSameLength10Depth2, \
+  ArithmaticSimpleSameLength10Depth4, \
+  ArithmaticSimpleSameLength21Depth2Zipfian, ArithmaticSimpleSameLength201Depth2Zipfian, \
+  ArithmaticSimpleSameLength21Depth2Normal, ArithmaticSimpleSameLength21Depth2NormalBiLing, \
+  ArithmaticSimpleSameLength201Depth2Normal
 from distill.data_util.prep_imdb import IMDB
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
@@ -137,9 +141,11 @@ if __name__ == '__main__':
            'arithmatic_simple_samelength10_depth6': ArithmaticSimpleSameLength10Depth6(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth6')),
            'arithmatic_simple_samelength10_depth4': ArithmaticSimpleSameLength10Depth4(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth4')),
            'arithmatic_simple_samelength10_depth2': ArithmaticSimpleSameLength10Depth2(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth2')),
-           'arithmatic_simple_samelength21_depth2_zipfian': ArithmaticSimpleSameLength21Depth2Zipfian(os.path.join(hparams.data_dir,'arithmatic_simple_samelength21_depth2_zipfian')),
-           'arithmatic_simple_samelength201_depth2_zipfian': ArithmaticSimpleSameLength201Depth2Zipfian(
-             os.path.join(hparams.data_dir, 'arithmatic_simple_samelength201_depth2_zipfian')),
+           'arithmatic_simple_samelength21_depth2_normal': ArithmaticSimpleSameLength21Depth2Normal(os.path.join(hparams.data_dir,'arithmatic_simple_samelength21_depth2_normal')),
+           'arithmatic_simple_samelength21_depth2_normal_biling': ArithmaticSimpleSameLength21Depth2NormalBiLing(
+             os.path.join(hparams.data_dir, 'arithmatic_simple_samelength21_depth2_normal_biling')),
+           'arithmatic_simple_samelength201_depth2_normal': ArithmaticSimpleSameLength201Depth2Normal(
+             os.path.join(hparams.data_dir, 'arithmatic_simple_samelength201_depth2_normal')),
            'sst': SST(data_path=os.path.join(hparams.data_dir,"sst/"),
                  add_subtrees=False,
                  pretrained=True),

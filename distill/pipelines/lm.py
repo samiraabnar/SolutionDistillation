@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+import numpy as np
 from distill.common.metrics import padded_cross_entropy_loss, get_eval_metrics
 from distill.pipelines.basic_trainer import Trainer
 
@@ -11,12 +11,14 @@ class LMTrainer(Trainer):
     self.task = task
 
   def get_data_itarators(self):
+
+    bucket_boundaries = list(np.arange(10,self.task.max_length,10))
     dataset = tf.data.TFRecordDataset(self.task.get_tfrecord_path(mode="train"))
     dataset = dataset.map(self.task.parse_examples)
     dataset = dataset.apply(
       tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
-                                                     bucket_batch_sizes=[self.config.batch_size]*11,
-                                                     bucket_boundaries=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                                                     bucket_batch_sizes=[self.config.batch_size]*len(bucket_boundaries),
+                                                     bucket_boundaries=bucket_boundaries,
                                                      padded_shapes=self.task.get_padded_shapes()))
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
@@ -26,8 +28,8 @@ class LMTrainer(Trainer):
     dataset = dataset.map(self.task.parse_examples)
     dataset = dataset.apply(
       tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
-                                                     bucket_batch_sizes=[self.config.batch_size] * 11,
-                                                     bucket_boundaries=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                                                     bucket_batch_sizes=[self.config.batch_size] * len(bucket_boundaries),
+                                                     bucket_boundaries=bucket_boundaries,
                                                      padded_shapes=self.task.get_padded_shapes()))
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
@@ -37,8 +39,8 @@ class LMTrainer(Trainer):
     dataset = dataset.map(self.task.parse_examples)
     dataset = dataset.apply(
       tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
-                                                     bucket_batch_sizes=[self.config.batch_size] * 11,
-                                                     bucket_boundaries=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                                                     bucket_batch_sizes=[self.config.batch_size] * len(bucket_boundaries),
+                                                     bucket_boundaries=bucket_boundaries,
                                                      padded_shapes=self.task.get_padded_shapes()))
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()

@@ -28,7 +28,6 @@ class PTB(SentWiki):
       self.build_vocab(os.path.join(self.data_path, "ptb.train.txt"))
     self.load_vocab()
 
-
   def read_raw_data(self, data_path=None):
     """Load PTB raw data from data directory "data_path".
     Reads PTB text files, converts strings to integer ids,
@@ -53,7 +52,9 @@ class PTB(SentWiki):
 
     return train_data, valid_data, test_data
 
-
+  @property
+  def max_length(self):
+    return 100
 
 
 if __name__ == '__main__':

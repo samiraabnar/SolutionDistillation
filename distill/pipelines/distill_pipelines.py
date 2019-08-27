@@ -418,9 +418,16 @@ class Seq2SeqDistiller(Distiller):
     return teacher_update_op, None, None, student_update_op, scaffold
 
   def get_train_data_itaratoes(self):
+    bucket_boundaries = list(np.arange(10, self.trainer.task.max_length, 10))
+
     dataset = tf.data.TFRecordDataset(self.trainer.task.get_tfrecord_path(mode="train"))
     dataset = dataset.map(self.trainer.task.parse_examples)
-    dataset = dataset.padded_batch(self.trainer.config.batch_size, padded_shapes=self.trainer.task.get_padded_shapes())
+    dataset = dataset.apply(
+      tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
+                                                     bucket_batch_sizes=[self.config.batch_size] * len(
+                                                       bucket_boundaries),
+                                                     bucket_boundaries=bucket_boundaries,
+                                                     padded_shapes=self.trainer.task.get_padded_shapes()))
     dataset = dataset.map((lambda x1,x2,x3,x4: ((x1,x2,x3,x4),(x1,x2,x3,x4))))
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
@@ -428,7 +435,12 @@ class Seq2SeqDistiller(Distiller):
 
     dataset = tf.data.TFRecordDataset(self.trainer.task.get_tfrecord_path(mode="dev"))
     dataset = dataset.map(self.trainer.task.parse_examples)
-    dataset = dataset.padded_batch(self.trainer.config.batch_size, padded_shapes=self.trainer.task.get_padded_shapes())
+    dataset = dataset.apply(
+      tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
+                                                     bucket_batch_sizes=[self.config.batch_size] * len(
+                                                       bucket_boundaries),
+                                                     bucket_boundaries=bucket_boundaries,
+                                                     padded_shapes=self.trainer.task.get_padded_shapes()))
     dataset = dataset.map((lambda x1,x2,x3,x4: ((x1,x2,x3,x4),(x1,x2,x3,x4))))
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()
@@ -436,7 +448,12 @@ class Seq2SeqDistiller(Distiller):
 
     dataset = tf.data.TFRecordDataset(self.trainer.task.get_tfrecord_path(mode="test"))
     dataset = dataset.map(self.trainer.task.parse_examples)
-    dataset = dataset.padded_batch(self.trainer.config.batch_size, padded_shapes=self.trainer.task.get_padded_shapes())
+    dataset = dataset.apply(
+      tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
+                                                     bucket_batch_sizes=[self.config.batch_size] * len(
+                                                       bucket_boundaries),
+                                                     bucket_boundaries=bucket_boundaries,
+                                                     padded_shapes=self.trainer.task.get_padded_shapes()))
     dataset = dataset.map((lambda x1,x2,x3,x4: ((x1,x2,x3,x4),(x1,x2,x3,x4))))
     dataset = dataset.shuffle(buffer_size=1000)
     dataset = dataset.repeat()

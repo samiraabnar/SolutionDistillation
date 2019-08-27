@@ -6,8 +6,6 @@ from tqdm import tqdm
 import scipy.stats as stats
 from num2words import num2words
 
-from distill.data_util.trees import Tree
-
 def binary_math_tree_generator(length, numbers, ops, max_value, depth=0, max_depth=None):
   if max_depth == None:
       max_depth = length
@@ -117,6 +115,10 @@ class Arithmatic(object):
   @property
   def dev_length(self):
     return 80
+
+  @property
+  def max_length(self):
+    return max([self.train_length, self.dev_length])
 
   def get_tf_example(self, example):
     """Convert our own representation of an example's features to Features class for TensorFlow dataset.

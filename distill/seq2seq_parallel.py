@@ -8,7 +8,7 @@ from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, Alg
 from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, ArithmaticSimpleCurriculumLength,\
 ArithmaticSimpleSameLength10, ArithmaticSimpleSameLength10Depth6, ArithmaticSimpleSameLength10Depth2, \
   ArithmaticSimpleSameLength10Depth4, \
-  ArithmaticSimpleSameLength21Depth2Normal, ArithmaticSimpleSameLength201Depth2Normal
+  ArithmaticSimpleSameLength21Depth2Normal, ArithmaticSimpleSameLength201Depth2Normal, ArithmaticSimpleSameLength21Depth2NormalBiLing
 from distill.data_util.prep_imdb import IMDB
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
@@ -135,6 +135,8 @@ if __name__ == '__main__':
            'arithmatic_simple_samelength10_depth4': ArithmaticSimpleSameLength10Depth4(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth4')),
            'arithmatic_simple_samelength10_depth2': ArithmaticSimpleSameLength10Depth2(os.path.join(hparams.data_dir,'arithmatic_simple_samelength10_depth2')),
            'arithmatic_simple_samelength21_depth2_normal': ArithmaticSimpleSameLength21Depth2Normal(os.path.join(hparams.data_dir,'arithmatic_simple_samelength21_depth2_normal')),
+           'arithmatic_simple_samelength21_depth2_normal_biling': ArithmaticSimpleSameLength21Depth2NormalBiLing(
+             os.path.join(hparams.data_dir, 'arithmatic_simple_samelength21_depth2_normal_biling')),
            'arithmatic_simple_samelength201_depth2_normal': ArithmaticSimpleSameLength201Depth2Normal(
              os.path.join(hparams.data_dir, 'arithmatic_simple_samelength201_depth2_normal')),
            'sst': SST(data_path=os.path.join(hparams.data_dir,"sst/"),

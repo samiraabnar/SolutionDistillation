@@ -57,9 +57,6 @@ tf.app.flags.DEFINE_string("data_path", "./data", "data path")
 hparams = tf.app.flags.FLAGS
 
 
-
-
-
 if __name__ == '__main__':
   Models = {"lm_lstm": LmLSTM,
             "schedule_lstm": ScheduledLSTMDecoder}

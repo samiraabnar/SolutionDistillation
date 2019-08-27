@@ -254,7 +254,7 @@ class ArithmaticSimple(ArithmaticSameLength):
     for i in tqdm(np.arange(number_of_examples)):
       exp = -1
       exp_str = '-1'
-      while exp < 0 or exp >= self.num_of_symbols:
+      while exp <= 0 or exp >= self.num_of_symbols:
         length = np.random.randint(max_length) + 1
         exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','+'], max_value, 0, self.max_depth)
         exp = eval(exp_str)
@@ -480,7 +480,11 @@ class ArithmaticSimpleSameLength10Depth2(ArithmaticSimpleSameLength10):
     self.load_vocab()
     self.pretrained = False
 
-  @property 
+  @property
+  def num_of_symbols(self):
+      return 10 #-10-10
+
+  @property
   def max_depth(self):
     return 2
 
@@ -503,7 +507,7 @@ class ArithmaticSimpleSameLength100Depth2(ArithmaticSimpleSameLength10Depth2):
     return 101
 
 
-class ArithmaticSimpleSameLength10Depth2Zipfian(ArithmaticSimpleSameLength10Depth2):
+class ArithmaticSimpleSameLength21Depth2Zipfian(ArithmaticSimpleSameLength10Depth2):
   def __init__(self, data_path):
     self.data_path = data_path
     self.task_name = 'arithmatic_simple_samelength10_depth2_zipfian'
@@ -519,41 +523,48 @@ class ArithmaticSimpleSameLength10Depth2Zipfian(ArithmaticSimpleSameLength10Dept
   @property
   def forbidden_lengths(self):
       return []
-      
+
+  @property
+  def num_of_symbols(self):
+      return 21 #-10-10
   def generator(self, number_of_examples, mode="train"):
     max_length = self.train_length if mode == "train" else self.dev_length
     possible_lengths = list(set(np.arange(1,max_length+1)) - set(self.forbidden_lengths))
 
     N = len(possible_lengths)
-    x = np.arange(1, N+1)
+    x = np.arange(N, 0, -1)
     a = 0.6
     weights = x ** (-a)
     weights /= weights.sum()
     bounded_zipf = stats.rv_discrete(name='bounded_zipf', values=(x, weights))
-    
+
     budgets = {}
     max_value = self.num_of_symbols - 1
     max_output_freq = (number_of_examples / self.num_of_symbols) * 2
     print("max_output_freq: ", max_output_freq)
     for i in tqdm(np.arange(number_of_examples)):
-      exp = -1
-      exp_str = '-1'
-      while exp < 0 or exp >= self.num_of_symbols:
-        
+      exp = -self.num_of_symbols
+      exp_str = '-' + str(self.num_of_symbols)
+      while exp < -int(self.num_of_symbols / 2) or exp > int(self.num_of_symbols / 2):
+
         if mode == "train":
-          length_index = bounded_zipf.rvs(size=1)[0]-1
+          length_index = bounded_zipf.rvs(size=1)[0] - 1
         else:
           length_index = np.random.randint(len(possible_lengths))
-        
-        length = possible_lengths[length_index]  
-        exp_str, _ = binary_math_tree_generator(length, np.arange(1,int(self.num_of_symbols)), ['-','+'], max_value, 0, self.max_depth)
+
+        length = possible_lengths[length_index]
+        exp_str, _ = binary_math_tree_generator(length,
+                                                np.arange(-int(self.num_of_symbols / 2), int(self.num_of_symbols / 2) + 1),
+                                                ['-', '+'], max_value, 0, self.max_depth)
         exp = eval(exp_str)
-        if exp not in budgets:
-          budgets[exp] = 1
-        budgets[exp] += 1
-        if budgets[exp] >= max_output_freq:
-          exp = -1
-          exp_str = '-1'
+        if exp >= -int(self.num_of_symbols / 2) and exp <= int(self.num_of_symbols / 2):
+          if exp not in budgets:
+            budgets[exp] = 1
+          budgets[exp] += 1
+          if budgets[exp] > max_output_freq:
+            exp = -self.num_of_symbols
+            exp_str = '-' + str(self.num_of_symbols)
+
 
       exp_tokens = exp_str.split() + [self.eos]
       output = [str(exp)]
@@ -564,7 +575,7 @@ class ArithmaticSimpleSameLength10Depth2Zipfian(ArithmaticSimpleSameLength10Dept
 
       yield example
 
-class ArithmaticSimpleSameLength100Depth2Zipfian(ArithmaticSimpleSameLength10Depth2Zipfian):
+class ArithmaticSimpleSameLength201Depth2Zipfian(ArithmaticSimpleSameLength21Depth2Zipfian):
   def __init__(self, data_path):
     self.data_path = data_path
     self.task_name = 'arithmatic_simple_samelength10_depth2_zipfian'
@@ -583,7 +594,7 @@ class ArithmaticSimpleSameLength100Depth2Zipfian(ArithmaticSimpleSameLength10Dep
       
   @property
   def num_of_symbols(self):
-      return 100
+      return 201
 
     
 if __name__ == '__main__':
@@ -630,7 +641,7 @@ if __name__ == '__main__':
 #  bin_iden.build_tfrecords(2000, 'dev')
 #  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden = ArithmaticSimpleSameLength10Depth4('data/arithmatic_simple_samelength10_depth4')
+  bin_iden = ArithmaticSimpleSameLength21Depth2Zipfian('data/arithmatic_simple_samelength21_depth2_zipfian')
 
   bin_iden.build_tfrecords(50000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')

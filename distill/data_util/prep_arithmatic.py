@@ -662,7 +662,7 @@ class ArithmaticSimpleSameLength21Depth2Normal(ArithmaticSimpleSameLength10Depth
       while exp < -int(self.num_of_symbols / 2) or exp > int(self.num_of_symbols / 2):
 
         if mode == "train":
-          randomNums = np.maximum(1, np.minimum(np.random.normal(loc=int(N/2), scale=2, size=1), N))
+          randomNums = np.maximum(0, np.minimum(np.random.normal(loc=int(N/2), scale=int(N/5), size=1), N-1))
           length_index = int(np.round(randomNums)[0])
         else:
           length_index = np.random.randint(len(possible_lengths))

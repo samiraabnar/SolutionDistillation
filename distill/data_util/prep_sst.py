@@ -50,7 +50,7 @@ class SST(object):
     self.eos = '<eos>'
     self.pad = '<pad>'
     self.unk = '<unk>'
-    self.cls = '<cls>'
+    self.cls_token = '<cls>'
     self.pretrained = pretrained
     self.fine_grained = True
     self.vocab = Vocab(path=self.vocab_path)

@@ -424,8 +424,8 @@ class Seq2SeqDistiller(Distiller):
     dataset = dataset.map(self.trainer.task.parse_examples)
     dataset = dataset.apply(
       tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
-                                                     bucket_batch_sizes=[self.config.batch_size] * len(
-                                                       bucket_boundaries),
+                                                     bucket_batch_sizes=[self.config.batch_size] * (len(
+                                                       bucket_boundaries)+1),
                                                      bucket_boundaries=bucket_boundaries,
                                                      padded_shapes=self.trainer.task.get_padded_shapes()))
     dataset = dataset.map((lambda x1,x2,x3,x4: ((x1,x2,x3,x4),(x1,x2,x3,x4))))
@@ -437,8 +437,8 @@ class Seq2SeqDistiller(Distiller):
     dataset = dataset.map(self.trainer.task.parse_examples)
     dataset = dataset.apply(
       tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
-                                                     bucket_batch_sizes=[self.config.batch_size] * len(
-                                                       bucket_boundaries),
+                                                     bucket_batch_sizes=[self.config.batch_size] * (len(
+                                                       bucket_boundaries)+1),
                                                      bucket_boundaries=bucket_boundaries,
                                                      padded_shapes=self.trainer.task.get_padded_shapes()))
     dataset = dataset.map((lambda x1,x2,x3,x4: ((x1,x2,x3,x4),(x1,x2,x3,x4))))
@@ -450,8 +450,8 @@ class Seq2SeqDistiller(Distiller):
     dataset = dataset.map(self.trainer.task.parse_examples)
     dataset = dataset.apply(
       tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
-                                                     bucket_batch_sizes=[self.config.batch_size] * len(
-                                                       bucket_boundaries),
+                                                     bucket_batch_sizes=[self.config.batch_size] * (len(
+                                                       bucket_boundaries)+1),
                                                      bucket_boundaries=bucket_boundaries,
                                                      padded_shapes=self.trainer.task.get_padded_shapes()))
     dataset = dataset.map((lambda x1,x2,x3,x4: ((x1,x2,x3,x4),(x1,x2,x3,x4))))

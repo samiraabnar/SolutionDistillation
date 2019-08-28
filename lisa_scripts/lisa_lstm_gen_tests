@@ -41,10 +41,10 @@ export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_parallel.py \
 --log_dir="$TMP_LOGS_DIR" --data_dir="$TMP_DATA_DIR" \
---batch_size=128 --teacher_hidden_dim=128 --student_hidden_dim=128 \
+--batch_size=64 --teacher_hidden_dim=256 --student_hidden_dim=256 \
 --teacher_model=lstm --student_model=lstm \
 --teacher_train_embeddings=True --student_train_embeddings=True \
---student_decoder_depth=1 --student_encoder_depth=1 --teacher_decoder_depth=1 --teacher_encoder_depth=1 \
+--student_decoder_depth=1 --student_encoder_depth=2 --teacher_decoder_depth=1 --teacher_encoder_depth=2 \
 --student_input_dropout_keep_prob=0.9 --student_hidden_dropout_keep_prob=0.9 \
 --teacher_input_dropout_keep_prob=0.9 --teacher_hidden_dropout_keep_prob=0.9 \
 --student_learning_rate=0.001 \

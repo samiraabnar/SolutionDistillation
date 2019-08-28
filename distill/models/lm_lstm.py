@@ -18,7 +18,7 @@ class LmLSTM(object):
                       sent_rep_mode=self.hparams.sent_rep_mode,
                       scope=scope)
     self.initializer = tf.variance_scaling_initializer(
-      self.initializer_gain, mode="fan_avg", distribution="truncated_normal")
+      self.hparams.initializer_gain, mode="fan_avg", distribution="truncated_normal")
 
   def create_vars(self, reuse=tf.AUTO_REUSE, pretrained_embeddings=None):
     with tf.variable_scope(self.scope, reuse=reuse, initializer=self.initializer):

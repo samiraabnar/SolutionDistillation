@@ -967,30 +967,6 @@ class DecodingUniversalTransformer(DecodingTransformer):
 
       self.decoder_stack.create_vars(reuse=tf.AUTO_REUSE)
 
-class EncodingUniversalTransformerWithLocalBias(EncodingUniversalTransformer):
-  """Transformer model for sequence to sequence data.
-  Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
-  The Transformer model consists of an encoder and decoder. The input is an int
-  sequence (or a batch of sequences). The encoder produces a continous
-  representation, and the decoder uses the encoder output to generate
-  probabilities for the output sequence.
-  """
-
-  def __init__(self, hparams, task, scope="EncUTransformer"):
-    self.hparams = hparams
-    self.vocab_size = hparams.vocab_size
-    self.hidden_dim = hparams.hidden_dim
-    self.number_of_heads = hparams.number_of_heads
-    self.encoder_depth = hparams.encoder_depth
-    self.ff_filter_size = hparams.ff_filter_size
-    self.attention_dropout_keepprob = hparams.attention_dropout_keepprob
-    self.relu_dropout_keepprob = hparams.relu_dropout_keepprob
-    self.postprocess_dropout_keepprob = hparams.postprocess_dropout_keepprob
-    self.initializer_gain = hparams.initializer_gain
-    self.scope = scope
-    self.task = task
-    self.eos_id = self.task.eos_id
-
 if __name__ == '__main__':
   from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40
 

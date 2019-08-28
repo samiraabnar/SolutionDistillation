@@ -17,7 +17,7 @@ from distill.data_util.prep_wsj_parsing import ParseWSJ
 from distill.models.lm_lstm import LmLSTM
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer, \
-  EncodingUniversalTransformer
+  EncodingUniversalTransformer, DecodingUniversalTransformer, DecodingTransformer
 from distill.pipelines.distill_pipelines import Seq2SeqParallel
 from distill.pipelines.seq2seq import Seq2SeqTrainer
 
@@ -121,7 +121,9 @@ if __name__ == '__main__':
             "transformer": Transformer,
             "utransformer": UniversalTransformer,
             "enc_transformer": EncodingTransformer,
-            "enc_utransformer": EncodingUniversalTransformer}
+            "enc_utransformer": EncodingUniversalTransformer,
+            "dec_utransformer": DecodingUniversalTransformer,
+            "dec_transformer": DecodingTransformer}
 
 
   tasks = {'identity': AlgorithmicIdentityDecimal40(os.path.join(hparams.data_dir,'alg')),

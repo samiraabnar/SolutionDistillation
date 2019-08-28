@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from distill.data_util.prep_ptb import PTB
-from distill.layers.embedding import Embedding, EmbeddingSharedWeights
+from distill.layers.embedding import EmbeddingSharedWeights
 from distill.layers.lstm import LSTM
 
 class LmLSTM(object):
@@ -35,6 +35,7 @@ class LmLSTM(object):
       else:
         self.output_embedding_layer = self.input_embedding_layer
 
+      self.output_bias = tf.get_variable(name="output_bias", initializer=tf.zeros((self.hparams.vocab_size)))
       self.lstm.create_vars(share_in_depth=False)
 
 
@@ -43,7 +44,6 @@ class LmLSTM(object):
     tf.logging.info(inputs_length)
     inputs_mask = tf.sequence_mask(inputs_length)
 
-    batch_size = tf.shape(inputs)[0]
     with tf.variable_scope(self.scope, reuse=reuse):
       embedded_inputs = self.input_embedding_layer.apply(inputs)
       if is_train:
@@ -52,11 +52,8 @@ class LmLSTM(object):
       lstm_output_dic = self.lstm.apply(inputs=embedded_inputs, inputs_length=inputs_length, is_train=is_train)
 
       seq_states = lstm_output_dic['raw_outputs']
-
-      logits = self.output_embedding_layer.linear(seq_states)
-
+      logits = self.output_embedding_layer.linear(seq_states) + self.output_bias
       predictions = tf.argmax(logits, axis=-1)
-
 
       loss = tf.contrib.seq2seq.sequence_loss(
         logits,
@@ -87,13 +84,14 @@ class LmLSTM(object):
       lstm_decoder_output_dic = self.lstm.predict(inputs_length=inputs_length,
                                                           target_length=40,
                                                           compute_decoding_step_input_fn=compute_decoding_step_input,
-                                                          embedding_layer=self.output_embedding_layer, eos_id=self.eos_id,
+                                                          input_embedding_layer=self.input_embedding_layer,
+                                                          output_embedding_layer=self.output_embedding_layer, eos_id=self.eos_id,
                                                           is_train=False,
                                                           initial_inputs=embedded_inputs)
       outputs = lstm_decoder_output_dic['seq_outputs']
       outputs_lengths = lstm_decoder_output_dic['outputs_lengths']
       output_mask = tf.cast(tf.sequence_mask(outputs_lengths, tf.shape(outputs)[1]), dtype=tf.int64)
-      logits = self.output_embedding_layer.linear(outputs)
+      logits = self.output_embedding_layer.linear(outputs) + self.output_bias
 
       predictions = tf.cast(tf.argmax(logits, axis=-1) * output_mask, dtype=tf.int64)
 

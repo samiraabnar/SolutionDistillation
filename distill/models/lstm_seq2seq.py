@@ -44,18 +44,18 @@ class LSTMSeq2Seq(object):
       else:
         self.output_embedding_layer = self.input_embedding_layer
         
-      self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
-                                              activation=None,
-                                              use_bias=True,
-                                              #kernel_initializer=self.initializer,
-                                              #bias_initializer=tf.zeros_initializer(),
-                                              kernel_regularizer=None,
-                                              bias_regularizer=None,
-                                              activity_regularizer=None,
-                                              kernel_constraint=None,
-                                              bias_constraint=None,
-                                              trainable=True,
-                                              name="OutProj")
+      # self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
+      #                                         activation=None,
+      #                                         use_bias=True,
+      #                                         #kernel_initializer=self.initializer,
+      #                                         #bias_initializer=tf.zeros_initializer(),
+      #                                         kernel_regularizer=None,
+      #                                         bias_regularizer=None,
+      #                                         activity_regularizer=None,
+      #                                         kernel_constraint=None,
+      #                                         bias_constraint=None,
+      #                                         trainable=True,
+      #                                         name="OutProj")
 
       with tf.variable_scope("encoder"):
         self.lstm_encoder.create_vars()

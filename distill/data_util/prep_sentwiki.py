@@ -29,7 +29,7 @@ class SentWiki(object):
   @property
   def max_length(self):
     return 100
-  
+
   @property
   def if_label_gaussian_noise(self):
     return False

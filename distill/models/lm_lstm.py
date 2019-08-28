@@ -17,10 +17,11 @@ class LmLSTM(object):
                       depth=config.encoder_depth,
                       sent_rep_mode=self.hparams.sent_rep_mode,
                       scope=scope)
-
+    self.initializer = tf.variance_scaling_initializer(
+      self.initializer_gain, mode="fan_avg", distribution="truncated_normal")
 
   def create_vars(self, reuse=tf.AUTO_REUSE, pretrained_embeddings=None):
-    with tf.variable_scope(self.scope, reuse=reuse):
+    with tf.variable_scope(self.scope, reuse=reuse, initializer=self.initializer):
       self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.hparams.vocab_size,
                                                           embedding_dim=self.hparams.embedding_dim,
                                                           pretrained_embeddings=pretrained_embeddings,
@@ -37,7 +38,6 @@ class LmLSTM(object):
 
       self.output_bias = tf.get_variable(name="output_bias", initializer=tf.zeros((self.hparams.vocab_size)))
       self.lstm.create_vars(share_in_depth=False)
-
 
   def apply(self, examples, is_train=True, reuse=tf.AUTO_REUSE, target_length=None):
     inputs, targets, inputs_length, targets_lengths = examples

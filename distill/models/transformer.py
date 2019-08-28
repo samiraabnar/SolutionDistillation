@@ -906,10 +906,11 @@ class EncodingUniversalTransformer(EncodingTransformer):
     self.scope = scope
     self.task = task
     self.eos_id = self.task.eos_id
+    self.initializer = tf.variance_scaling_initializer(
+    self.initializer_gain, mode="fan_avg", distribution="truncated_normal")
 
   def create_vars(self, reuse=False,pretrained_embeddings=None):
-    self.initializer = tf.variance_scaling_initializer(
-      self.initializer_gain, mode="fan_avg", distribution="uniform")
+
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
 
@@ -923,19 +924,6 @@ class EncodingUniversalTransformer(EncodingTransformer):
         self.output_embedding_layer.create_vars()
       else:
         self.output_embedding_layer = self.input_embedding_layer
-
-      # self.output_projections_layer = tf.layers.Dense(self.hparams.hidden_dim,
-      #                                         activation=None,
-      #                                         use_bias=True,
-      #                                         kernel_initializer=self.initializer,
-      #                                         bias_initializer=tf.zeros_initializer(),
-      #                                         kernel_regularizer=None,
-      #                                         bias_regularizer=None,
-      #                                         activity_regularizer=None,
-      #                                         kernel_constraint=None,
-      #                                         bias_constraint=None,
-      #                                         trainable=True,
-      #                                         name="OutProj")
         
       self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth,
                                                        self.ff_filter_size,
@@ -945,6 +933,58 @@ class EncodingUniversalTransformer(EncodingTransformer):
                                                        self_attention_dir=self.hparams.encoder_self_attention_dir,
                                                        scope="UniversalTransformerEncoder")
 
+
+      self.encoder_stack.create_vars(reuse=tf.AUTO_REUSE)
+
+
+class DecodingUniversalTransformer(EncodingTransformer):
+  """Transformer model for sequence to sequence data.
+  Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
+  The Transformer model consists of an encoder and decoder. The input is an int
+  sequence (or a batch of sequences). The encoder produces a continous
+  representation, and the decoder uses the encoder output to generate
+  probabilities for the output sequence.
+  """
+
+  def __init__(self, hparams, task, scope="EncUTransformer"):
+    self.hparams = hparams
+    self.vocab_size = hparams.vocab_size
+    self.hidden_dim = hparams.hidden_dim
+    self.number_of_heads = hparams.number_of_heads
+    self.encoder_depth = hparams.encoder_depth
+    self.ff_filter_size = hparams.ff_filter_size
+    self.attention_dropout_keepprob = hparams.attention_dropout_keepprob
+    self.relu_dropout_keepprob = hparams.relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = hparams.postprocess_dropout_keepprob
+    self.initializer_gain = hparams.initializer_gain
+    self.scope = scope
+    self.task = task
+    self.eos_id = self.task.eos_id
+    self.initializer = tf.variance_scaling_initializer(
+      self.initializer_gain, mode="fan_avg", distribution="truncated_normal")
+
+  def create_vars(self, reuse=False, pretrained_embeddings=None):
+
+    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
+
+      self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
+                                                          method="matmul" if tpu else "gather", scope="InputEmbed",
+                                                          pretrained_embeddings=pretrained_embeddings)
+      self.input_embedding_layer.create_vars(is_train=self.hparams.train_embeddings)
+      if not self.task.share_input_output_embeddings:
+        self.output_embedding_layer = EmbeddingSharedWeights(vocab_size=len(self.task.target_vocab),
+                                                             embedding_dim=self.hparams.hidden_dim, scope="OutputEmbed")
+        self.output_embedding_layer.create_vars()
+      else:
+        self.output_embedding_layer = self.input_embedding_layer
+
+      self.encoder_stack = UniversalTransformerEncoder(self.hidden_dim, self.number_of_heads, self.encoder_depth,
+                                                       self.ff_filter_size,
+                                                       attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                                       relu_dropout_keepprob=self.relu_dropout_keepprob,
+                                                       postprocess_dropout_keepprob=self.postprocess_dropout_keepprob,
+                                                       self_attention_dir=self.hparams.encoder_self_attention_dir,
+                                                       scope="UniversalTransformerEncoder")
 
       self.encoder_stack.create_vars(reuse=tf.AUTO_REUSE)
 

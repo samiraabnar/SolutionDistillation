@@ -14,7 +14,7 @@ from distill.data_util.prep_sentwiki import SentWiki
 Py3 = sys.version_info[0] == 3
 
 class PTB(SentWiki):
-  def __init__(self, data_path, build_vocab=False, tie_embeddings=True):
+  def __init__(self, data_path, build_vocab=False, tie_embeddings=False):
 
     self.data_path = data_path
     self.eos = '<eos>'

@@ -620,10 +620,11 @@ class EncodingTransformer(object):
     self.scope = scope
     self.task = task
     self.eos_id = self.task.eos_id
-
-  def create_vars(self, reuse=False,pretrained_embeddings=None):
     self.initializer = tf.variance_scaling_initializer(
       self.initializer_gain, mode="fan_avg", distribution="normal")
+
+  def create_vars(self, reuse=False,pretrained_embeddings=None):
+
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
 
@@ -887,7 +888,8 @@ class EncodingUniversalTransformer(EncodingTransformer):
     self.task = task
     self.eos_id = self.task.eos_id
     self.initializer = tf.variance_scaling_initializer(
-    self.initializer_gain, mode="fan_avg", distribution="truncated_normal")
+      self.initializer_gain, mode="fan_avg",
+      distribution="uniform")
 
   def create_vars(self, reuse=False,pretrained_embeddings=None):
 

@@ -885,7 +885,7 @@ class EncodingUniversalTransformer(EncodingTransformer):
     self.eos_id = self.task.eos_id
     self.initializer = tf.variance_scaling_initializer(
       self.initializer_gain, mode="fan_avg",
-      distribution="uniform")
+      distribution="truncated_normal")
 
   def create_vars(self, reuse=False,pretrained_embeddings=None):
 

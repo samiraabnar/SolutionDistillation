@@ -674,7 +674,6 @@ class EncodingTransformer(object):
         tf.logging.info(inputs)
 
       attention_bias = get_padding_bias(inputs)
-
       encoder_outputs, encoder_outputs_presence = self.encode(inputs, attention_bias, is_train, dic_to_save_weights=dic_to_save_weights)
       outputs = self.decode(encoder_outputs=encoder_outputs,
                             encoder_outputs_presence=encoder_outputs_presence,

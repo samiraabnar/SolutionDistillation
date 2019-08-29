@@ -621,7 +621,7 @@ class EncodingTransformer(object):
     self.task = task
     self.eos_id = self.task.eos_id
     self.initializer = tf.variance_scaling_initializer(
-      self.initializer_gain, mode="fan_avg", distribution="normal")
+      self.initializer_gain, mode="fan_avg", distribution="uniform")
 
   def create_vars(self, reuse=False,pretrained_embeddings=None):
 

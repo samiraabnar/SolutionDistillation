@@ -219,10 +219,10 @@ class UniversalTransformerEncoder(TransformerEncoder):
                                                  scope="FF")
 
         wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
+                                   postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
         wrapped_self_attention.create_vars(reuse=tf.AUTO_REUSE)
         wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
+                                   postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
         wrapped_ff.create_vars(reuse=tf.AUTO_REUSE)
 
         self.layers.append([wrapped_self_attention, wrapped_ff])

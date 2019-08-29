@@ -422,7 +422,7 @@ class Seq2SeqDistiller(Distiller):
 
     dataset = tf.data.TFRecordDataset(self.trainer.task.get_tfrecord_path(mode="train"))
     dataset = dataset.map(self.trainer.task.parse_examples)
-    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.trainer.task.get_padded_shapes())
 
     # dataset = dataset.apply(
     #   tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
@@ -437,7 +437,7 @@ class Seq2SeqDistiller(Distiller):
 
     dataset = tf.data.TFRecordDataset(self.trainer.task.get_tfrecord_path(mode="dev"))
     dataset = dataset.map(self.trainer.task.parse_examples)
-    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.trainer.task.get_padded_shapes())
 
     # dataset = dataset.apply(
     #   tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),
@@ -452,7 +452,7 @@ class Seq2SeqDistiller(Distiller):
 
     dataset = tf.data.TFRecordDataset(self.trainer.task.get_tfrecord_path(mode="test"))
     dataset = dataset.map(self.trainer.task.parse_examples)
-    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.task.get_padded_shapes())
+    dataset = dataset.padded_batch(self.config.batch_size, padded_shapes=self.trainer.task.get_padded_shapes())
 
     # dataset = dataset.apply(
     #   tf.data.experimental.bucket_by_sequence_length(element_length_func=lambda x1, x2, x3, x4: tf.size(x1),

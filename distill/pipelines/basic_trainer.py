@@ -33,7 +33,7 @@ class Trainer(object):
 
 
       if optimizer == 'adam':
-        opt = tf.train.AdamWOptimizer(learning_rate=learning_rate,
+        opt = tf.contrib.opt.AdamWOptimizer(learning_rate=learning_rate,
                           beta1=self.model.hparams.optimizer_adam_beta1,
                           beta2=self.model.hparams.optimizer_adam_beta2,
                           epsilon=self.model.hparams.optimizer_adam_epsilon)

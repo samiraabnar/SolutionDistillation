@@ -69,7 +69,7 @@ class SSTDistiller(Distiller):
                                decay_learning_rate)
 
 
-      opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
+      opt = tf.train.AdamWOptimizer(learning_rate=learning_rate)
       grads_and_vars = opt.compute_gradients(loss, params)
       gradients, variables = zip(*grads_and_vars)
       self.gradient_norm = tf.global_norm(gradients)

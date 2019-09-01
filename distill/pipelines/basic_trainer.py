@@ -32,7 +32,7 @@ class Trainer(object):
 
 
       if optimizer == 'adam':
-        opt = tf.contrib.opt.AdamOptimizer(
+        opt = tf.train.AdamOptimizer(
                           #weight_decay=l2_rate,
                           learning_rate=learning_rate,
                           beta1=self.model.hparams.optimizer_adam_beta1,

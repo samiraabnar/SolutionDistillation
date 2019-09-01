@@ -145,7 +145,7 @@ class LSTM(object):
           last_lstm_prediction = tf.expand_dims(last_lstm_prediction, 1)
           last_lstm_prediction_logits = output_embedding_layer.linear(last_lstm_prediction)
 
-          prediction = tf.random.multinomial(logits=tf.squeeze(last_lstm_prediction_logits),
+          prediction = tf.random.multinomial(logits=tf.squeeze(last_lstm_prediction_logits)/0.1,
                                              num_samples=1)
           sampled_predictions.write(step, prediction)
 

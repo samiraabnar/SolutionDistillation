@@ -700,15 +700,17 @@ class EncodingTransformer(object):
       embedded_inputs = self.input_embedding_layer.apply(inputs)
       inputs_padding = get_padding(inputs)
 
+      if is_train:
+        embedded_inputs = tf.nn.dropout(
+          embedded_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
       with tf.name_scope("add_pos_encoding"):
         length = tf.shape(embedded_inputs)[1]
         pos_encoding = get_position_encoding(
             length, self.hidden_dim)
         encoder_inputs = embedded_inputs + pos_encoding
 
-      if is_train:
-        encoder_inputs = tf.nn.dropout(
-          encoder_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
+
 
 
       return self.encoder_stack.apply(encoder_inputs, attention_bias, inputs_padding, is_train, dic_to_save_weights=dic_to_save_weights)

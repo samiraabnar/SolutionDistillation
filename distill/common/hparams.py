@@ -106,7 +106,7 @@ class LSTMHparam(object):
     self.initializer_gain = initializer_gain
     self.attention_mechanism = attention_mechanism
     self.sent_rep_mode = sent_rep_mode
-    self.clip_grad_norm = 0.  # i.e. no gradient clipping
+    self.clip_grad_norm = 5  # i.e. no gradient clipping
     self.optimizer_adam_epsilon = 1e-9
     self.learning_rate = learning_rate
     self.learning_rate_warmup_steps = 2000

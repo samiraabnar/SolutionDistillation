@@ -14,9 +14,8 @@ class Trainer(object):
     with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
       self.global_step = tf.train.get_or_create_global_step()
 
-      loss_l2 = tf.add_n([tf.nn.l2_loss(p) for p in params]) * l2_rate
-
-      loss += loss_l2
+      #loss_l2 = tf.add_n([tf.nn.l2_loss(p) for p in params]) * l2_rate
+      #loss += loss_l2
 
       slope = (base_learning_rate - start_learning_rate) / warmup_steps
       warmup_rate = slope * tf.cast(self.global_step,

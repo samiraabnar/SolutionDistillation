@@ -173,18 +173,11 @@ class LSTM(object):
         else:
           cell_input = embedded_prediction
 
-        tf.logging.info("cell inputs")
-        tf.logging.info(cell_input)
         lstm_outputs, state = the_cell(cell_input, last_state)
         lstm_outputs = lstm_outputs[:,None,:]
-        tf.logging.info("cell outputs")
-        tf.logging.info(lstm_outputs)
-        tf.logging.info(state)
         logits = output_embedding_layer(lstm_outputs)
         prediction = tf.random.multinomial(logits=tf.squeeze(logits),
                                            num_samples=1)
-        tf.logging.info("prediction shape")
-        tf.logging.info(prediction)
         sampled_predictions.write(step, prediction)
 
         finish_flags = tf.logical_or(finish_flags,tf.equal(prediction[:,-1],eos_id))

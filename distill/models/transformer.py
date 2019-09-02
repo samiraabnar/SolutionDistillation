@@ -84,7 +84,7 @@ class TransformerEncoder(object):
                                                                              is_train=is_train, bias=attention_bias,
                                                                              dic_to_save_weights=dic_to_save_weights
                                                                              )
-        encoder_inputs, _ = feed_forward_network.apply(x=encoder_inputs, is_train=is_train,
+        encoder_inputs = feed_forward_network.apply(x=encoder_inputs, is_train=is_train,
                                                     padding=inputs_padding)
 
     return self.output_normalization.apply(encoder_inputs, is_train), encoder_inputs_presence

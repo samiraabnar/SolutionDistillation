@@ -81,11 +81,14 @@ class LmLSTM(object):
       def compute_decoding_step_input(current_input):
         return None
 
+      def projection_layer(hidden_states):
+        return self.output_embedding_layer.linear(hidden_states) + self.output_bias
+
       lstm_decoder_output_dic = self.lstm.predict(inputs_length=inputs_length,
                                                           target_length=40,
                                                           compute_decoding_step_input_fn=compute_decoding_step_input,
                                                           input_embedding_layer=self.input_embedding_layer,
-                                                          output_embedding_layer=self.output_embedding_layer, eos_id=self.eos_id,
+                                                          output_embedding_layer=projection_layer, eos_id=self.eos_id,
                                                           is_train=False,
                                                           initial_inputs=embedded_inputs)
       outputs = lstm_decoder_output_dic['seq_outputs']

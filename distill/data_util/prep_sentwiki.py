@@ -194,7 +194,7 @@ if __name__ == '__main__':
   sentwiki = SentWiki(data_path="data/sent_wiki", build_vocab=True)
 
 
-  train_data, dev_data, test_data = sentwiki.read_raw_data('data/sent_wiki')
+  train_data, dev_data, test_data = sentwiki.read_raw_data('data/sampled_sent_wiki')
 
   print("Length of train: ", len(train_data))
   print("Length of test: ", len(test_data))

@@ -62,7 +62,10 @@ if __name__ == '__main__':
             "schedule_lstm": ScheduledLSTMDecoder}
   tasks = {'ptb_lm': PTB(os.path.join(hparams.data_dir,'ptb')),
            'sent_wiki': SentWiki(os.path.join(hparams.data_dir,'sent_wiki'),
-                                 tie_embeddings=hparams.tie_embeddings)}
+                                 tie_embeddings=hparams.tie_embeddings),
+           'sampled_sent_wiki': SentWiki(os.path.join(hparams.data_dir, 'sampled_sent_wiki'),
+                                 tie_embeddings=hparams.tie_embeddings)
+           }
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
   hparams.output_dim = len(tasks[hparams.task_name].target_vocab)

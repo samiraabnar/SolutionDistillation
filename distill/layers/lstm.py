@@ -145,7 +145,7 @@ class LSTM(object):
                                                 infer_shape=True)
 
       # Loop condition
-      for_each_time_step = lambda s, l, c, a, b, f, step: tf.logical_and(
+      for_each_time_step = lambda sp, lp, ls, o, f, step: tf.logical_and(
         tf.less(tf.cast(step, dtype=tf.int32), tf.cast(timesteps, dtype=tf.int32)),
         tf.logical_not(tf.reduce_all(f)))
 

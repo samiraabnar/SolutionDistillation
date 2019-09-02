@@ -172,9 +172,9 @@ class LSTM(object):
         else:
           cell_input = embedded_prediction
 
-        _, state = the_cell(cell_input, last_state)
+        lstm_outputs, state = the_cell(cell_input, last_state)
 
-        logits = output_embedding_layer.linear(state)
+        logits = output_embedding_layer.linear(lstm_outputs)
         prediction = tf.random.multinomial(logits=tf.squeeze(logits),
                                            num_samples=1)
         tf.logging.info("prediction shape")

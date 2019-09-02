@@ -164,6 +164,7 @@ class LSTM(object):
         :return:
         """
 
+        last_prediction = last_prediction.squeeze()
         embedded_prediction = input_embedding_layer.apply(last_prediction)
 
         current_step_input = compute_decoding_step_input_fn(embedded_prediction)

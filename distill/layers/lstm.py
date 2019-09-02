@@ -207,8 +207,8 @@ class LSTM(object):
                                                                                                lstm_loop,
                                                                                                (sampled_predictions_tensor_array,
                                                                                                 initial_inputs,
-                                                                                                init_output_lengths,
                                                                                                 init_state,
+                                                                                                init_output_lengths,
                                                                                                 init_finish,
                                                                                                 0),
                                                                                                 parallel_iterations=32)

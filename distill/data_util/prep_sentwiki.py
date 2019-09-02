@@ -191,7 +191,7 @@ class SentWiki(object):
 
 
 if __name__ == '__main__':
-  sentwiki = SentWiki(data_path="data/sent_wiki", build_vocab=True)
+  sentwiki = SentWiki(data_path="data/sampled_sent_wiki", build_vocab=True)
 
 
   train_data, dev_data, test_data = sentwiki.read_raw_data('data/sampled_sent_wiki')

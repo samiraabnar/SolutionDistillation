@@ -53,3 +53,4 @@ class PrePostProcessingWrapper(object):
       y = tf.nn.dropout(y, self.postprocess_dropout_keepprob)
 
     return x + y, extra
+

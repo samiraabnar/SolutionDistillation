@@ -173,7 +173,7 @@ class LSTM(object):
           cell_input = embedded_prediction
 
         lstm_outputs, state = the_cell(cell_input, last_state)
-        tf.logging.ingo("cell outputs")
+        tf.logging.info("cell outputs")
         tf.logging.info(lstm_outputs)
         tf.logging.info(state)
         logits = output_embedding_layer.linear(lstm_outputs[:,-1,:])

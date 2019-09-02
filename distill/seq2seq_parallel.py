@@ -59,7 +59,7 @@ tf.app.flags.DEFINE_integer("input_dim", None, "")
 tf.app.flags.DEFINE_integer("output_dim", 1, "")
 tf.app.flags.DEFINE_integer("number_of_heads", 4, "")
 tf.app.flags.DEFINE_integer("ff_filter_size", 512, "")
-tf.app.flags.DEFINE_float("initializer_gain", 0.1, "")
+tf.app.flags.DEFINE_float("initializer_gain", 1.0, "")
 tf.app.flags.DEFINE_float("teacher_label_smoothing", 0.0001, "")
 tf.app.flags.DEFINE_float("student_label_smoothing", 0.0001, "")
 

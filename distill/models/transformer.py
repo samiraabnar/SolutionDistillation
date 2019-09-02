@@ -57,9 +57,8 @@ class TransformerEncoder(object):
         wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
                                    postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
         wrapped_self_attention.create_vars()
-        wrapped_ff = feed_forward_network
-        #PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
-        #                           postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
+        wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
+                                              postprocess_dropout_keepprob = self.postprocess_dropout_keepprob)
         wrapped_ff.create_vars()
 
         self.layers.append([wrapped_self_attention, wrapped_ff])
@@ -222,9 +221,8 @@ class UniversalTransformerEncoder(TransformerEncoder):
         wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
                                    postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
         wrapped_self_attention.create_vars(reuse=tf.AUTO_REUSE)
-        wrapped_ff = feed_forward_network
-        # PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
-        #                          postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
+        wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
+                                              postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
         wrapped_ff.create_vars(reuse=tf.AUTO_REUSE)
 
         self.layers.append([wrapped_self_attention, wrapped_ff])

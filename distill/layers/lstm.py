@@ -172,10 +172,10 @@ class LSTM(object):
         else:
           cell_input = embedded_prediction
 
-        cell_input = cell_input[:,None,:]
         tf.logging.info("cell inputs")
         tf.logging.info(cell_input)
         lstm_outputs, state = the_cell(cell_input, last_state)
+        lstm_outputs = lstm_outputs[:,None,:]
         tf.logging.info("cell outputs")
         tf.logging.info(lstm_outputs)
         tf.logging.info(state)

@@ -180,6 +180,8 @@ class LSTM(object):
                                            num_samples=1)
         sampled_predictions.write(step, prediction)
 
+        tf.logging.info("prediction")
+        tf.logging.info(prediction.shape)
         finish_flags = tf.logical_or(finish_flags,tf.equal(prediction[:,-1],eos_id))
         output_lengths = output_lengths + tf.cast( tf.logical_not(finish_flags), dtype=tf.int32)*1
 

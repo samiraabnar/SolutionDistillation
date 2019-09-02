@@ -176,7 +176,7 @@ class LSTM(object):
         tf.logging.ingo("cell outputs")
         tf.logging.info(lstm_outputs)
         tf.logging.info(state)
-        logits = output_embedding_layer.linear(lstm_outputs[:,:,-1])
+        logits = output_embedding_layer.linear(lstm_outputs[:,-1,:])
         prediction = tf.random.multinomial(logits=tf.squeeze(logits),
                                            num_samples=1)
         tf.logging.info("prediction shape")

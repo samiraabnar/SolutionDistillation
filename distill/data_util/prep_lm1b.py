@@ -17,7 +17,7 @@ from distill.data_util.prep_sentwiki import SentWiki
 
 Py3 = sys.version_info[0] == 3
 
-class OneBLM(SentWiki):
+class Lm1b(SentWiki):
 
   def __init__(self, data_path, build_vocab=False, tie_embeddings=True):
     self.data_path = data_path
@@ -67,9 +67,9 @@ class OneBLM(SentWiki):
 
   def read_words(self, filename):
     sentences = self.read_sentences(filename)
-    return [word for sent in sentences for word in sent]
+    return [word.lower() for sent in sentences for word in sent]
 
-  def read_sentences(self, filename):
+  def read_and_clean_sentences(self, filename):
     sentences = []
     with tf.gfile.GFile(filename, "r") as f:
       sentences.extend(f.read().split("\n"))
@@ -90,23 +90,72 @@ class OneBLM(SentWiki):
     return translates_sentences
 
 
-  def read_raw_data(self, data_path, mode):
+  def clean_data(self, data_path, mode):
     path = os.path.join(data_path, mode+"/*")
 
     print(path)
     files = glob.glob(path)
     print(files)
     for filename in files:
-      train_data = self.read_sentences(filename)
+      train_data = self.read_and_clean_sentences(filename)
       print("Length of this part of train: ", len(train_data))
       with open(filename+".clean", "w") as f:
         f.writelines('\n'.join(train_data))
 
+  def build_vocab(self, data_path):
+    path = os.path.join(data_path + "/*.clean")
+
+    print(path)
+    files = glob.glob(path)
+    print(files)
+    counter = collections.Counter()
+    for filename in files:
+      data = self.read_words(filename)
+      counter.update(data)
 
 
+    count_pairs = sorted(counter.items(), key=lambda x: (-x[1], x[0]))
+
+    words, _ = list(zip(*count_pairs))
+    words = self.pre_defs + list(words)
+    print(words[0])
+    print(words[1])
+    print(words[2])
+    print(words[3])
+    print(words[4])
+    word_to_id = dict(zip(words, range(len(words))))
+
+    id_to_word = {}
+    for word,id in word_to_id.items():
+      id_to_word[id] = word
+
+    print("vocab size: ", len(word_to_id))
+    vocab_dict = {'word_to_id': word_to_id, 'id_to_word': id_to_word}
+
+    np.save(os.path.join(self.data_path, "vocab"), vocab_dict)
+
+
+  def build_tfrecords(self, data, mode, file_name):
+    tf_examples = []
+    for example in self.get_examples(data):
+       tf_examples.append(self.get_tf_example(example))
+
+    with tf.python_io.TFRecordWriter(os.path.join(self.data_path,file_name + ".tfr")) as tf_record_writer:
+      for example in tqdm(tf_examples):
+        tf_record = tf.train.Example(features=example)
+        tf_record_writer.write(tf_record.SerializeToString())
+
+  def build_all_tfrecords(self, path, mode):
+    path = os.path.join(path, mode + "/*.clean")
+    print(path)
+    files = glob.glob(path)
+    print(files)
+    for filename in files:
+      data = self.read_sentences(filename)
+      self.build_tfrecords(data,mode, filename.split("/")[-1])
 
 if __name__ == '__main__':
-  sentwiki = OneBLM(data_path="data/lm1b", build_vocab=True)
-
-
-  sentwiki.read_raw_data('data/lm1b', "train")
+  lm1b = Lm1b(data_path="data/lm1b", build_vocab=True)
+  #lm1b.clean_data('data/lm1b', "val")
+  lm1b.build_vocab('data/lm1b/train')
+  #lm1b.build_all_tfrecords('data/lm1b', "val")

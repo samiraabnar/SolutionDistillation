@@ -15,11 +15,11 @@ class FeedFowardNetwork(object):
 
   def create_vars(self, reuse=False):
     with tf.variable_scope(self.scope, reuse=reuse):
-        self.filter_dense_layer = tf.layers.Dense(
-        self.filter_size, use_bias=True, activation=tf.nn.relu, name="filter_layer")
-    self.output_dense_layer = tf.layers.Dense(
-        self.hidden_size, use_bias=True, name="output_layer"
-)
+      self.filter_dense_layer = tf.layers.Dense(
+      self.filter_size, use_bias=True, activation=tf.nn.relu, name="filter_layer")
+      self.output_dense_layer = tf.layers.Dense(
+          self.hidden_size, use_bias=True, name="output_layer")
+
   def apply(self, x, is_train=True, padding=None, reuse=False):
     """Return outputs of the feedforward network.
     Args:

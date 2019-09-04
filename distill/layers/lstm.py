@@ -13,14 +13,13 @@ class LSTM(object):
     self.sent_rep_mode = sent_rep_mode
     self.sent_rep_dim = self.hidden_dim
     self.normalizer = tf.contrib.layers.layer_norm
-    self.initializer = tf.orthogonal_initializer
 
   def create_vars(self, reuse=False, share_in_depth=True):
     with tf.variable_scope(self.scope, reuse=reuse):
       # Build the RNN layers
       with tf.variable_scope("LSTM_Cells"):
         lstm0 = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0,
-                                        initializer=self.initializer, name="L0")
+                                        name="L0")
         dropout_lstm0 = tf.contrib.rnn.DropoutWrapper(lstm0,
                                                       output_keep_prob=self.hidden_keep_prob,
                                                       variational_recurrent=True,
@@ -32,7 +31,7 @@ class LSTM(object):
         if self.num_layers > 1:
           if share_in_depth:
             lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0,
-                                           initializer=self.initializer, name="L1")
+                                           name="L1")
             dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                           output_keep_prob=self.hidden_keep_prob,
                                                           variational_recurrent=True,
@@ -43,7 +42,7 @@ class LSTM(object):
           else:
             for i in np.arange(1, self.num_layers):
               lstm = tf.nn.rnn_cell.LSTMCell(self.hidden_dim, forget_bias=1.0,
-                                             initializer=self.initializer, name="L"+str(i))
+                                             name="L"+str(i))
               dropout_lstm = tf.contrib.rnn.DropoutWrapper(lstm,
                                                            output_keep_prob=self.hidden_keep_prob,
                                                            variational_recurrent=True,

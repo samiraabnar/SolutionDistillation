@@ -586,6 +586,7 @@ class Seq2SeqParallel(Seq2SeqDistiller):
                                                                          base_learning_rate=self.teacher.hparams.learning_rate,
                                                                          warmup_steps=1000,
                                                                          l2_rate=self.trainer.config.l2_rate,
+                                                                         clip_gradient_norm=self.teacher.hparams.clip_gradient_norm,
                                                                          scope="teacher")
 
     student_loss = self.config.data_weight * student_train_output_dic[
@@ -596,6 +597,7 @@ class Seq2SeqParallel(Seq2SeqDistiller):
                                                                          base_learning_rate=self.student.hparams.learning_rate,
                                                                          warmup_steps=1000,
                                                                          l2_rate=self.trainer.config.l2_rate,
+                                                                         clip_gradient_norm=self.student.hparams.clip_gradient_norm,
                                                                          scope="student")
 
     tf.summary.scalar("learning_rate", teacher_learning_rate, family="teacher_train")

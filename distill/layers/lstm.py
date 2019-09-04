@@ -13,7 +13,7 @@ class LSTM(object):
     self.sent_rep_mode = sent_rep_mode
     self.sent_rep_dim = self.hidden_dim
     self.normalizer = tf.contrib.layers.layer_norm
-    self.initializer = tf.initializers.orthogonal.orthogonal_initializer()
+    self.initializer = tf.orthogonal_initializer
 
   def create_vars(self, reuse=False, share_in_depth=True):
     with tf.variable_scope(self.scope, reuse=reuse):

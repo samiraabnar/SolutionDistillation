@@ -30,7 +30,7 @@ class Lm1b(SentWiki):
 
     # if build_vocab:
     #   self.build_vocab(os.path.join(self.data_path, "train.txt"))
-    # self.load_vocab()
+    self.load_vocab()
 
   @property
   def max_length(self):
@@ -154,8 +154,25 @@ class Lm1b(SentWiki):
       data = self.read_sentences(filename)
       self.build_tfrecords(data,mode, filename.split("/")[-1])
 
+  def get_tfrecord_path(self, mode):
+    return os.path.join(self.data_path, mode, "*.tfr")
+
 if __name__ == '__main__':
   lm1b = Lm1b(data_path="data/lm1b", build_vocab=True)
   #lm1b.clean_data('data/lm1b', "val")
   #lm1b.build_vocab('data/lm1b/train')
   lm1b.build_all_tfrecords('data/lm1b', "val")
+
+  print(lm1b.get_tfrecord_path(mode="val"))
+  dataset = tf.data.TFRecordDataset(lm1b.get_tfrecord_path(mode="val"))
+  dataset = dataset.map(lm1b.parse_examples)
+  dataset = dataset.padded_batch(1, padded_shapes=lm1b.get_padded_shapes())
+  iterator = dataset.make_initializable_iterator()
+
+  example = iterator.get_next()
+  inputs, targets, input_lengths, target_lengths = example
+  global_step = tf.train.get_or_create_global_step()
+  scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
+                                                      iterator.initializer))
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs', scaffold=scaffold) as sess:
+    print(sess.run([inputs, targets, input_lengths, target_lengths]))

@@ -67,8 +67,8 @@ class LSTMSeq2Seq(object):
     inputs, targets, inputs_lengths, targets_length = examples
 
     with tf.variable_scope(self.scope, reuse=reuse):
-      embedded_inputs = self.input_embedding_layer.apply(inputs)
-      embedded_targets = self.output_embedding_layer.apply(targets)
+      embedded_inputs = self.input_embedding_layer.apply(inputs, scale_embeddings=False)
+      embedded_targets = self.output_embedding_layer.apply(targets, scale_embeddings=False)
 
       if is_train:
         embedded_inputs = tf.nn.dropout(

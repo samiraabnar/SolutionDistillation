@@ -197,7 +197,7 @@ class UniversalTransformerEncoder(TransformerEncoder):
 
   def create_vars(self, reuse=False):
 
-    with tf.variable_scope(self.scope, reuse=reuse):
+    with tf.variable_scope(self.scope,reuse=reuse):
       self.layers = []
       for i in np.arange(self.depth):
         # Create sublayers for each layer.
@@ -623,6 +623,7 @@ class EncodingTransformer(object):
     self.initializer = tf.variance_scaling_initializer(
       self.initializer_gain, mode="fan_avg", distribution="uniform")
 
+
   def create_vars(self, reuse=False,pretrained_embeddings=None):
 
 
@@ -886,8 +887,7 @@ class EncodingUniversalTransformer(EncodingTransformer):
     self.task = task
     self.eos_id = self.task.eos_id
     self.initializer = tf.variance_scaling_initializer(
-      self.initializer_gain, mode="fan_avg",
-      distribution="truncated_normal")
+      self.initializer_gain, mode="fan_avg", distribution="uniform")
 
   def create_vars(self, reuse=False,pretrained_embeddings=None):
 

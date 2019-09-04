@@ -146,13 +146,13 @@ class Lm1b(SentWiki):
         tf_record_writer.write(tf_record.SerializeToString())
 
   def build_all_tfrecords(self, path, mode):
-    path = os.path.join(path, mode + "/*.clean")
+    path = os.path.join(path, mode,"*.clean")
     print(path)
     files = glob.glob(path)
     print(files)
     for filename in files:
       data = self.read_sentences(filename)
-      self.build_tfrecords(data,mode, filename.split("/")[-1])
+      self.build_tfrecords(data,mode, '/'.join(filename.split("/")[-2:]))
 
   def get_tfrecord_path(self, mode):
     return os.path.join(self.data_path, mode, "*.tfr")

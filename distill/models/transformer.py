@@ -892,7 +892,7 @@ class EncodingUniversalTransformer(EncodingTransformer):
   def create_vars(self, reuse=False,pretrained_embeddings=None):
 
 
-    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=tf.AUTO_REUSE):
+    with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
 
       self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
                                                        method="matmul" if tpu else "gather", scope="InputEmbed",

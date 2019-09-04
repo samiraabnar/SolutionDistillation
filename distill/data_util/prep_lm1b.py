@@ -160,12 +160,12 @@ class Lm1b(SentWiki):
 
 if __name__ == '__main__':
   lm1b = Lm1b(data_path="data/lm1b", build_vocab=True)
-  lm1b.clean_data('data/lm1b', "test")
+  #lm1b.clean_data('data/lm1b', "test")
   #lm1b.build_vocab('data/lm1b/train')
-  lm1b.build_all_tfrecords('data/lm1b', "test")
+  lm1b.build_all_tfrecords('data/lm1b', "train")
 
-  print(lm1b.get_tfrecord_path(mode="test"))
-  dataset = tf.data.TFRecordDataset(lm1b.get_tfrecord_path(mode="test"))
+  print(lm1b.get_tfrecord_path(mode="train"))
+  dataset = tf.data.TFRecordDataset(lm1b.get_tfrecord_path(mode="train"))
   dataset = dataset.map(lm1b.parse_examples)
   dataset = dataset.padded_batch(1, padded_shapes=lm1b.get_padded_shapes())
   iterator = dataset.make_initializable_iterator()

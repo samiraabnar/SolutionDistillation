@@ -157,5 +157,5 @@ class Lm1b(SentWiki):
 if __name__ == '__main__':
   lm1b = Lm1b(data_path="data/lm1b", build_vocab=True)
   #lm1b.clean_data('data/lm1b', "val")
-  lm1b.build_vocab('data/lm1b/train')
-  #lm1b.build_all_tfrecords('data/lm1b', "val")
+  #lm1b.build_vocab('data/lm1b/train')
+  lm1b.build_all_tfrecords('data/lm1b', "val")

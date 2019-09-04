@@ -155,16 +155,17 @@ class Lm1b(SentWiki):
       self.build_tfrecords(data,mode, '/'.join(filename.split("/")[-2:]))
 
   def get_tfrecord_path(self, mode):
-    return os.path.join(self.data_path, mode, "*.tfr")
+    path = os.path.join(self.data_path, mode, "*.tfr")
+    return glob.glob(path)
 
 if __name__ == '__main__':
   lm1b = Lm1b(data_path="data/lm1b", build_vocab=True)
-  #lm1b.clean_data('data/lm1b', "val")
+  lm1b.clean_data('data/lm1b', "test")
   #lm1b.build_vocab('data/lm1b/train')
-  lm1b.build_all_tfrecords('data/lm1b', "val")
+  lm1b.build_all_tfrecords('data/lm1b', "test")
 
-  print(lm1b.get_tfrecord_path(mode="val"))
-  dataset = tf.data.TFRecordDataset(lm1b.get_tfrecord_path(mode="val"))
+  print(lm1b.get_tfrecord_path(mode="test"))
+  dataset = tf.data.TFRecordDataset(lm1b.get_tfrecord_path(mode="test"))
   dataset = dataset.map(lm1b.parse_examples)
   dataset = dataset.padded_batch(1, padded_shapes=lm1b.get_padded_shapes())
   iterator = dataset.make_initializable_iterator()

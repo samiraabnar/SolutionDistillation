@@ -882,7 +882,7 @@ class EncodingUniversalTransformer(EncodingTransformer):
     self.attention_dropout_keepprob = hparams.attention_dropout_keepprob
     self.relu_dropout_keepprob = hparams.relu_dropout_keepprob
     self.postprocess_dropout_keepprob = hparams.postprocess_dropout_keepprob
-    self.initializer_gain = hparams.initializer_gain
+    self.initializer_gain = 0.1 #hparams.initializer_gain
     self.scope = scope
     self.task = task
     self.eos_id = self.task.eos_id

@@ -75,16 +75,15 @@ class LSTMSeq2Seq(object):
           embedded_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
 
       with tf.variable_scope("encoder"):
+        # Apply encoder
         lstm_encoder_output_dic = self.lstm_encoder.apply(inputs=embedded_inputs, inputs_length=inputs_lengths, is_train=is_train)
-
-        
 
         if self.hparams.sent_rep_mode == "none":
           encoder_outputs = lstm_encoder_output_dic['raw_outputs']
           if is_train:
             encoder_outputs = tf.nn.dropout(encoder_outputs, self.hparams.hidden_dropout_keep_prob)
           def compute_decoding_step_input(current_decoder_input):
-            aggregiated_encoder_output = tf.reduce_mean(encoder_outputs, axis=1)
+            aggregiated_encoder_output = tf.reduce_sum(encoder_outputs, axis=1)
             if is_train:
               aggregiated_encoder_output = tf.nn.dropout(aggregiated_encoder_output,
                                                          self.hparams.hidden_dropout_keep_prob)

@@ -147,6 +147,8 @@ def get_eval_metrics(logits, labels, params):
       "padded_accuracy": _convert_to_eval_metric(padded_accuracy)(logits, labels),
       "accuracy_top5": _convert_to_eval_metric(padded_accuracy_top5)(
           logits, labels),
+      "accuracy_top2": _convert_to_eval_metric(padded_accuracy_top2)(
+      logits, labels),
       "accuracy_per_sequence": _convert_to_eval_metric(
           padded_sequence_accuracy)(logits, labels),
       "neg_log_perplexity": _convert_to_eval_metric(padded_neg_log_perplexity)(
@@ -209,6 +211,8 @@ def padded_accuracy_topk(logits, labels, k):
 def padded_accuracy_top5(logits, labels):
   return padded_accuracy_topk(logits, labels, 5)
 
+def padded_accuracy_top2(logits, labels):
+  return padded_accuracy_topk(logits, labels, 2)
 
 def padded_sequence_accuracy(logits, labels):
   """Percentage of times that predictions matches labels everywhere (non-0)."""

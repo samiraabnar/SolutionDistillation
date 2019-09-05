@@ -22,10 +22,10 @@ class Trainer(object):
                                     tf.float32) + start_learning_rate
 
       if self.config.decay_learning_rate:
-        # decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
-        #                                                1000, 0.98, staircase=False)
-        decay_learning_rate = tf.train.cosine_decay_restarts(base_learning_rate, self.global_step,
-                              1000)
+        decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
+                                                       10000, 0.98, staircase=False)
+        # decay_learning_rate = tf.train.cosine_decay_restarts(base_learning_rate, self.global_step,
+        #                       1000)
       else:
         decay_learning_rate = base_learning_rate
 

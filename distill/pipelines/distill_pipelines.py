@@ -585,6 +585,7 @@ class Seq2SeqParallel(Seq2SeqDistiller):
                                                                          start_learning_rate=0.000,
                                                                          base_learning_rate=self.teacher.hparams.learning_rate,
                                                                          warmup_steps=1000,
+                                                                         hidden_size=self.teacher.hparams.hidden_dim,
                                                                          l2_rate=self.trainer.config.l2_rate,
                                                                          clip_gradient_norm=self.teacher.hparams.clip_grad_norm,
                                                                          scope="teacher")
@@ -596,6 +597,7 @@ class Seq2SeqParallel(Seq2SeqDistiller):
                                                                          start_learning_rate=0.000,
                                                                          base_learning_rate=self.student.hparams.learning_rate,
                                                                          warmup_steps=1000,
+                                                                         hidden_size=self.student.hparams.hidden_dim,
                                                                          l2_rate=self.trainer.config.l2_rate,
                                                                          clip_gradient_norm=self.student.hparams.clip_grad_norm,
                                                                          scope="student")

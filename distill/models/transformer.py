@@ -734,7 +734,7 @@ class EncodingTransformer(object):
         if encoder_outputs_presence is not None:
           outputs = tf.reduce_sum(encoder_outputs * encoder_outputs_presence, axis=1)
         else:
-          outputs = tf.reduce_mean(encoder_outputs, axis=1)
+          outputs = tf.reduce_sum(encoder_outputs, axis=1)
 
 
       return tf.expand_dims(outputs, axis=1)

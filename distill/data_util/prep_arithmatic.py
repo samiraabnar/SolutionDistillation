@@ -738,10 +738,12 @@ class ArithmaticSimpleSameLength21Depth2NormalBiLing(ArithmaticSimpleSameLength2
 
   def generator(self, number_of_examples, mode="train"):
     max_length = self.train_length if mode == "train" else self.dev_length
-    possible_lengths = list(set(np.arange(1, max_length + 1)) - set(self.forbidden_lengths))
+    if mode == "train":
+      possible_lengths = list(set(np.arange(1, max_length + 1)) - set(self.forbidden_lengths))
+    else:
+      possible_lengths = list(set(np.arange(1, max_length + 1)))
 
     N = len(possible_lengths)
-
 
     budgets = {}
     max_value = self.num_of_symbols - 1
@@ -788,6 +790,23 @@ class ArithmaticSimpleSameLength21Depth2NormalBiLing(ArithmaticSimpleSameLength2
                  'targets_length': len(output)}
 
       yield example
+
+class ArithmaticSimpleMissingLength21Depth2NormalBiLing(ArithmaticSimpleSameLength21Depth2NormalBiLing):
+  def __init__(self, data_path):
+    self.data_path = data_path
+    self.task_name = 'arithmatic_simple_missinglength21_depth2_normal_biling'
+    self.vocab_path = os.path.join(self.data_path, 'vocab')
+
+    self.eos = '<eos>'
+    self.pad = '<pad>'
+    self.cls_token = '<cls>'
+
+    self.load_vocab()
+    self.pretrained = False
+
+  @property
+  def forbidden_lengths(self):
+    return [3,8,10,15,20,24,29,31]
 
 
 class ArithmaticSimpleSameLength201Depth2Normal(ArithmaticSimpleSameLength21Depth2Normal):

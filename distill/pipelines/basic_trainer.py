@@ -6,7 +6,7 @@ class Trainer(object):
     self.config = config
     self.model = model_obj
 
-  def get_train_op(self, loss, params, start_learning_rate, base_learning_rate, warmup_steps,
+  def get_train_op(self, loss, params, start_learning_rate, base_learning_rate, warmup_steps,hidden_size,
                    l2_rate=0.0001, clip_gradient_norm=5,
                    optimizer='adam',
                    scope=""):
@@ -16,23 +16,32 @@ class Trainer(object):
 
       loss_l2 = tf.add_n([tf.nn.l2_loss(p) for p in params]) * l2_rate
       loss += loss_l2
+      #
+      # slope = (base_learning_rate - start_learning_rate) / warmup_steps
+      # warmup_rate = slope * tf.cast(self.global_step,
+      #                               tf.float32) + start_learning_rate
+      #
+      # if self.config.decay_learning_rate:
+      #   decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
+      #                                                  1000, 0.98, staircase=False)
+      # else:
+      #   decay_learning_rate = base_learning_rate
 
-      slope = (base_learning_rate - start_learning_rate) / warmup_steps
-      warmup_rate = slope * tf.cast(self.global_step,
-                                    tf.float32) + start_learning_rate
+      #learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
+      #                          decay_learning_rate)
 
-      if self.config.decay_learning_rate:
-        decay_learning_rate = tf.train.exponential_decay(base_learning_rate, self.global_step,
-                                                       1000, 0.98, staircase=False)
-      else:
-        decay_learning_rate = base_learning_rate
+      warmup_steps = tf.to_float(warmup_steps)
+      step = tf.to_float(tf.train.get_or_create_global_step())
 
-      learning_rate = tf.where(self.global_step < warmup_steps, warmup_rate,
-                               decay_learning_rate)
+      learning_rate = base_learning_rate * (hidden_size ** -0.5)
+      # Apply linear warmup
+      learning_rate *= tf.minimum(1.0, step / warmup_steps)
+      # Apply rsqrt decay
+      learning_rate *= tf.rsqrt(tf.maximum(step, warmup_steps))
 
 
       if optimizer == 'adam':
-        opt = tf.train.AdamOptimizer(
+        opt = tf.contrib.opt.LazyAdamOptimizer(
                           #weight_decay=l2_rate,
                           learning_rate=learning_rate,
                           beta1=self.model.hparams.optimizer_adam_beta1,

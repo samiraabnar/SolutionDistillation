@@ -5,10 +5,12 @@ import os
 
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40, \
   AlgorithmicAdditionDecimal40, AlgorithmicMultiplicationDecimal40, AlgorithmicSortProblem, AlgorithmicReverseProblem
-from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, ArithmaticSimpleCurriculumLength,\
-ArithmaticSimpleSameLength10, ArithmaticSimpleSameLength10Depth6, ArithmaticSimpleSameLength10Depth2, \
+from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, ArithmaticSimple, \
+  ArithmaticSimpleCurriculumLength, \
+  ArithmaticSimpleSameLength10, ArithmaticSimpleSameLength10Depth6, ArithmaticSimpleSameLength10Depth2, \
   ArithmaticSimpleSameLength10Depth4, \
-  ArithmaticSimpleSameLength21Depth2Normal, ArithmaticSimpleSameLength201Depth2Normal, ArithmaticSimpleSameLength21Depth2NormalBiLing
+  ArithmaticSimpleSameLength21Depth2Normal, ArithmaticSimpleSameLength201Depth2Normal, \
+  ArithmaticSimpleSameLength21Depth2NormalBiLing, ArithmaticSimpleMissingLength21Depth2NormalBiLing
 from distill.data_util.prep_imdb import IMDB
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
@@ -146,6 +148,8 @@ if __name__ == '__main__':
              os.path.join(hparams.data_dir, 'arithmatic_simple_samelength21_depth2_normal_biling')),
            'arithmatic_simple_samelength201_depth2_normal': ArithmaticSimpleSameLength201Depth2Normal(
              os.path.join(hparams.data_dir, 'arithmatic_simple_samelength201_depth2_normal')),
+           'arithmatic_simple_missinglength21_depth2_normal_biling': ArithmaticSimpleMissingLength21Depth2NormalBiLing(
+             os.path.join(hparams.data_dir, 'arithmatic_simple_missinglength21_depth2_normal_biling')),
            'sst': SST(data_path=os.path.join(hparams.data_dir,"sst/"),
                  add_subtrees=False,
                  pretrained=False),

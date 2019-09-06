@@ -66,8 +66,8 @@ tf.app.flags.DEFINE_float("student_label_smoothing", 0.0001, "")
 tf.app.flags.DEFINE_boolean('teacher_train_embeddings', True, " False | True")
 tf.app.flags.DEFINE_boolean('student_train_embeddings', True, " False | True")
 
-tf.app.flags.DEFINE_string('teacher_sent_rep_mode', "all", "none | final | all")
-tf.app.flags.DEFINE_string('student_sent_rep_mode', "all", "none | final | all")
+tf.app.flags.DEFINE_string('teacher_sent_rep_mode', "final", "none | final | all")
+tf.app.flags.DEFINE_string('student_sent_rep_mode', "final", "none | final | all")
 
 tf.app.flags.DEFINE_string('teacher_attention_mechanism', None, 'attention_mechanism')
 tf.app.flags.DEFINE_string('student_attention_mechanism', None, 'attention_mechanism')

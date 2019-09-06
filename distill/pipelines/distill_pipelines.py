@@ -374,6 +374,8 @@ class Seq2SeqDistiller(Distiller):
                                                          start_learning_rate=0.000,
                                                          base_learning_rate=self.teacher.hparams.learning_rate, warmup_steps=1000,
                                                          l2_rate=self.trainer.config.l2_rate,
+                                                         hidden_size=self.teacher.hparams.hidden_dim,
+                                                         clip_gradient_norm=self.teacher.hparams.clip_grad_norm,
                                                          scope="teacher")
 
 #    distill_rep_op, distill_rep_learning_rate = self.trainer.get_train_op(distill_rep_loss, 
@@ -398,6 +400,8 @@ class Seq2SeqDistiller(Distiller):
                                                           start_learning_rate=0.000,
                                                           base_learning_rate=self.student.hparams.learning_rate, warmup_steps=10000,
                                                           l2_rate=self.trainer.config.l2_rate,
+                                                          hidden_size=self.student.hparams.hidden_dim,
+                                                          clip_gradient_norm=self.student.hparams.clip_grad_norm,
                                                           scope="student")
 
 

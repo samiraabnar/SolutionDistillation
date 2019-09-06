@@ -875,7 +875,7 @@ if __name__ == '__main__':
 #  bin_iden.build_tfrecords(2000, 'dev')
 #  bin_iden.build_tfrecords(2000, 'test')
 
-  bin_iden = ArithmaticSimpleSameLength21Depth2NormalBiLing('data/arithmatic_simple_samelength21_depth2_normal_biling')
+  bin_iden = ArithmaticSimpleMissingLength21Depth2NormalBiLing('data/arithmatic_simple_missinglength21_depth2_normal_biling')
 
   bin_iden.build_tfrecords(100000, 'train')
   bin_iden.build_tfrecords(2000, 'dev')

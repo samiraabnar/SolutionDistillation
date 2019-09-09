@@ -368,7 +368,7 @@ class Seq2SeqDistiller(Distiller):
     if self.config.learn_to_teach:
         distill_params + teacher_train_output_dic["trainable_vars"]
 
-    teacher_loss = teacher_train_output_dic['loss'] + self.config.teacher_rep_distill_weight * distill_rep_loss
+    teacher_loss = teacher_train_output_dic['loss'] + self.config.teacher_rep_distill_weight * local_bias_distill_rep_loss
     teacher_update_op, teacher_learning_rate = self.trainer.get_train_op(teacher_loss,
                                                          teacher_train_output_dic["trainable_vars"],
                                                          start_learning_rate=0.000,
@@ -394,7 +394,7 @@ class Seq2SeqDistiller(Distiller):
 
     student_loss = self.config.data_weight * student_train_output_dic['loss'] +  \
                    self.config.distill_logits_weight * distill_logit_loss + \
-                   self.config.distill_rep_weight * distill_rep_loss
+                   self.config.distill_rep_weight * local_bias_distill_rep_loss
 
     student_update_op, student_learning_rate = self.trainer.get_train_op(student_loss, student_train_output_dic["trainable_vars"],
                                                           start_learning_rate=0.000,

@@ -503,8 +503,8 @@ class Seq2SeqParallel(Seq2SeqDistiller):
     teacher_dev_examples, student_dev_examples = dev_iterator.get_next()
 
     pretrained_embeddings = None
-    if self.task.pretrained:
-      pretrained_embeddings = self.task.get_pretrained_mat("glove_300")
+    if self.trainer.task.pretrained:
+      pretrained_embeddings = self.trainer.task.get_pretrained_mat("glove_300")
 
     self.teacher.create_vars(reuse=False, pretrained_embeddings=pretrained_embeddings)
     self.student.create_vars(reuse=False, pretrained_embeddings=pretrained_embeddings)

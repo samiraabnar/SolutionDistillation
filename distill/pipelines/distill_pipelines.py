@@ -502,8 +502,12 @@ class Seq2SeqParallel(Seq2SeqDistiller):
     teacher_train_examples, student_train_examples = train_iterator.get_next()
     teacher_dev_examples, student_dev_examples = dev_iterator.get_next()
 
-    self.teacher.create_vars(reuse=False)
-    self.student.create_vars(reuse=False)
+    pretrained_embeddings = None
+    if self.task.pretrained:
+      pretrained_embeddings = self.task.get_pretrained_mat("glove_300")
+
+    self.teacher.create_vars(reuse=False, pretrained_embeddings=pretrained_embeddings)
+    self.student.create_vars(reuse=False, pretrained_embeddings=pretrained_embeddings)
 
     teacher_train_output_dic, teacher_dev_output_dic, teacher_test_output_dic = \
       self.apply_model(self.teacher, teacher_train_examples, teacher_dev_examples, None, "teacher",

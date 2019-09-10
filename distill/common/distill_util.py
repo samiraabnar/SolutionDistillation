@@ -65,6 +65,9 @@ def get_biased_single_state_rsa_distill_loss(student_states, teacher_states, mod
   teacher_rsm = dot_product_sim(teacher_states, teacher_states, pair_wise=True)
   student_rsm = dot_product_sim(student_states, student_states, pair_wise=True)
 
+  teacher_distances = 1 - teacher_rsm
+  student_distances = 1 - student_rsm
+
   if mode == 'squared':
     rsa_score = tf.reduce_mean(squared_dist_rsm(student_rsm,teacher_rsm))
   elif mode == 'softmax_cross_ent':

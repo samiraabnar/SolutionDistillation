@@ -41,7 +41,7 @@ export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --log_dir="$TMP_LOGS_DIR" --data_dir="$TMP_DATA_DIR" \
---batch_size=128 --teacher_hidden_dim=256 --student_hidden_dim=64 \
+--batch_size=128 --teacher_hidden_dim=512 --student_hidden_dim=128 \
 --teacher_model=lstm --student_model=enc_utransformer \
 --teacher_train_embeddings=True --student_train_embeddings=True \
 --student_decoder_depth=1 --student_encoder_depth=4 --teacher_decoder_depth=1 --teacher_encoder_depth=2 \
@@ -61,7 +61,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=True \
 --distill_temp=1.0 --teacher_temp=1.0 --student_temp=1.0 \
---task_name=arithmatic_simple_samelength21_depth2_normal_biling --exp_name=_distill1-0_tdrop9-5_sdrop9-10-10-9_L20001_LR001_RUN3
+--task_name=arithmatic_simple_missinglength21_depth2_normal_biling --exp_name=_distill1-0_tdrop9-5_sdrop9-10-10-9_L20001_LR001_RUN3
 
 
 #Copy input file to scratch

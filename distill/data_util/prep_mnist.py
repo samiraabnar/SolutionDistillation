@@ -70,32 +70,20 @@ class Mnist1D(object):
     })
     return features
 
-  def generator(self, number_of_examples, mode="train"):
-    max_length = self.train_length if mode == "train" else self.dev_length
-    budgets = {}
-    max_value = self.num_of_symbols - 1
-    max_output_freq = (number_of_examples / self.num_of_symbols) * 2
-    for i in tqdm(np.arange(number_of_examples)):
-      exp = -1
-      exp_str = '-1'
-      while exp < 0 or exp >= self.num_of_symbols:
-        length = np.random.randint(max_length) + 1
-        exp_str, _ = binary_math_tree_generator(length, np.arange(1, int(self.num_of_symbols)),
-                                                ['-', '-', '+', '+', '+', '*'], max_value, 0, self.max_depth)
-        exp = eval(exp_str)
-        if exp not in budgets:
-          budgets[exp] = 1
-        budgets[exp] += 1
-        if budgets[exp] >= max_output_freq:
-          exp = -1
-          exp_str = '-1'
+  def generator(self, number_of_examples, split):
+    train_ds = tfds.load("mnist", split=split, batch_size=-1)
+    numpy_ds = tfds.as_numpy(train_ds)
+    numpy_images, numpy_labels = numpy_ds["image"], numpy_ds["label"]
 
-      exp_tokens = exp_str.split() + [self.eos]
-      output = [str(exp)]
-      example = {'inputs': self.encode(exp_tokens),
-                 'targets': self.encode(output),
-                 'inputs_length': len(exp_tokens),
-                 'targets_length': len(output)}
+
+    _, height, width, _ = numpy_images.shape
+    for image, label in zip(numpy_images, numpy_labels):
+      inputs = image.reshape((height*width))
+      targets = label
+      example = {'inputs': inputs,
+                 'targets': targets,
+                 'inputs_length': len(inputs),
+                 'targets_length': len(targets)}
 
       yield example
 
@@ -136,6 +124,5 @@ class Mnist1D(object):
 
 
 if __name__ == '__main__':
-  mnist_train = tfds.load(name="mnist", split="train")
-  assert isinstance(mnist_train, tf.data.Dataset)
-  print(mnist_train)
+  mnist_builder = Mnist1D("data/mnist1d/")
+  mnist_builder.build_tfrecords(None, tfds.Split.TRAIN)

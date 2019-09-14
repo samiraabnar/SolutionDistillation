@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from distill.common.hparams import TransformerHparam, LSTMHparam
+from distill.common.hparams import TransformerHparam, LSTMHparam, LenetHparams
 import os
 
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40, \
@@ -12,6 +12,7 @@ from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, 
   ArithmaticSimpleSameLength21Depth2Normal, ArithmaticSimpleSameLength201Depth2Normal, \
   ArithmaticSimpleSameLength21Depth2NormalBiLing, ArithmaticSimpleMissingLength21Depth2NormalBiLing
 from distill.data_util.prep_imdb import IMDB
+from distill.data_util.prep_mnist import Mnist1D
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
 from distill.data_util.prep_trec6 import CharTrec6, Trec6
@@ -114,6 +115,9 @@ tf.app.flags.DEFINE_string("data_path", "../data", "data path")
 hparams = tf.app.flags.FLAGS
 
 
+
+
+
 if __name__ == '__main__':
 
   Models = {
@@ -157,7 +161,8 @@ if __name__ == '__main__':
            'wsj_parse': ParseWSJ(os.path.join(hparams.data_dir,'wsj')),
            'imdb': IMDB(data_path=os.path.join(hparams.data_dir,"imdb"),
                         pretrained=True),
-            'char_trec': CharTrec6(os.path.join(hparams.data_dir,"char_trec6"), build_vocab=False)
+           'char_trec': CharTrec6(os.path.join(hparams.data_dir,"char_trec6"), build_vocab=False),
+           'mnist': Mnist1D(os.path.join(hparams.data_dir,'mnist1d')),
            }
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
@@ -170,7 +175,8 @@ if __name__ == '__main__':
             "transformer": TransformerHparam,
             "utransformer": TransformerHparam,
             "enc_transformer": TransformerHparam,
-            "enc_utransformer": TransformerHparam}
+            "enc_utransformer": TransformerHparam,
+            "lenet5": LenetHparams}
 
   CLS_TOKEN = {
               "lm_lstm": False,
@@ -179,7 +185,8 @@ if __name__ == '__main__':
               "transformer": False,
               "utransformer": False,
               "enc_transformer": True,
-              "enc_utransformer": True}
+              "enc_utransformer": True,
+              "lenet5": False}
 
   teacher_params = PARAM_TYPES[hparams.teacher_model](input_dim=hparams.input_dim,
                                                       output_dim=hparams.output_dim,

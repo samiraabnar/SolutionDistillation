@@ -14,8 +14,6 @@ class Mnist1D(object):
     self.pad = '<pad>'
     self.cls_token = '<cls>'
 
-    self.load_vocab()
-    self.pretrained = False
 
   @property
   def if_label_gaussian_noise(self):
@@ -79,7 +77,7 @@ class Mnist1D(object):
     _, height, width, _ = numpy_images.shape
     for image, label in zip(numpy_images, numpy_labels):
       inputs = image.reshape((height*width))
-      targets = label
+      targets = [label]
       example = {'inputs': inputs,
                  'targets': targets,
                  'inputs_length': len(inputs),
@@ -93,7 +91,7 @@ class Mnist1D(object):
       tf_examples.append(self.get_tf_example(example))
 
     with tf.python_io.TFRecordWriter(
-        os.path.join(self.data_path, self.task_name + "_" + mode + ".tfr")) as tf_record_writer:
+        os.path.join(self.data_path, self.task_name + "_" + str(mode) + ".tfr")) as tf_record_writer:
       for example in tqdm(tf_examples):
         tf_record = tf.train.Example(features=example)
         tf_record_writer.write(tf_record.SerializeToString())

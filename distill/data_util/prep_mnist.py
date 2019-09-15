@@ -29,7 +29,7 @@ class Mnist1D(object):
 
   @property
   def vocab_length(self):
-    return len(self.id2word)
+    return 28*28
 
   def load_vocab(self):
     raise NotImplementedError

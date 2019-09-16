@@ -40,7 +40,7 @@ class Mnist1D(object):
 
   @property
   def target_vocab(self):
-    return self.id2word  # list(np.arange(self.num_of_symbols))
+    return [0,1,2,3,4,5,6,7,8,9]  # list(np.arange(self.num_of_symbols))
 
   def decode(self, ids):
     return [self.id2word[i] for i in ids]

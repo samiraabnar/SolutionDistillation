@@ -30,7 +30,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 tf.app.flags.DEFINE_string("exp_name", "distill", "")
 tf.app.flags.DEFINE_string("task_name", "identity_binary", "")
-tf.app.flags.DEFINE_string("log_dir", "logs", "")
+# tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("data_dir", "data", "")
 
 tf.app.flags.DEFINE_string("save_dir", None, "")

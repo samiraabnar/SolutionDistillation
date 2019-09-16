@@ -14,7 +14,7 @@ class LeNet5(object):
       self.hparams.initializer_gain, mode="fan_avg", distribution="uniform")
 
 
-  def create_vars(self, reuse=False):
+  def create_vars(self, reuse=False, pretrained_embeddings=None):
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
       self.cnn_layers = []
       self.dense_layers = []

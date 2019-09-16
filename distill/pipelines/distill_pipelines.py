@@ -337,12 +337,26 @@ class Seq2SeqDistiller(Distiller):
                                                          mode=self.config.rep_loss_mode)
     student_logits_uniform_loss = get_single_state_uniform_rsa_loss(student_train_output_dic['logits'],
                                                                     mode=self.config.rep_loss_mode)
+
+    teacher_logit_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
+      labels=tf.nn.softmax(teacher_train_output_dic['logits']),
+      logits=teacher_train_output_dic['logits']
+    ))
+
+    student_logit_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
+      labels=tf.nn.softmax(student_train_output_dic['logits']),
+      logits=student_train_output_dic['logits']
+    ))
+
+
     if hasattr(self.student, 'input_embedding_layer'):
       embedding_rep_loss = get_single_state_rsa_distill_loss(self.student.input_embedding_layer.shared_weights,
                                                          self.teacher.input_embedding_layer.shared_weights,
                                                          mode=self.config.rep_loss_mode)
       tf.summary.scalar("embedding_rep_loss", embedding_rep_loss, family="student_train")
 
+    tf.summary.scalar("teacher_logit_entropy", teacher_logit_entropy, family="teacher_train")
+    tf.summary.scalar("student_logit_entropy", student_logit_entropy, family="student_train")
     tf.summary.scalar("teacher_logits_uniform_loss", teacher_logits_uniform_loss, family="teacher_train")
     tf.summary.scalar("student_logits_uniform_loss", student_logits_uniform_loss, family="student_train")
     tf.summary.scalar("distill_rep_loss", distill_rep_loss, family="student_train")

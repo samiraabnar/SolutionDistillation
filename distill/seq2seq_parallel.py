@@ -29,7 +29,6 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 tf.app.flags.DEFINE_string("exp_name", "distill", "")
 tf.app.flags.DEFINE_string("task_name", "identity_binary", "")
-tf.app.flags.DEFINE_string("log_dir", "logs", "")
 tf.app.flags.DEFINE_string("data_dir", "data", "")
 
 tf.app.flags.DEFINE_string("save_dir", None, "")
@@ -246,7 +245,9 @@ if __name__ == '__main__':
 
 
   hparams.model_type = '_'.join([hparams.teacher_model,'to',hparams.student_model])
-
+  if hparams.log_dir == "":
+    hparams.log_dir = "logs"
+    
   if hparams.save_dir is None:
     hparams.save_dir = os.path.join(hparams.log_dir, hparams.task_name, '_'.join(
       [hparams.rep_loss_mode, hparams.model_type, 'std_depth' + str(hparams.student_encoder_depth),

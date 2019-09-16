@@ -22,6 +22,7 @@ from distill.models.lm_lstm import LmLSTM
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer, \
   EncodingUniversalTransformer, DecodingUniversalTransformer, DecodingTransformer
+from distill.models.vanilla_ff import VanillaFF
 from distill.pipelines.distill_pipelines import Seq2SeqParallel
 from distill.pipelines.seq2seq import Seq2SeqTrainer
 
@@ -130,7 +131,8 @@ if __name__ == '__main__':
             "enc_utransformer": EncodingUniversalTransformer,
             "dec_utransformer": DecodingUniversalTransformer,
             "dec_transformer": DecodingTransformer,
-            "lenet5": LeNet5}
+            "lenet5": LeNet5,
+            "vanilla_ff": VanillaFF}
 
 
   tasks = {'identity': AlgorithmicIdentityDecimal40(os.path.join(hparams.data_dir,'alg')),
@@ -177,7 +179,8 @@ if __name__ == '__main__':
             "utransformer": TransformerHparam,
             "enc_transformer": TransformerHparam,
             "enc_utransformer": TransformerHparam,
-            "lenet5": LenetHparams}
+            "lenet5": LenetHparams,
+            "vanilla_ff": LenetHparams}
 
   CLS_TOKEN = {
               "lm_lstm": False,
@@ -187,7 +190,8 @@ if __name__ == '__main__':
               "utransformer": False,
               "enc_transformer": True,
               "enc_utransformer": True,
-              "lenet5": False}
+              "lenet5": False,
+              "vanilla_ff": False}
 
   teacher_params = PARAM_TYPES[hparams.teacher_model](input_dim=hparams.input_dim,
                                                       output_dim=hparams.output_dim,
@@ -247,7 +251,7 @@ if __name__ == '__main__':
   hparams.model_type = '_'.join([hparams.teacher_model,'to',hparams.student_model])
   if hparams.log_dir == "":
     hparams.log_dir = "logs"
-    
+
   if hparams.save_dir is None:
     hparams.save_dir = os.path.join(hparams.log_dir, hparams.task_name, '_'.join(
       [hparams.rep_loss_mode, hparams.model_type, 'std_depth' + str(hparams.student_encoder_depth),

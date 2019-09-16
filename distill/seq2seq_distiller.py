@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from distill.common.hparams import TransformerHparam, LSTMHparam
+from distill.common.hparams import TransformerHparam, LSTMHparam, LenetHparams
 import os
 
 from distill.data_util.prep_algorithmic import AlgorithmicIdentityDecimal40, AlgorithmicIdentityBinary40, \
@@ -13,13 +13,16 @@ from distill.data_util.prep_arithmatic import Arithmatic, ArithmaticSameLength, 
   ArithmaticSimpleSameLength21Depth2Normal, ArithmaticSimpleSameLength21Depth2NormalBiLing, \
   ArithmaticSimpleSameLength201Depth2Normal, ArithmaticSimpleMissingLength21Depth2NormalBiLing
 from distill.data_util.prep_imdb import IMDB
+from distill.data_util.prep_mnist import Mnist1D
 from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
 from distill.data_util.prep_trec6 import CharTrec6, Trec6
 from distill.data_util.prep_wsj_parsing import ParseWSJ
+from distill.models.lenet5 import LeNet5
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer, \
   EncodingUniversalTransformer
+from distill.models.vanilla_ff import VanillaFF
 from distill.pipelines.distill_pipelines import Seq2SeqDistiller
 from distill.pipelines.seq2seq import Seq2SeqTrainer
 
@@ -122,14 +125,20 @@ if __name__ == '__main__':
             "transformer": Transformer,
             "utransformer": UniversalTransformer,
             "enc_transformer": EncodingTransformer,
-            "enc_utransformer": EncodingUniversalTransformer}
+            "enc_utransformer": EncodingUniversalTransformer,
+            "lenet5": LeNet5,
+            "vanilla_ff": VanillaFF
+            }
 
   CLS_TOKEN = {"lstm": False,
               "bilstm": False,
               "transformer": False,
               "utransformer": False,
               "enc_transformer": True,
-              "enc_utransformer": True}
+              "enc_utransformer": True,
+              "lenet5": False,
+              "vanilla_ff": False
+              }
 
   tasks = {'identity': AlgorithmicIdentityDecimal40(os.path.join(hparams.data_dir,'alg')),
            'identity_binary': AlgorithmicIdentityBinary40(os.path.join(hparams.data_dir,'alg')),
@@ -160,7 +169,8 @@ if __name__ == '__main__':
            'wsj_parse': ParseWSJ(os.path.join(hparams.data_dir,'wsj')),
            'imdb': IMDB(data_path=os.path.join(hparams.data_dir,"imdb"),
                         pretrained=True),
-            'char_trec': CharTrec6(os.path.join(hparams.data_dir,"char_trec6"), build_vocab=False),
+           'char_trec': CharTrec6(os.path.join(hparams.data_dir,"char_trec6"), build_vocab=False),
+           'mnist': Mnist1D(os.path.join(hparams.data_dir, 'mnist1d')),
            }
 
   hparams.vocab_size = tasks[hparams.task_name].vocab_length
@@ -171,7 +181,10 @@ if __name__ == '__main__':
             "transformer": TransformerHparam,
             "utransformer": TransformerHparam,
             "enc_transformer": TransformerHparam,
-            "enc_utransformer": TransformerHparam}
+            "enc_utransformer": TransformerHparam,
+            "lenet5": LenetHparams,
+            "vanilla_ff": LenetHparams
+                 }
 
   teacher_params = PARAM_TYPES[hparams.teacher_model](input_dim=hparams.input_dim,
                                                       output_dim=hparams.output_dim,
@@ -229,6 +242,10 @@ if __name__ == '__main__':
 
 
   hparams.model_type = '_'.join([hparams.teacher_model,'to',hparams.student_model])
+
+  hparams.model_type = '_'.join([hparams.teacher_model,'to',hparams.student_model])
+  if hparams.log_dir == "":
+    hparams.log_dir = "logs"
 
   if hparams.save_dir is None:
     hparams.save_dir = os.path.join(hparams.log_dir, hparams.task_name, '_'.join(

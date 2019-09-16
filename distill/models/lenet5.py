@@ -87,7 +87,8 @@ class LeNet5(object):
       return {"logits": logits,
               "outputs": dense2,
               "inputs": inputs,
-              "targets": targets
+              "targets": targets,
+              "trainable_vars": tf.trainable_variables(scope=self.scope),
             }
 
 

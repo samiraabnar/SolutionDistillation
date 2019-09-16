@@ -171,3 +171,4 @@ class LenetHparams(object):
     self.num_sampled_classes = 0
     self.label_smoothing = label_smoothing
     self.optimizer_adam_epsilon = 1e-9
+    self.filter_size=5

@@ -24,10 +24,11 @@ class LayerNormalization(object):
 class PrePostProcessingWrapper(object):
   """Wrapper class that applies layer pre-processing and post-processing."""
 
-  def __init__(self, layer, hidden_dim, postprocess_dropout_keepprob):
+  def __init__(self, layer, hidden_dim, postprocess_dropout_keepprob, residual=True):
     self.layer = layer
     self.hidden_dim = hidden_dim
     self.postprocess_dropout_keepprob = postprocess_dropout_keepprob
+    self.residual = residual
 
 
 
@@ -35,14 +36,18 @@ class PrePostProcessingWrapper(object):
     # Create normalization layer
     self.layer_norm = LayerNormalization(self.hidden_dim)
     self.layer_norm.create_vars()
-    self.layer.create_vars(**kwargs)
+    if hasattr(self.layer, "create_vars"):
+      self.layer.create_vars(**kwargs)
 
   def apply(self, x, is_train=True, **kwargs):
     # Preprocessing: apply layer normalization
     y = self.layer_norm.apply(x)
 
     # Get layer output
-    y = self.layer.apply(y, is_train=is_train, **kwargs)
+    if hasattr(self.layer, "apply"):
+      y = self.layer.apply(y, is_train=is_train, **kwargs)
+    else:
+      y = self.layer(y, **kwargs)
 
     extra = None
     if isinstance(y, tuple):
@@ -52,5 +57,5 @@ class PrePostProcessingWrapper(object):
     if is_train:
       y = tf.nn.dropout(y, self.postprocess_dropout_keepprob)
 
-    return x + y, extra
+    return x + y if self.residual else y, extra
 

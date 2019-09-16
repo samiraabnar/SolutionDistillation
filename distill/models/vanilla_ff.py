@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from distill.data_util.prep_mnist import Mnist1D
+from distill.layers.ffn_layer import DenseLayer
 from distill.layers.pre_post_wrapper import PrePostProcessingWrapper
 
 
@@ -17,14 +18,15 @@ class VanillaFF(object):
     with tf.variable_scope(self.scope, reuse=reuse):
       self.dense_layers = []
 
+      input_dim = self.hparams.input_dim
       for i in np.arange(self.hparams.encoder_depth):
-        dense_layer = tf.keras.layers.Dense(self.hparams.hidden_dim,
-                                      activation=tf.nn.relu,
-                                      use_bias=True)
-        warpped_dense_layer = PrePostProcessingWrapper(layer=dense_layer, hidden_dim=self.hparams.hidden_dim,
-                                 postprocess_dropout_keepprob=self.hparams.postprocess_dropout_keepprob)
+        dense_layer = DenseLayer(hidden_dim=self.hparams.hidden_dim, scope="dens_"+str(i))
+        warpped_dense_layer = PrePostProcessingWrapper(layer=dense_layer, hidden_dim=input_dim,
+                                 postprocess_dropout_keepprob=self.hparams.postprocess_dropout_keepprob, residual=False)
+        warpped_dense_layer.create_vars()
 
         self.dense_layers.append(warpped_dense_layer)
+        input_dim = self.hparams.hidden_dim
 
       self.dense_layers.append(tf.keras.layers.Dense(self.hparams.output_dim,
                                     activation=tf.nn.relu,
@@ -44,7 +46,7 @@ class VanillaFF(object):
 
       # Fully connected layers
       for i in np.arange(self.hparams.encoder_depth):
-        encoder_inputs = self.dense_layers[i](encoder_inputs)
+        encoder_inputs, _ = self.dense_layers[i].apply(encoder_inputs)
 
 
       # Output layer, 10 neurons for each digit
@@ -67,7 +69,7 @@ if __name__ == '__main__':
   class Config(object):
     def __init__(self):
       self.output_dim = 10
-      self.input_dim = 728
+      self.input_dim = 28*28
       self.encoder_depth = 1
       self.decoder_depth = 1
       self.sent_rep_mode = "all"
@@ -93,6 +95,8 @@ if __name__ == '__main__':
       self.clip_grad_norm = 0.  # i.e. no gradient clipping
       self.optimizer_adam_epsilon = 1e-9
       self.alpha = 1
+      self.hidden_dim=200
+      self.postprocess_dropout_keepprob = 1.0
 
 
   tf.logging.set_verbosity(tf.logging.INFO)

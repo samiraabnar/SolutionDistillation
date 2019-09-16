@@ -1,5 +1,19 @@
 import tensorflow as tf
 
+class DenseLayer(object):
+  def __init__(self, hidden_dim, scope="dense"):
+    self.hidden_dim = hidden_dim
+    self.scope = scope
+
+  def create_vars(self, reuse=False):
+    with tf.variable_scope(self.scope, reuse=reuse):
+      self.layer  = tf.keras.layers.Dense(self.hidden_dim,
+                                        activation=tf.nn.relu,
+                                        use_bias=True)
+
+  def apply(self, x, is_train=True, reuse=tf.AUTO_REUSE):
+    with tf.variable_scope(self.scope, reuse=reuse):
+      return self.layer(x)
 
 class FeedFowardNetwork(object):
   """Fully connected feedforward network."""

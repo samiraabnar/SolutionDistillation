@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from distill.data_util.prep_mnist import Mnist1D
+from distill.layers.pre_post_wrapper import PrePostProcessingWrapper
 
 
 class VanillaFF(object):
@@ -13,13 +14,17 @@ class VanillaFF(object):
 
 
   def create_vars(self, reuse=False, pretrained_embeddings=None):
-    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
+    with tf.variable_scope(self.scope, reuse=reuse):
       self.dense_layers = []
 
       for i in np.arange(self.hparams.encoder_depth):
-        self.dense_layers.append(tf.keras.layers.Dense(self.hparams.hidden_dim,
+        dense_layer = tf.keras.layers.Dense(self.hparams.hidden_dim,
                                       activation=tf.nn.relu,
-                                      use_bias=True))
+                                      use_bias=True)
+        warpped_dense_layer = PrePostProcessingWrapper(layer=dense_layer, hidden_dim=self.hparams.hidden_dim,
+                                 postprocess_dropout_keepprob=self.hparams.postprocess_dropout_keepprob)
+
+        self.dense_layers.append(warpped_dense_layer)
 
       self.dense_layers.append(tf.keras.layers.Dense(self.hparams.output_dim,
                                     activation=tf.nn.relu,
@@ -30,12 +35,14 @@ class VanillaFF(object):
     inputs, targets, inputs_lengths, targets_lengths = examples
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
-      # Fully connected layers
       encoder_inputs = tf.cast(tf.reshape(inputs, [-1, input_h*input_w]), dtype=tf.float32)
       tf.logging.info("inputs")
       tf.logging.info(inputs)
+      if is_train:
+        encoder_inputs = tf.nn.dropout(
+          encoder_inputs, keep_prob=self.hparams.input_dropout_keep_prob)
 
-
+      # Fully connected layers
       for i in np.arange(self.hparams.encoder_depth):
         encoder_inputs = self.dense_layers[i](encoder_inputs)
 

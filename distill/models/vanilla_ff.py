@@ -16,24 +16,15 @@ class VanillaFF(object):
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
       self.dense_layers = []
 
-      dens1 = tf.keras.layers.Dense(728,
-                                    activation=tf.nn.relu,
-                                    use_bias=True)
-      dens2 = tf.keras.layers.Dense(256,
-                                    activation=tf.nn.relu,
-                                    use_bias=True)
-      dens3 = tf.keras.layers.Dense(120,
-                                    activation=tf.nn.relu,
-                                    use_bias=True)
-      dens4 = tf.keras.layers.Dense(84,
-                                    activation=tf.nn.relu,
-                                    use_bias=True)
+      for i in np.arange(self.hparams.encoder_depth):
+        self.dense_layers.append(tf.keras.layers.Dense(self.hparams.hidden_dim,
+                                      activation=tf.nn.relu,
+                                      use_bias=True))
 
-      dens5 = tf.keras.layers.Dense(10,
+      self.dense_layers.append(tf.keras.layers.Dense(self.hparams.output_dim,
                                     activation=tf.nn.relu,
-                                    use_bias=True)
+                                    use_bias=True))
 
-      self.dense_layers = [dens1, dens2, dens3, dens4, dens5]
 
   def apply(self,examples, target_length=None, is_train=True, input_h=28, input_w=28, input_c=1, reuse=tf.AUTO_REUSE):
     inputs, targets, inputs_lengths, targets_lengths = examples

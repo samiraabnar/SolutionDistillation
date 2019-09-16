@@ -172,3 +172,4 @@ class LenetHparams(object):
     self.label_smoothing = label_smoothing
     self.optimizer_adam_epsilon = 1e-9
     self.filter_size=5
+    self.encoder_depth = encoder_depth

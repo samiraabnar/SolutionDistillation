@@ -13,7 +13,7 @@ class Mnist1D(object):
     self.eos = '<eos>'
     self.pad = '<pad>'
     self.cls_token = '<cls>'
-
+    self.pretrained = False
 
   @property
   def if_label_gaussian_noise(self):

@@ -41,13 +41,13 @@ export PYTHONPATH=$PYTHONPATH:$HEAD_DIR
 
 CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --log_dir="$TMP_LOGS_DIR" --data_dir="$TMP_DATA_DIR" \
---batch_size=128 --teacher_hidden_dim=256 --student_hidden_dim=128 \
---teacher_model=lstm --student_model=enc_utransformer \
+--batch_size=128 --teacher_hidden_dim=512 --student_hidden_dim=128 \
+--teacher_model=enc_utransformer --student_model=enc_utransformer \
 --teacher_train_embeddings=True --student_train_embeddings=True \
---student_decoder_depth=1 --student_encoder_depth=4 --teacher_decoder_depth=1 --teacher_encoder_depth=2 \
+--student_decoder_depth=1 --student_encoder_depth=2 --teacher_decoder_depth=1 --teacher_encoder_depth=4 \
 --student_input_dropout_keep_prob=0.9 --student_hidden_dropout_keep_prob=1.0 \
 --student_relu_dropout_keepprob=1.0 --student_postprocess_dropout_keepprob=0.9 \
---teacher_input_dropout_keep_prob=0.9 --teacher_hidden_dropout_keep_prob=0.8 \
+--teacher_input_dropout_keep_prob=0.9 --teacher_hidden_dropout_keep_prob=0.9 \
 --teacher_relu_dropout_keepprob=1.0 --teacher_postprocess_dropout_keepprob=0.9 \
 --student_learning_rate=0.001 \
 --teacher_learning_rate=0.001 \
@@ -62,7 +62,7 @@ CUDA_VISIBLE_DEVICES=0 python $CODE_DIR/seq2seq_distiller.py \
 --train_student=True --train_teacher=True \
 --distill_rep=False distill_logit=True \
 --distill_temp=1.0 --teacher_temp=1.0 --student_temp=1.0 \
---task_name=arithmatic_simple_missinglength21_depth2_normal_biling --exp_name=_distill1-0_tdrop9-8_sdrop9-10-10-9_L20001_LR001_RUN5
+--task_name=arithmatic_simple_missinglength21_depth2_normal_biling --exp_name=_distill1-0_tdrop9-10-10-9_sdrop9-8_L20001_LR001_RUN5
 
 
 #Copy input file to scratch

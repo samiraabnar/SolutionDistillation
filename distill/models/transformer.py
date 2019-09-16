@@ -1035,87 +1035,87 @@ class DecodingUniversalTransformer(DecodingTransformer):
 
       self.decoder_stack.create_vars(reuse=tf.AUTO_REUSE)
 
-# if __name__ == '__main__':
-#   from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40
-#
-#   tf.logging.set_verbosity(tf.logging.INFO)
-#
-#   #bin_iden = AlgorithmicIdentityBinary40('data/alg')
-#   bin_iden = ArithmaticSimpleSameLength201Depth2Normal(
-#              'data/arithmatic_simple_samelength201_depth2_normal')
-#   #bin_iden = CharTrec6(data_path="data/char_trec6/")
-#
-#   dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
-#   dataset = dataset.map(bin_iden.parse_examples)
-#   dataset = dataset.padded_batch(1, padded_shapes=bin_iden.get_padded_shapes())
-#   iterator = dataset.make_initializable_iterator()
-#
-#   example = iterator.get_next()
-#   inputs, targets, inputs_lengths, targets_length = example
-#
-#   class Config(object):
-#     def __init__(self):
-#       self.vocab_size = bin_iden.vocab_length
-#       self.hidden_dim = 32
-#       self.output_dim = self.vocab_size
-#       self.embedding_dim = 32
-#       self.attention_dropout_keepprob = 0.1
-#       self.relu_dropout_keepprob = 0.1
-#       self.postprocess_dropout_keepprob = 0.1
-#       self.attention_mechanism = None
-#       self.encoder_depth = 1
-#       self.decoder_depth = 1
-#       self.sent_rep_mode = "all"
-#       self.scope = "transformer"
-#       self.batch_size = 64
-#       self.input_dropout_keep_prob = 1.0
-#       self.hidden_dropout_keep_prob = 1.0
-#       self.number_of_heads = 2
-#       self.ff_filter_size = 512
-#       self.initializer_gain = 1.0
-#       self.label_smoothing = 0.1
-#       self.clip_grad_norm = 0.  # i.e. no gradient clipping
-#       self.optimizer_adam_epsilon = 1e-9
-#       self.learning_rate = 0.001
-#       self.learning_rate_warmup_steps = 1000
-#       self.initializer_gain = 1.0
-#       self.initializer = "uniform_unit_scaling"
-#       self.weight_decay = 0.0
-#       self.optimizer_adam_beta1 = 0.9
-#       self.optimizer_adam_beta2 = 0.98
-#       self.num_sampled_classes = 0
-#       self.label_smoothing = 0.1
-#       self.clip_grad_norm = 0.  # i.e. no gradient clipping
-#       self.optimizer_adam_epsilon = 1e-9
-#       self.alpha = 1
-#       self.beam_size = 5
-#       self.extra_decode_length = 5
-#       self.encoder_self_attention_dir = "bottom_up"
-#       self.decoder_self_attention_dir = "top_down"
-#       self.decoder_cross_attention_dir = "top_down"
-#       self.train_embeddings = True
-#       self.cls_token = True
-#
-#
-#   transformer = DecodingUniversalTransformer(Config(),
-#                             task=bin_iden,
-#                             scope="Transformer")
-#   transformer.create_vars(reuse=False)
-#
-#   outputs = transformer.apply(example, target_length=bin_iden.target_length, is_train=True)
-#   outputs = transformer.apply(example, target_length=bin_iden.target_length, is_train=False)
-#
-#   logits = outputs['logits']
-#   predictions = tf.argmax(logits, axis=-1)
-#
-#   global_step = tf.train.get_or_create_global_step()
-#   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
-#                                                       iterator.initializer))
-#   with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_transformer', scaffold=scaffold) as sess:
-#     for _ in np.arange(1):
-#       inp, targ, pred = sess.run([inputs, targets, predictions])
-#
-#       print(inp)
-#       print(bin_iden.decode(inp[0]))
-#       print(bin_iden.decode(pred[0]))
-#       print(bin_iden.decode(targ[0]))
+if __name__ == '__main__':
+  from distill.data_util.prep_algorithmic import AlgorithmicIdentityBinary40
+
+  tf.logging.set_verbosity(tf.logging.INFO)
+
+  #bin_iden = AlgorithmicIdentityBinary40('data/alg')
+  bin_iden = ArithmaticSimpleSameLength201Depth2Normal(
+             'data/arithmatic_simple_samelength201_depth2_normal')
+  #bin_iden = CharTrec6(data_path="data/char_trec6/")
+
+  dataset = tf.data.TFRecordDataset(bin_iden.get_tfrecord_path(mode="train"))
+  dataset = dataset.map(bin_iden.parse_examples)
+  dataset = dataset.padded_batch(1, padded_shapes=bin_iden.get_padded_shapes())
+  iterator = dataset.make_initializable_iterator()
+
+  example = iterator.get_next()
+  inputs, targets, inputs_lengths, targets_length = example
+
+  class Config(object):
+    def __init__(self):
+      self.vocab_size = bin_iden.vocab_length
+      self.hidden_dim = 32
+      self.output_dim = self.vocab_size
+      self.embedding_dim = 32
+      self.attention_dropout_keepprob = 0.1
+      self.relu_dropout_keepprob = 0.1
+      self.postprocess_dropout_keepprob = 0.1
+      self.attention_mechanism = None
+      self.encoder_depth = 1
+      self.decoder_depth = 1
+      self.sent_rep_mode = "all"
+      self.scope = "transformer"
+      self.batch_size = 64
+      self.input_dropout_keep_prob = 1.0
+      self.hidden_dropout_keep_prob = 1.0
+      self.number_of_heads = 2
+      self.ff_filter_size = 512
+      self.initializer_gain = 1.0
+      self.label_smoothing = 0.1
+      self.clip_grad_norm = 0.  # i.e. no gradient clipping
+      self.optimizer_adam_epsilon = 1e-9
+      self.learning_rate = 0.001
+      self.learning_rate_warmup_steps = 1000
+      self.initializer_gain = 1.0
+      self.initializer = "uniform_unit_scaling"
+      self.weight_decay = 0.0
+      self.optimizer_adam_beta1 = 0.9
+      self.optimizer_adam_beta2 = 0.98
+      self.num_sampled_classes = 0
+      self.label_smoothing = 0.1
+      self.clip_grad_norm = 0.  # i.e. no gradient clipping
+      self.optimizer_adam_epsilon = 1e-9
+      self.alpha = 1
+      self.beam_size = 5
+      self.extra_decode_length = 5
+      self.encoder_self_attention_dir = "bottom_up"
+      self.decoder_self_attention_dir = "top_down"
+      self.decoder_cross_attention_dir = "top_down"
+      self.train_embeddings = True
+      self.cls_token = True
+
+
+  transformer = DecodingUniversalTransformer(Config(),
+                            task=bin_iden,
+                            scope="Transformer")
+  transformer.create_vars(reuse=False)
+
+  outputs = transformer.apply(example, target_length=bin_iden.target_length, is_train=True)
+  outputs = transformer.apply(example, target_length=bin_iden.target_length, is_train=False)
+
+  logits = outputs['logits']
+  predictions = tf.argmax(logits, axis=-1)
+
+  global_step = tf.train.get_or_create_global_step()
+  scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
+                                                      iterator.initializer))
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_transformer', scaffold=scaffold) as sess:
+    for _ in np.arange(1):
+      inp, targ, pred = sess.run([inputs, targets, predictions])
+
+      print(inp)
+      print(bin_iden.decode(inp[0]))
+      print(bin_iden.decode(pred[0]))
+      print(bin_iden.decode(targ[0]))

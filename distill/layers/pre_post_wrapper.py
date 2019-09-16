@@ -31,23 +31,18 @@ class PrePostProcessingWrapper(object):
     self.residual = residual
 
 
-
   def create_vars(self, **kwargs):
     # Create normalization layer
     self.layer_norm = LayerNormalization(self.hidden_dim)
     self.layer_norm.create_vars()
-    if hasattr(self.layer, "create_vars"):
-      self.layer.create_vars(**kwargs)
+    self.layer.create_vars(**kwargs)
 
   def apply(self, x, is_train=True, **kwargs):
     # Preprocessing: apply layer normalization
     y = self.layer_norm.apply(x)
 
     # Get layer output
-    if hasattr(self.layer, "apply"):
-      y = self.layer.apply(y, is_train=is_train, **kwargs)
-    else:
-      y = self.layer(y, **kwargs)
+    y = self.layer.apply(y, is_train=is_train, **kwargs)
 
     extra = None
     if isinstance(y, tuple):

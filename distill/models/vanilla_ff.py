@@ -20,10 +20,11 @@ class VanillaFF(object):
 
       input_dim = self.hparams.input_dim
       for i in np.arange(self.hparams.encoder_depth):
-        dense_layer = DenseLayer(hidden_dim=self.hparams.hidden_dim, scope="dens_"+str(i))
-        warpped_dense_layer = PrePostProcessingWrapper(layer=dense_layer, hidden_dim=input_dim,
-                                 postprocess_dropout_keepprob=self.hparams.postprocess_dropout_keepprob, residual=False)
-        warpped_dense_layer.create_vars()
+        with tf.variable_scope("layer"+str(i), reuse=reuse):
+          dense_layer = DenseLayer(hidden_dim=self.hparams.hidden_dim)
+          warpped_dense_layer = PrePostProcessingWrapper(layer=dense_layer, hidden_dim=input_dim,
+                                   postprocess_dropout_keepprob=self.hparams.postprocess_dropout_keepprob, residual=False)
+          warpped_dense_layer.create_vars()
 
         self.dense_layers.append(warpped_dense_layer)
         input_dim = self.hparams.hidden_dim
@@ -36,7 +37,7 @@ class VanillaFF(object):
   def apply(self,examples, target_length=None, is_train=True, input_h=28, input_w=28, input_c=1, reuse=tf.AUTO_REUSE):
     inputs, targets, inputs_lengths, targets_lengths = examples
 
-    with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
+    with tf.variable_scope(self.scope, reuse=reuse):
       encoder_inputs = tf.cast(tf.reshape(inputs, [-1, input_h*input_w]), dtype=tf.float32)
       tf.logging.info("inputs")
       tf.logging.info(inputs)
@@ -46,7 +47,8 @@ class VanillaFF(object):
 
       # Fully connected layers
       for i in np.arange(self.hparams.encoder_depth):
-        encoder_inputs, _ = self.dense_layers[i].apply(encoder_inputs)
+        with tf.variable_scope("layer"+str(i), reuse=reuse):
+          encoder_inputs, _ = self.dense_layers[i].apply(encoder_inputs)
 
 
       # Output layer, 10 neurons for each digit

@@ -36,17 +36,17 @@ class Mnist1D(object):
 
   @property
   def eos_id(self):
-    return self.word2id[self.eos]
+    return None
 
   @property
   def target_vocab(self):
     return [0,1,2,3,4,5,6,7,8,9]  # list(np.arange(self.num_of_symbols))
 
   def decode(self, ids):
-    return [self.id2word[i] for i in ids]
+    return ids
 
   def encode(self, tokens):
-    return [self.word2id[t] for t in tokens]
+    return tokens
 
   @property
   def target_length(self):

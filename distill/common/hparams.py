@@ -173,3 +173,5 @@ class LenetHparams(object):
     self.optimizer_adam_epsilon = 1e-9
     self.filter_size=5
     self.encoder_depth = encoder_depth
+    self.relu_dropout_keepprob = relu_dropout_keepprob
+    self.postprocess_dropout_keepprob = postprocess_dropout_keepprob

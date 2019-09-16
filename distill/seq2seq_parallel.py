@@ -17,6 +17,7 @@ from distill.data_util.prep_ptb import PTB
 from distill.data_util.prep_sst import SST
 from distill.data_util.prep_trec6 import CharTrec6, Trec6
 from distill.data_util.prep_wsj_parsing import ParseWSJ
+from distill.models.lenet5 import LeNet5
 from distill.models.lm_lstm import LmLSTM
 from distill.models.lstm_seq2seq import LSTMSeq2Seq, BidiLSTMSeq2Seq
 from distill.models.transformer import Transformer, UniversalTransformer, EncodingTransformer, \
@@ -129,7 +130,8 @@ if __name__ == '__main__':
             "enc_transformer": EncodingTransformer,
             "enc_utransformer": EncodingUniversalTransformer,
             "dec_utransformer": DecodingUniversalTransformer,
-            "dec_transformer": DecodingTransformer}
+            "dec_transformer": DecodingTransformer,
+            "lenet5": LeNet5}
 
 
   tasks = {'identity': AlgorithmicIdentityDecimal40(os.path.join(hparams.data_dir,'alg')),

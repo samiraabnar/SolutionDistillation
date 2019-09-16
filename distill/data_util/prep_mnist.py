@@ -124,3 +124,5 @@ class Mnist1D(object):
 if __name__ == '__main__':
   mnist_builder = Mnist1D("data/mnist1d/")
   mnist_builder.build_tfrecords(None, tfds.Split.TRAIN)
+  mnist_builder.build_tfrecords(None, tfds.Split.TEST)
+  mnist_builder.build_tfrecords(None, tfds.Split.VALIDATION)

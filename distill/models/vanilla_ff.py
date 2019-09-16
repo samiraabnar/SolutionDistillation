@@ -40,6 +40,10 @@ class VanillaFF(object):
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
       # Fully connected layers
+      inputs = tf.cast(tf.reshape(inputs, [-1, input_h*input_w]), dtype=tf.float32)
+      tf.logging.info("inputs")
+      tf.logging.info(inputs)
+
       dense1 = self.dense_layers[0](inputs)
       dense2 = self.dense_layers[1](dense1)
       dense3 = self.dense_layers[2](dense2)
@@ -105,9 +109,9 @@ if __name__ == '__main__':
   example = iterator.get_next()
   inputs, targets, inputs_lengths, targets_length = example
 
-  lenet = LeNet5(Config(),
+  lenet = VanillaFF(Config(),
                        task=bin_iden,
-                       scope="lenet5")
+                       scope="vanillaff")
   lenet.create_vars(reuse=False)
 
   outputs = lenet.apply(example, target_length=bin_iden.target_length, is_train=True)
@@ -116,7 +120,7 @@ if __name__ == '__main__':
   global_step = tf.train.get_or_create_global_step()
   scaffold = tf.train.Scaffold(local_init_op=tf.group(tf.local_variables_initializer(),
                                                       iterator.initializer))
-  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_lenet', scaffold=scaffold) as sess:
+  with tf.train.MonitoredTrainingSession(checkpoint_dir='logs/test_vanillaff', scaffold=scaffold) as sess:
     for _ in np.arange(1):
       inp, targ, outp = sess.run([inputs, targets, outputs])
 

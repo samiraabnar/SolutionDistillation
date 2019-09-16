@@ -31,23 +31,23 @@ class VanillaFF(object):
 
     with tf.variable_scope(self.scope, initializer=self.initializer, reuse=reuse):
       # Fully connected layers
-      inputs = tf.cast(tf.reshape(inputs, [-1, input_h*input_w]), dtype=tf.float32)
+      encoder_inputs = tf.cast(tf.reshape(inputs, [-1, input_h*input_w]), dtype=tf.float32)
       tf.logging.info("inputs")
       tf.logging.info(inputs)
 
-      dense1 = self.dense_layers[0](inputs)
-      dense2 = self.dense_layers[1](dense1)
-      dense3 = self.dense_layers[2](dense2)
-      dense4 = self.dense_layers[3](dense3)
+
+      for i in np.arange(self.hparams.encoder_depth):
+        encoder_inputs = self.dense_layers[i](encoder_inputs)
+
 
       # Output layer, 10 neurons for each digit
-      logits = self.dense_layers[4](dense4)[:,None,:]
+      logits = self.dense_layers[-1](encoder_inputs)[:,None,:]
 
       tf.logging.info("logits shape")
       tf.logging.info(logits)
 
       return {"logits": logits,
-              "outputs": dense4,
+              "outputs": encoder_inputs,
               "inputs": inputs,
               "targets": targets,
               "trainable_vars": tf.trainable_variables(scope=self.scope),

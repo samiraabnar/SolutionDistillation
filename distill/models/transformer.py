@@ -197,34 +197,33 @@ class UniversalTransformerEncoder(TransformerEncoder):
 
   def create_vars(self, reuse=False):
 
-    with tf.variable_scope(self.scope,reuse=reuse):
+    with tf.variable_scope(self.scope,reuse=reuse): #"I should set this to True"
       self.layers = []
+      if self.self_attention_dir == "bottom_up":
+        self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
+                                                                          num_heads=self.number_of_heads,
+                                                                          attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                                                          scope="Attention")
+      else:
+        self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
+                                                                  num_heads=self.number_of_heads,
+                                                                  attention_dropout_keepprob=self.attention_dropout_keepprob,
+                                                                  scope="Attention")
+
+      feed_forward_network = FeedFowardNetwork(hidden_size=self.hidden_dim,
+                                               filter_size=self.ff_filter_size,
+                                               relu_dropout_keepprob=self.relu_dropout_keepprob,
+                                               allow_pad=True,
+                                               scope="FF")
+
+      wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
+                                                        postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
+      wrapped_self_attention.create_vars(reuse=tf.AUTO_REUSE)
+      wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
+                                            postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
+      wrapped_ff.create_vars(reuse=tf.AUTO_REUSE)
       for i in np.arange(self.depth):
         # Create sublayers for each layer.
-        if self.self_attention_dir == "bottom_up":
-          self_attention_layer = ReversedMultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
-                                                                            num_heads=self.number_of_heads,
-                                                                            attention_dropout_keepprob=self.attention_dropout_keepprob,
-                                                                            scope="Attention")
-        else:
-          self_attention_layer = MultiHeadScaledDotProductAttention(hidden_dim=self.hidden_dim,
-                                                                    num_heads=self.number_of_heads,
-                                                                    attention_dropout_keepprob=self.attention_dropout_keepprob,
-                                                                    scope="Attention")
-
-        feed_forward_network = FeedFowardNetwork(hidden_size=self.hidden_dim,
-                                                 filter_size=self.ff_filter_size,
-                                                 relu_dropout_keepprob=self.relu_dropout_keepprob,
-                                                 allow_pad=True,
-                                                 scope="FF")
-
-        wrapped_self_attention = PrePostProcessingWrapper(layer=self_attention_layer, hidden_dim=self.hidden_dim,
-                                   postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
-        wrapped_self_attention.create_vars(reuse=tf.AUTO_REUSE)
-        wrapped_ff = PrePostProcessingWrapper(layer=feed_forward_network, hidden_dim=self.hidden_dim,
-                                              postprocess_dropout_keepprob=self.postprocess_dropout_keepprob)
-        wrapped_ff.create_vars(reuse=tf.AUTO_REUSE)
-
         self.layers.append([wrapped_self_attention, wrapped_ff])
 
       # Create final layer normalization layer.
@@ -958,8 +957,6 @@ class EncodingUniversalTransformer(EncodingTransformer):
       self.initializer_gain, mode="fan_avg", distribution="uniform")
 
   def create_vars(self, reuse=False,pretrained_embeddings=None):
-
-
     with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
 
       self.input_embedding_layer = EmbeddingSharedWeights(vocab_size=self.vocab_size, embedding_dim=self.hidden_dim,
@@ -1097,7 +1094,7 @@ if __name__ == '__main__':
       self.cls_token = True
 
 
-  transformer = DecodingUniversalTransformer(Config(),
+  transformer = EncodingUniversalTransformer(Config(),
                             task=bin_iden,
                             scope="Transformer")
   transformer.create_vars(reuse=False)
